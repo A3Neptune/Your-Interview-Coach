@@ -1,21 +1,21 @@
 'use client';
 
-import StandardNavbar from '@/components/StandardNavbar';
-import StandardFooter from '@/components/StandardFooter';
+import ModernDashboardNavbar from '@/components/ModernDashboardNavbar';
+import ModernDashboardFooter from '@/components/ModernDashboardFooter';
 
 export default function UserDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col">
-      {/* Standard Navbar */}
-      <StandardNavbar variant="dashboard" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Modern Dashboard Navbar */}
+      <ModernDashboardNavbar />
 
       {/* Main Content */}
-      <div className="flex-1 pt-24">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {children}
-      </div>
+      </main>
 
-      {/* Standard Footer */}
-      <StandardFooter />
+      {/* Modern Dashboard Footer */}
+      <ModernDashboardFooter />
     </div>
   );
 }

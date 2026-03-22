@@ -2,10 +2,16 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, User, DollarSign, ExternalLink, MessageSquare, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Calendar, MessageCircle, Clock, User, DollarSign, ExternalLink, MessageSquare } from 'lucide-react';
+// import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+
+const phoneNumber = "919718713646"; // no +
+const message = "Hi I enrolled the session";
+
+const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
 
 interface Booking {
   _id: string;
@@ -143,7 +149,7 @@ function UserBookingsContent() {
   }
 
   return (
-    <div className="space-y-6 p-10 bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-screen">
+    <div className="space-y-8 sm:space-y-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">My Bookings</h1>
@@ -187,11 +193,10 @@ function UserBookingsContent() {
               setFilter(status);
               setShowAll(false); // Reset to showing only 5 when filter changes
             }}
-            className={`px-5 py-2.5 rounded-xl font-bold transition-all capitalize text-sm ${
-              filter === status
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-transparent text-slate-600 hover:text-blue-600 hover:bg-blue-50'
-            }`}
+            className={`px-5 py-2.5 rounded-xl font-bold transition-all capitalize text-sm ${filter === status
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-transparent text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
           >
             {status} ({status === 'all' ? bookings.length : bookings.filter(b => b.status === status).length})
           </button>
@@ -212,151 +217,142 @@ function UserBookingsContent() {
         </div>
       ) : (
         <>
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
-          >
-            {displayedBookings.map((booking, idx) => (
-            <motion.div
-              key={booking._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white border-2 border-blue-200 rounded-2xl p-6 hover:border-blue-400 transition-all hover:shadow-xl shadow-md"
-            >
-              {/* Header with Status */}
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl">{statusIcons[booking.status]}</span>
-                    <h3 className="text-2xl font-bold text-slate-900">{booking.title}</h3>
+          <div className="space-y-4">
+            {displayedBookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-blue-300 transition-colors"
+              >
+                {/* Header with Status */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-3xl">{statusIcons[booking.status]}</span>
+                      <h3 className="text-2xl font-bold text-slate-900">{booking.title}</h3>
+                    </div>
+                    {booking.description && (
+                      <p className="text-slate-600 text-sm font-medium">{booking.description}</p>
+                    )}
                   </div>
-                  {booking.description && (
-                    <p className="text-slate-600 text-sm font-medium">{booking.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${statusColors[booking.status]}`}>
+                      {booking.status}
+                    </span>
+                    <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${paymentStatusColors[booking.paymentStatus]}`}>
+                      {booking.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 py-5 border-y border-slate-100">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+                      <Calendar size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Date & Time</p>
+                      <p className="text-sm text-slate-900 font-bold">{formatDate(booking.scheduledDate)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-100">
+                      <Clock size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Duration</p>
+                      <p className="text-sm text-slate-900 font-bold">{booking.duration} min</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100">
+                      <User size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Mentor</p>
+                      <p className="text-sm text-slate-900 font-bold">{booking.mentorId?.fullName || booking.mentorId?.name || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                      <DollarSign size={20} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Amount</p>
+                      <p className="text-sm text-slate-900 font-bold">₹{booking.amount}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-3">
+                  {booking.meetingLink && booking.status === 'confirmed' && isUpcoming(booking.scheduledDate) && (
+                    <a
+                      href={booking.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                    >
+                      <ExternalLink size={18} />
+                      Join Meeting
+                    </a>
                   )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className={`px-4 py-2 rounded-xl text-xs font-bold border-2 ${statusColors[booking.status]}`}>
-                    {booking.status}
-                  </span>
-                  <span className={`px-4 py-2 rounded-xl text-xs font-bold border-2 ${paymentStatusColors[booking.paymentStatus]}`}>
-                    {booking.paymentStatus}
-                  </span>
-                </div>
-              </div>
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 py-5 border-t-2 border-b-2 border-blue-100">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-blue-100 border-2 border-blue-300">
-                    <Calendar size={20} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1 font-bold uppercase tracking-wider">Date & Time</p>
-                    <p className="text-sm text-slate-900 font-bold">{formatDate(booking.scheduledDate)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-purple-100 border-2 border-purple-300">
-                    <Clock size={20} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1 font-bold uppercase tracking-wider">Duration</p>
-                    <p className="text-sm text-slate-900 font-bold">{booking.duration} min</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-orange-100 border-2 border-orange-300">
-                    <User size={20} className="text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1 font-bold uppercase tracking-wider">Mentor</p>
-                    <p className="text-sm text-slate-900 font-bold">{booking.mentorId?.fullName || booking.mentorId?.name || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-100 border-2 border-emerald-300">
-                    <DollarSign size={20} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1 font-bold uppercase tracking-wider">Amount</p>
-                    <p className="text-sm text-slate-900 font-bold">₹{booking.amount}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-wrap gap-3">
-                {booking.meetingLink && booking.status === 'confirmed' && isUpcoming(booking.scheduledDate) && (
                   <a
-                    href={booking.meetingLink}
+                    href={whatsappLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
-                  >
-                    <ExternalLink size={18} />
-                    Join Meeting
-                  </a>
-                )}
-
-                {/* Chat Button - Available for confirmed/completed bookings */}
-                {/* {['confirmed', 'completed'].includes(booking.status) && (
-                  <button
-                    onClick={() => router.push('/user-dashboard/messages')}
-                    className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
                     <MessageCircle size={18} />
-                    Chat
+                    Join WhatsApp
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      setSelectedBooking(booking);
+                      setNotes(booking.studentNotes || '');
+                      setShowNotes(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-bold rounded-xl transition-all"
+                  >
+                    <MessageSquare size={18} />
+                    Notes
                   </button>
-                )} */}
-
-                <button
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setNotes(booking.studentNotes || '');
-                    setShowNotes(true);
-                  }}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
-                >
-                  <MessageSquare size={18} />
-                  Notes
-                </button>
+                </div>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* View More/Less Button */}
-        {hasMoreBookings && (
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="flex items-center gap-2 px-8 py-3 bg-white hover:bg-blue-50 text-blue-600 font-bold rounded-xl transition-all border-2 border-blue-200 hover:border-blue-400 shadow-md hover:shadow-lg"
-            >
-              {showAll ? (
-                <>
-                  <span>View Less</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                </>
-              ) : (
-                <>
-                  <span>View More ({filteredBookings.length - 5} more)</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </>
-              )}
-            </button>
+            ))}
           </div>
-        )}
-      </>
+
+          {/* View More/Less Button */}
+          {hasMoreBookings && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="flex items-center gap-2 px-8 py-3 bg-white hover:bg-blue-50 text-blue-600 font-bold rounded-xl transition-all border-2 border-blue-200 hover:border-blue-400 shadow-md hover:shadow-lg"
+              >
+                {showAll ? (
+                  <>
+                    <span>View Less</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    <span>View More ({filteredBookings.length - 5} more)</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Notes Modal */}

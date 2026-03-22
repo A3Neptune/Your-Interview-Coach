@@ -252,12 +252,7 @@ export default function AboutPage() {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           {/* Badge */}
-          <div className="hero-word inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
-            style={{
-              background: 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(8,145,178,0.08))',
-              border: '1px solid rgba(37,99,235,0.2)',
-              animationDelay: '0ms',
-            }}>
+          <div className="sv-word inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7" style={{ background: 'rgba(255,255,255,0.88)', border: '1.5px solid rgba(147,197,253,0.6)', boxShadow: '0 2px 14px rgba(37,99,235,0.07)', animationDelay: '0ms' }}>
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
             <span className="text-xs font-semibold text-blue-700 uppercase tracking-widest">Our Story</span>
           </div>
@@ -503,9 +498,8 @@ export default function AboutPage() {
                 return (
                   <FadeUp key={i} delay={i * 80}>
                     <div
-                      className={`timeline-item relative flex gap-6 md:gap-0 ${
-                        isRight ? 'md:flex-row' : 'md:flex-row-reverse'
-                      }`}
+                      className={`timeline-item relative flex gap-6 md:gap-0 ${isRight ? 'md:flex-row' : 'md:flex-row-reverse'
+                        }`}
                       onClick={() => setActiveYear(i)}
                     >
                       {/* Content */}

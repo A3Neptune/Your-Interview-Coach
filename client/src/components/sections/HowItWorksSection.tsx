@@ -513,7 +513,7 @@ export default function HowItWorksSection() {
                                   {/* Avatar */}
                                   <div className="w-11 h-11 rounded-xl overflow-hidden border-2 border-white/20 shrink-0">
                                     <img
-                                      src="/IMG-20241116-WA0012(1).jpg.jpeg"
+                                      src="/neel-aashish-seru.jpeg"
                                       alt="Neel Aashish Seru"
                                       className="w-full h-full object-cover object-top"
                                     />
@@ -643,7 +643,7 @@ export default function HowItWorksSection() {
                               <div className="mentor-card-inner p-4">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white/20 shrink-0">
-                                    <img src="/IMG-20241116-WA0012(1).jpg.jpeg" alt="Neel" className="w-full h-full object-cover object-top" />
+                                    <img src="/neel-aashish-seru.jpeg" alt="Neel" className="w-full h-full object-cover object-top" />
                                   </div>
                                   <div>
                                     <p className="text-white font-semibold text-sm">Neel Aashish Seru</p>
