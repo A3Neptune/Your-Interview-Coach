@@ -160,7 +160,7 @@ export default function ServicesPage() {
                   {[
                     { icon:Zap, val:'2 days',label:'Avg. time from booking to first session' },
                     { icon:Shield, val:'100%',label:'Satisfaction guarantee — full refund if unsatisfied' },
-                    { icon:Star, val:'4.9★',label:'Average rating across 12,000+ coached sessions' },
+                    { icon:Star, val:'4.4★',label:'Average rating across 12,000+ coached sessions' },
                   ].map((item,i)=>{
                     const Icon=item.icon;
                     return (

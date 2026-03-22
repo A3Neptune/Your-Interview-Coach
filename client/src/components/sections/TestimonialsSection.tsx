@@ -396,7 +396,7 @@
 //                 <Star key={i} style={{ width: '12px', height: '12px', fill: '#f59e0b', color: '#f59e0b' }} />
 //               ))}
 //             </div>
-//             <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>4.9</span>
+//             <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>4.4</span>
 //             <span style={{ width: '1px', height: '12px', background: 'rgba(219,234,254,0.8)', display: 'inline-block' }} />
 //             <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
 //               from 2,000+ mentees
@@ -796,7 +796,7 @@ export default function TestimonialsSection() {
                   <Star key={i} style={{ width: 12, height: 12, fill: '#f59e0b', color: '#f59e0b' }} />
                 ))}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>4.9</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', fontFamily: "'DM Sans', system-ui, sans-serif" }}>4.4</span>
               <div style={{ width: 1, height: 14, background: 'rgba(29,78,216,0.12)' }} />
               <span style={{ fontSize: 12.5, color: '#64748b', fontWeight: 500, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                 from 2,000+ mentees

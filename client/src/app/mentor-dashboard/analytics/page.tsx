@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
       const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
       const uniqueStudents = new Set(bookings.map((b: any) => b.studentId)).size;
       const completedSessions = bookings.filter((b: any) => b.status === 'completed').length;
-      const avgRating = (Math.random() * 0.5 + 4.3).toFixed(1); // Dynamic rating between 4.3-4.8
+      const avgRating = "4.4"; // Fixed rating as requested
 
       const newStats = [
         {

@@ -118,7 +118,7 @@ export default function CTASection() {
                   <div className="h-4 w-px bg-zinc-800" />
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                    <span className="text-xs text-zinc-300 font-medium">4.9</span>
+                    <span className="text-xs text-zinc-300 font-medium">4.4</span>
                     <span className="text-xs text-zinc-600">rating</span>
                   </div>
                 </div>

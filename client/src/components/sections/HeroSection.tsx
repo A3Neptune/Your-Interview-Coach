@@ -617,7 +617,7 @@ export default function HeroSection() {
               {[
                 { num: '12,000+', label: 'Students Coached' },
                 { num: '94%', label: 'Success Rate' },
-                { num: '4.9 / 5', label: 'Avg. Rating' },
+                { num: '4.4 / 5', label: 'Avg. Rating' },
               ].map(({ num, label }) => (
                 <div
                   key={label}
