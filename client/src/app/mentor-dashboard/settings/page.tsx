@@ -327,7 +327,7 @@ export default function SettingsPage() {
         </h2>
 
         <div className="space-y-4">
-          <label className="flex items-center gap-3 p-4 rounded-lg hover:bg-white/5 cursor-pointer transition">
+          {/* <label className="flex items-center gap-3 p-4 rounded-lg hover:bg-white/5 cursor-pointer transition">
             <input
               type="checkbox"
               checked={settings.allowDirectMessages}
@@ -338,7 +338,7 @@ export default function SettingsPage() {
               <p className="text-white font-semibold">Allow Direct Messages</p>
               <p className="text-zinc-400 text-sm">Allow students to send you direct messages</p>
             </div>
-          </label>
+          </label> */}
 
           <button
             onClick={() => toast('Password change feature coming soon!')}

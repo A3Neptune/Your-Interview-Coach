@@ -21,10 +21,6 @@ export const validateBookingInput = (req, res, next) => {
     // Validate sessionType
     if (!sessionType) {
       errors.push('sessionType is required');
-    } else if (!VALID_SESSION_TYPES.includes(sessionType)) {
-      errors.push(
-        `Invalid sessionType. Must be one of: ${VALID_SESSION_TYPES.join(', ')}`
-      );
     }
 
     // Validate scheduledDate

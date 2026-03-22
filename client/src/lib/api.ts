@@ -34,7 +34,7 @@ apiClient.interceptors.response.use(
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
           localStorage.removeItem('authToken');
-          window.location.href = '/login';
+          window.location.href = '/';
         }
       }
     }

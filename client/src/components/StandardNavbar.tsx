@@ -246,7 +246,7 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                         Dashboard
                       </Link>
                     )}
-                    {isOnDashboard && (
+                    {/* {isOnDashboard && (
                       <Link
                         href="/dashboard/gd-invitations"
                         className="block px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -254,7 +254,7 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                       >
                         GD Invitations
                       </Link>
-                    )}
+                    )} */}
                     <Link
                       href="/"
                       className="block px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"

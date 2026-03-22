@@ -154,9 +154,8 @@ function CheckoutContent() {
       // Calculate final price with discount
       const finalPrice = getDiscountedPrice();
 
-      // Get duration in minutes (handle "60 mins" or just "60" format)
-      const durationMatch = selectedSlot.duration?.toString().match(/\d+/) || service?.duration?.toString().match(/\d+/);
-      const durationMinutes = durationMatch ? parseInt(durationMatch[0]) : 60;
+      // Fixed 1-hour slots
+      const durationMinutes = 60;
 
       // Step 2: Create booking
       // NOTE: amount is NOT sent to the server - it's calculated server-side from pricing database
@@ -318,11 +317,20 @@ function CheckoutContent() {
                 weekday: 'short',
                 month: 'short',
                 day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
               })}
             </p>
-            <p className="text-blue-600 text-sm mt-1 font-semibold">{service.duration || 60} minute session</p>
+            <p className="text-blue-600 text-sm mt-1 font-semibold">
+              {(() => {
+                const startHour = parseInt(selectedSlot.time.split(':')[0]);
+                const endHour = startHour + 1;
+                const formatHour = (hr: number) => {
+                  const period = hr >= 12 ? 'PM' : 'AM';
+                  const displayHr = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+                  return `${displayHr} ${period}`;
+                };
+                return `${formatHour(startHour)} - ${formatHour(endHour)} (1 hour)`;
+              })()}
+            </p>
           </div>
 
           <div className="mb-6 pb-6 border-b-2 border-blue-100">

@@ -33,6 +33,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ensure all buttons and clickable elements have pointer cursor on hover */
+button, 
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a {
+  cursor: pointer !important;
+}
+
+button:disabled,
+input:disabled,
+a[disabled] {
+  cursor: not-allowed !important;
+}
+
 /* Headings use Poppins */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Poppins', system-ui, sans-serif;

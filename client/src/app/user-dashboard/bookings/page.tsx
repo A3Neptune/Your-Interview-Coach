@@ -305,7 +305,7 @@ function UserBookingsContent() {
                 )}
 
                 {/* Chat Button - Available for confirmed/completed bookings */}
-                {['confirmed', 'completed'].includes(booking.status) && (
+                {/* {['confirmed', 'completed'].includes(booking.status) && (
                   <button
                     onClick={() => router.push('/user-dashboard/messages')}
                     className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
@@ -313,7 +313,7 @@ function UserBookingsContent() {
                     <MessageCircle size={18} />
                     Chat
                   </button>
-                )}
+                )} */}
 
                 <button
                   onClick={() => {

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Twitter, Linkedin, Github, Instagram } from 'lucide-react';
+import { Mail, MapPin, Phone, Twitter, Linkedin, Github, Instagram } from 'lucide-react';
 
 export default function ModernDashboardFooter() {
   return (

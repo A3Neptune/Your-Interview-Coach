@@ -36,6 +36,7 @@ export default function MentorDashboard() {
     totalCourses: 0,
     upcomingSessions: 0,
     totalStudents: 0,
+    totalRevenue: 0,
   });
 
   useEffect(() => {
@@ -79,34 +80,59 @@ export default function MentorDashboard() {
               (b: Booking) => new Date(b.scheduledDate) > new Date() && b.status === 'confirmed'
             ).length;
 
-            // Count unique students
-            const uniqueStudents = new Set(
-              allBookings
-                .filter((b: Booking) => ['confirmed', 'completed'].includes(b.status))
-                .map((b: Booking) => b.studentId._id || b.studentId.email)
-            ).size;
+            // Calculate total revenue from completed payments
+            const totalRevenue = allBookings
+              .filter((b: any) => b.paymentStatus === 'completed')
+              .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
 
             setStats(prev => ({
               ...prev,
               upcomingSessions: upcomingCount,
-              totalStudents: uniqueStudents,
+              totalRevenue: totalRevenue,
             }));
           }
         } catch (err) {
           console.error('Error fetching bookings:', err);
         }
 
+        // Fetch total users count (students + professionals)
+        try {
+          const usersResponse = await fetch(`${API_URL}/auth/all-users`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            console.log('Users data:', usersData); // Debug log
+            // Count all non-admin users (students + professionals)
+            const totalUsers = usersData.users?.filter((u: any) => u.userType !== 'admin').length || 0;
+            console.log('Total non-admin users:', totalUsers); // Debug log
+            setStats(prev => ({
+              ...prev,
+              totalStudents: totalUsers,
+            }));
+          } else {
+            console.error('Users API error:', usersResponse.status);
+          }
+        } catch (err) {
+          console.error('Error fetching users:', err);
+        }
+
         // Fetch courses count
         try {
-          const coursesResponse = await fetch(`${API_URL}/courses-advanced`, {
+          const coursesResponse = await fetch(`${API_URL}/advanced/courses`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (coursesResponse.ok) {
             const coursesData = await coursesResponse.json();
+            console.log('Courses API response:', coursesData); // Debug log
+            // API returns { success: true, data: { courses: [...], pagination: {...} } }
+            const courses = coursesData.data?.courses || coursesData.courses || [];
             setStats(prev => ({
               ...prev,
-              totalCourses: coursesData.courses?.length || 0,
+              totalCourses: courses.length,
             }));
+          } else {
+            console.error('Courses API error:', coursesResponse.status, await coursesResponse.text());
           }
         } catch (err) {
           console.error('Error fetching courses:', err);
@@ -241,9 +267,11 @@ export default function MentorDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-zinc-400 text-sm mb-1">Revenue</p>
-                <p className="text-3xl font-bold text-white">$0</p>
+                <p className="text-3xl font-bold text-white">
+                  ₹{stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </p>
               </div>
-              <BarChart3 className="w-10 h-10 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
+              <BarChart3 className="w-10 h-10 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" />
             </div>
           </Link>
         </div>

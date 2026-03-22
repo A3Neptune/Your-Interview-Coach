@@ -180,7 +180,7 @@ export default function ProfilePage() {
 
                 <div>
                   <p className="text-sm text-slate-500 mb-2 font-medium">Years of Experience</p>
-                  <p className="text-slate-900 font-semibold">{user.yearsOfExperience}+ years</p>
+                  <p className="text-slate-900 font-semibold">{user.yearsOfExperience} years</p>
                 </div>
               </div>
             </div>

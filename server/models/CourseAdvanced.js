@@ -23,7 +23,7 @@ const moduleSchema = new mongoose.Schema({
   resources: [{
     type: {
       type: String,
-      enum: ['video', 'google-drive', 'youtube', 'vimeo', 'pdf', 'document', 'quiz', 'assignment', 'live-session', 'link'],
+      enum: ['video', 'google-drive', 'youtube', 'vimeo', 'pdf', 'document', 'quiz', 'assignment', 'live-session'],
       required: true,
     },
     title: String,

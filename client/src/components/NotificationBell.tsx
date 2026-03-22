@@ -145,7 +145,7 @@ export default function NotificationBell() {
 
                       {/* Action Links */}
                       <div className="mt-2 flex gap-2">
-                        {notification.type === 'gd-invite' && (
+                        {/* {notification.type === 'gd-invite' && (
                           <>
                             <a
                               href="/dashboard/gd-invitations"
@@ -169,7 +169,7 @@ export default function NotificationBell() {
                           >
                             View GDs
                           </a>
-                        )}
+                        )} */}
                         {!notification.actionUrl &&
                           notification.type !== 'gd-invite' &&
                           notification.type !== 'gd-user-accepted' &&

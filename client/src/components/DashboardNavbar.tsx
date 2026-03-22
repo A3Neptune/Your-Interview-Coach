@@ -27,7 +27,7 @@ export default function DashboardNavbar() {
     removeAuthToken();
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   const navLinks = [
@@ -41,11 +41,13 @@ export default function DashboardNavbar() {
   return (
     <>
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 backdrop-blur-xl shadow-lg shadow-blue-500/5 border-b-2 border-blue-200'
-          : 'bg-white border-b-2 border-blue-100'
-      }`}>
+      <nav className="fixed top-0 left-0 right-0 w-full z-50 border-b border-black/5"
+        style={{
+          background: 'rgba(255, 255, 255, 0.65)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -160,7 +162,6 @@ export default function DashboardNavbar() {
           )}
         </div>
       </nav>
-
       {/* Spacer to prevent content from going under fixed navbar */}
       <div className="h-16"></div>
     </>

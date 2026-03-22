@@ -12,13 +12,11 @@ import FAQSection from '@/components/sections/FAQSection';
 import CTASectionPremium from '@/components/sections/CTASectionPremium';
 import StandardFooter from '@/components/StandardFooter';
 import LaunchNotificationToast from '@/components/LaunchNotificationToast';
+import ServicesPopup from '@/components/ServicesPopup';
 
 export default function Home() {
-
   return (
-    <main className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
-      {/* <LaunchBanner onVisibilityChange={setIsBannerVisible} /> */}
-      {/* <Navbar bannerHeight={bannerHeight} /> */}
+    <main className="min-h-screen bg-white text-slate-900">
       <Navbar />
       <LaunchNotificationToast />
       <HeroSection />
@@ -31,6 +29,7 @@ export default function Home() {
       <FAQSection />
       <CTASectionPremium />
       <StandardFooter />
+      <ServicesPopup />
     </main>
   );
 }

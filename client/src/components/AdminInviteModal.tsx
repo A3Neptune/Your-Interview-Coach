@@ -192,7 +192,7 @@ export default function AdminInviteModal({
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-zinc-900 border-t border-zinc-800 p-4 flex items-center justify-between">
-          <p className="text-sm text-white font-medium">
+          <p className="text-sm text-zinc-400">
             {selectedUsers.length} user{selectedUsers.length !== 1 ? 's' : ''} selected
           </p>
           <div className="flex gap-3">

@@ -149,8 +149,8 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
     { name: 'Bookings', icon: Calendar, href: '/mentor-dashboard/bookings', color: 'text-purple-400' },
     { name: 'Pricing', icon: DollarSign, href: '/mentor-dashboard/pricing', color: 'text-orange-400' },
     { name: 'Students', icon: Users, href: '/mentor-dashboard/students', color: 'text-pink-400' },
-    { name: 'Messaging', icon: MessageSquare, href: '/mentor-dashboard/messages', color: 'text-cyan-400' },
-    { name: 'GD Practice', icon: Video, href: '/mentor-dashboard/gd-practice', color: 'text-red-400' },
+    // { name: 'Messaging', icon: MessageSquare, href: '/mentor-dashboard/messages', color: 'text-cyan-400' },
+    // { name: 'GD Practice', icon: Video, href: '/mentor-dashboard/gd-practice', color: 'text-red-400' },
     { name: 'CV Reviews', icon: FileText, href: '/mentor-dashboard/cv-reviews', color: 'text-yellow-400' },
     { name: 'Placements', icon: Award, href: '/mentor-dashboard/placements', color: 'text-green-400' },
     { name: 'Courses', icon: BookOpen, href: '/mentor-dashboard/courses', color: 'text-indigo-400' },
@@ -265,7 +265,7 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
       <div className={`transition-all duration-300 ${
         isMobile ? 'ml-0' : sidebarOpen ? 'ml-64' : 'ml-20'
       }`}>
-        <StandardFooter dark={true} />
+        <StandardFooter />
       </div>
     </div>
   );

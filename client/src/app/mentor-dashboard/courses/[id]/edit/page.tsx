@@ -9,6 +9,36 @@ import { getAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+interface Resource {
+  type: string;
+  title: string;
+  url?: string;
+  duration?: number;
+}
+
+interface Module {
+  title: string;
+  description: string;
+  order: number;
+  isLocked: boolean;
+  estimatedDuration: number;
+  resources: Resource[];
+}
+
+interface Course {
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  category: string;
+  contentType: string;
+  difficulty: string;
+  price: number;
+  tags: string[];
+  thumbnail: string;
+  duration: number;
+  modules: Module[];
+}
+
 export default function EditCoursePage() {
   const router = useRouter();
   const params = useParams();
@@ -19,28 +49,7 @@ export default function EditCoursePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [course, setCourse] = useState<{
-    title: string;
-    shortDescription: string;
-    fullDescription: string;
-    category: string;
-    contentType: string;
-    difficulty: string;
-    price: number;
-    tags: string[];
-    thumbnail: string;
-    duration: number;
-    modules: {
-      title: string;
-      description: string;
-      order: number;
-      isLocked: boolean;
-      estimatedDuration: number;
-      resources: { title: string; type: string; url: string }[];
-      [key: string]: unknown;
-    }[];
-    [key: string]: unknown;
-  }>({
+  const [course, setCourse] = useState<Course>({
     title: '',
     shortDescription: '',
     fullDescription: '',

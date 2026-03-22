@@ -15,7 +15,6 @@ const bookingSchema = new mongoose.Schema(
     sessionType: {
       type: String,
       required: true,
-      enum: ['oneMentorship', 'resumeAnalysis', 'gdGroupDiscussions', 'webinars'],
     },
     title: {
       type: String,

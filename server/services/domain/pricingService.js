@@ -79,8 +79,8 @@ const getPricingSection = async () => {
           services: DEFAULT_SERVICES,
           stats: [
             { stat: '3000+', desc: 'Careers Transformed' },
-            { stat: '4.8/5', desc: 'Average Rating' },
-            { stat: '92%', desc: 'Success Rate' },
+            { stat: '4.4/5', desc: 'Average Rating' },
+            { stat: '94%', desc: 'Success Rate' },
           ],
         },
       },
