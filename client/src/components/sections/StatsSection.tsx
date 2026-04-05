@@ -6,7 +6,6 @@
 //   { value: 10, suffix: '+', label: 'Years Experience' },
 //   { value: 10, suffix: 'k+', label: 'Happy Mentees' },
 //   { value: 94, suffix: '%', label: 'Success rate' },
-//   { value: 50, suffix: '+', label: 'Countries Reached' },
 // ];
 
 // function Counter({ value, suffix }: { value: number; suffix: string }) {
@@ -70,33 +69,32 @@
 //   );
 // }
 
+"use client";
 
-
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
-import { TrendingUp, Users, Globe, Award } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { TrendingUp, Users, Award } from "lucide-react";
 
 const stats = [
   {
-    value: 10, suffix: '+', label: 'Years Experience',
-    sub: 'Coaching professionals since 2014',
+    value: 10,
+    suffix: "+",
+    label: "Years Experience",
+    sub: "Coaching professionals since 2014",
     icon: Award,
   },
   {
-    value: 10, suffix: 'k+', label: 'Happy Mentees',
-    sub: 'Across all industries and roles',
+    value: 10,
+    suffix: "k+",
+    label: "Happy Mentees",
+    sub: "Across all industries and roles",
     icon: Users,
   },
   {
-    value: 94, suffix: '%', label: 'Success Rate',
-    sub: 'Candidates who land their target role',
+    value: 94,
+    suffix: "%",
+    label: "Success Rate",
+    sub: "Candidates who land their target role",
     icon: TrendingUp,
-  },
-  {
-    value: 50, suffix: '+', label: 'Countries Reached',
-    sub: 'Global coaching, zero boundaries',
-    icon: Globe,
   },
 ];
 
@@ -106,25 +104,31 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
   const animated = useRef(false);
 
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !animated.current) {
-        animated.current = true;
-        let current = 0;
-        const step = value / 48;
-        const timer = setInterval(() => {
-          current += step;
-          if (current >= value) { setCount(value); clearInterval(timer); }
-          else setCount(Math.floor(current));
-        }, 28);
-      }
-    }, { threshold: 0.5 });
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting && !animated.current) {
+          animated.current = true;
+          let current = 0;
+          const step = value / 48;
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= value) {
+              setCount(value);
+              clearInterval(timer);
+            } else setCount(Math.floor(current));
+          }, 28);
+        }
+      },
+      { threshold: 0.5 },
+    );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, [value]);
 
   return (
     <span ref={ref}>
-      {count}{suffix}
+      {count}
+      {suffix}
     </span>
   );
 }
@@ -165,36 +169,62 @@ export default function StatsSection() {
       <section
         className="stats-grain relative py-16 lg:py-24 px-4 sm:px-6 overflow-hidden"
         style={{
-          background: '#f8f6f1',
+          background: "#f8f6f1",
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          borderTop: '1px solid rgba(29,78,216,0.07)',
-          borderBottom: '1px solid rgba(29,78,216,0.07)',
+          borderTop: "1px solid rgba(29,78,216,0.07)",
+          borderBottom: "1px solid rgba(29,78,216,0.07)",
         }}
       >
         {/* Ambient blobs */}
         <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
-          <div style={{
-            position: 'absolute', top: '10%', left: '5%',
-            width: 360, height: 360, borderRadius: '50%',
-            background: 'radial-gradient(circle,rgba(29,78,216,0.06) 0%,transparent 70%)',
-            filter: 'blur(80px)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '10%', right: '5%',
-            width: 320, height: 320, borderRadius: '50%',
-            background: 'radial-gradient(circle,rgba(8,145,178,0.05) 0%,transparent 70%)',
-            filter: 'blur(80px)',
-          }} />
+          <div
+            style={{
+              position: "absolute",
+              top: "10%",
+              left: "5%",
+              width: 360,
+              height: 360,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle,rgba(29,78,216,0.06) 0%,transparent 70%)",
+              filter: "blur(80px)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10%",
+              right: "5%",
+              width: 320,
+              height: 320,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle,rgba(8,145,178,0.05) 0%,transparent 70%)",
+              filter: "blur(80px)",
+            }}
+          />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto">
-
           {/* Section label */}
           <div className="text-center mb-10 lg:mb-14">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border"
-              style={{ background: 'rgba(29,78,216,0.05)', borderColor: 'rgba(29,78,216,0.15)' }}>
+            <div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border"
+              style={{
+                background: "rgba(29,78,216,0.05)",
+                borderColor: "rgba(29,78,216,0.15)",
+              }}
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#1d40b0', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#1d40b0",
+                  letterSpacing: "0.10em",
+                  textTransform: "uppercase",
+                }}
+              >
                 By the numbers
               </span>
             </div>
@@ -205,50 +235,83 @@ export default function StatsSection() {
             {stats.map((stat, i) => {
               const Icon = stat.icon;
               return (
-                <div key={i} className="stat-card rounded-2xl border bg-white p-6 sm:p-7"
+                <div
+                  key={i}
+                  className="stat-card rounded-2xl border bg-white p-6 sm:p-7"
                   style={{
-                    borderColor: 'rgba(29,78,216,0.10)',
-                    boxShadow: '0 2px 12px rgba(29,78,216,0.05)',
+                    borderColor: "rgba(29,78,216,0.10)",
+                    boxShadow: "0 2px 12px rgba(29,78,216,0.05)",
                   }}
                 >
                   {/* Icon */}
                   <div
                     className="stat-icon w-10 h-10 rounded-xl flex items-center justify-center mb-5"
                     style={{
-                      background: 'rgba(29,78,216,0.08)',
-                      transition: 'background 0.3s ease, box-shadow 0.3s ease',
+                      background: "rgba(29,78,216,0.08)",
+                      transition: "background 0.3s ease, box-shadow 0.3s ease",
                     }}
                   >
-                    <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18, color: '#1d4ed8', transition: 'color 0.3s ease' }} />
+                    <Icon
+                      className="w-4.5 h-4.5"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        color: "#1d4ed8",
+                        transition: "color 0.3s ease",
+                      }}
+                    />
                   </div>
 
                   {/* Number */}
-                  <div style={{
-                    fontSize: 'clamp(32px,4vw,48px)',
-                    fontWeight: 300,
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1,
-                    color: '#0f172a',
-                    marginBottom: 6,
-                  }}>
-                    <span style={{ fontWeight: 600, color: '#1d4ed8' }}>
+                  <div
+                    style={{
+                      fontSize: "clamp(32px,4vw,48px)",
+                      fontWeight: 300,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                      color: "#0f172a",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
                       <Counter value={stat.value} suffix={stat.suffix} />
                     </span>
                   </div>
 
                   {/* Label */}
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 5, letterSpacing: '-0.01em' }}>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      marginBottom: 5,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
                     {stat.label}
                   </p>
 
                   {/* Sub */}
-                  <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.55, fontWeight: 400 }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "#94a3b8",
+                      lineHeight: 1.55,
+                      fontWeight: 400,
+                    }}
+                  >
                     {stat.sub}
                   </p>
 
                   {/* Bottom accent line */}
-                  <div className="mt-5 h-0.5 rounded-full"
-                    style={{ background: 'linear-gradient(90deg,rgba(29,78,216,0.25),transparent)', width: 36 }} />
+                  <div
+                    className="mt-5 h-0.5 rounded-full"
+                    style={{
+                      background:
+                        "linear-gradient(90deg,rgba(29,78,216,0.25),transparent)",
+                      width: 36,
+                    }}
+                  />
                 </div>
               );
             })}

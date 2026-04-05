@@ -84,7 +84,6 @@
 //           color: transparent;
 //         }
 
-
 //         /* Rotated photo frames */
 //         .frame-a {
 //           position: absolute; inset: -14px;
@@ -368,14 +367,12 @@
 //   );
 // }
 
+"use client";
 
-
-'use client';
-
-import { useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
+import { useRef } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 const FADE_UP = (delay = 0) => ({
   initial: { opacity: 0, y: 22 },
@@ -387,7 +384,7 @@ export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
   const scrollToFeatures = () => {
-    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -517,60 +514,95 @@ export default function HeroSection() {
         ref={sectionRef}
         className="h-noise relative min-h-svh overflow-hidden flex flex-col"
         style={{
-          background: 'var(--cream)',
+          background: "var(--cream)",
           fontFamily: "'DM Sans', system-ui, sans-serif",
         }}
       >
         {/* ── Subtle mesh blobs (static) ── */}
-        <div className="blob" style={{ width: 600, height: 600, background: 'radial-gradient(circle, rgba(26,59,204,0.06) 0%, transparent 70%)', top: '-120px', right: '-80px' }} />
-        <div className="blob" style={{ width: 400, height: 400, background: 'radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)', bottom: '60px', left: '-60px' }} />
+        <div
+          className="blob"
+          style={{
+            width: 600,
+            height: 600,
+            background:
+              "radial-gradient(circle, rgba(26,59,204,0.06) 0%, transparent 70%)",
+            top: "-120px",
+            right: "-80px",
+          }}
+        />
+        <div
+          className="blob"
+          style={{
+            width: 400,
+            height: 400,
+            background:
+              "radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)",
+            bottom: "60px",
+            left: "-60px",
+          }}
+        />
 
         {/* ── Fine grid ── */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(13,17,23,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,17,23,0.03) 1px,transparent 1px)',
-            backgroundSize: '72px 72px',
+              "linear-gradient(rgba(13,17,23,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,17,23,0.03) 1px,transparent 1px)",
+            backgroundSize: "72px 72px",
           }}
         />
 
         {/* ── Main content ── */}
         <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 pt-[100px] pb-20 lg:pt-[118px] lg:pb-0 grid grid-cols-1 lg:grid-cols-[55%_45%] items-center gap-16 lg:gap-0">
-
           {/* ════ LEFT ════ */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:pr-16">
-
             {/* Eyebrow */}
-            <motion.div {...FADE_UP(0.05)} className="eyebrow-pill inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full mb-8">
+            <motion.div
+              {...FADE_UP(0.05)}
+              className="eyebrow-pill inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full mb-8"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
               <span
                 style={{
-                  fontSize: '10.5px', fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1a3bcc',
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#1a3bcc",
                 }}
               >
                 Interview Mentorship · 2026
               </span>
             </motion.div>
 
-
             {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: [0.23, 1, 0.32, 1] as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: [0.23, 1, 0.32, 1] as const,
+              }}
               className="mb-6"
               style={{
-                fontSize: 'clamp(40px, 5.5vw, 72px)',
+                fontSize: "clamp(40px, 5.5vw, 72px)",
                 lineHeight: 1.08,
-                letterSpacing: '-0.025em',
+                letterSpacing: "-0.025em",
                 fontWeight: 300,
-                color: '#0f172a',
+                color: "#0f172a",
               }}
             >
-              Be{' '}
-              <span style={{ fontWeight: 600, color: '#1d4ed8', fontStyle: 'italic' }}>interview</span>
+              Be{" "}
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "#1d4ed8",
+                  fontStyle: "italic",
+                }}
+              >
+                interview
+              </span>
               <br />
               ready.
             </motion.h1>
@@ -579,20 +611,37 @@ export default function HeroSection() {
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35, ease: [0.23, 1, 0.32, 1] as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.35,
+                ease: [0.23, 1, 0.32, 1] as const,
+              }}
               className="mb-9 leading-relaxed max-w-[440px] mx-auto lg:mx-0"
-              style={{ fontSize: 'clamp(15px, 1.5vw, 17px)', color: '#64748b', fontWeight: 400 }}
+              style={{
+                fontSize: "clamp(15px, 1.5vw, 17px)",
+                color: "#64748b",
+                fontWeight: 400,
+              }}
             >
-              Master your interviews with one-on-one expert mentorship. Practice real scenarios,
-              get precision feedback, and walk into every room with unshakeable confidence.
+              Master your interviews with one-on-one expert mentorship. Practice
+              real scenarios, get precision feedback, and walk into every room
+              with unshakeable confidence.
             </motion.p>
 
             {/* CTAs */}
-            <motion.div {...FADE_UP(0.40)} className="flex flex-wrap gap-3 items-center justify-center lg:justify-start mb-12">
+            <motion.div
+              {...FADE_UP(0.4)}
+              className="flex flex-wrap gap-3 items-center justify-center lg:justify-start mb-12"
+            >
               <Link
                 href="/signup"
                 className="btn-primary inline-flex items-center gap-2 px-7 py-3.5 rounded-lg no-underline"
-                style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                }}
               >
                 Start your journey
                 <ArrowRight size={14} />
@@ -601,7 +650,12 @@ export default function HeroSection() {
               <button
                 onClick={scrollToFeatures}
                 className="btn-outline inline-flex items-center gap-2 px-6 py-3.5 rounded-lg"
-                style={{ fontSize: '13px', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                }}
               >
                 Explore services
                 <ArrowRight size={14} />
@@ -610,26 +664,28 @@ export default function HeroSection() {
 
             {/* Stats */}
             <motion.div
-              {...FADE_UP(0.50)}
+              {...FADE_UP(0.5)}
               className="flex gap-0 items-center"
-              style={{ borderTop: '1px solid var(--rule)', paddingTop: '1.6rem' }}
+              style={{
+                borderTop: "1px solid var(--rule)",
+                paddingTop: "1.6rem",
+              }}
             >
               {[
-                { num: '12,000+', label: 'Students Coached' },
-                { num: '94%', label: 'Success Rate' },
-                { num: '4.4 / 5', label: 'Avg. Rating' },
+                { num: "12,000+", label: "Students Coached" },
+                { num: "94%", label: "Success Rate" },
               ].map(({ num, label }) => (
                 <div
                   key={label}
                   className="stat-block"
-                  style={{ paddingRight: '2rem' }}
+                  style={{ paddingRight: "2rem" }}
                 >
                   <p
                     style={{
-                      fontSize: 'clamp(24px, 2.8vw, 34px)',
+                      fontSize: "clamp(24px, 2.8vw, 34px)",
                       fontWeight: 600,
-                      color: 'var(--ink)',
-                      letterSpacing: '-0.02em',
+                      color: "var(--ink)",
+                      letterSpacing: "-0.02em",
                       lineHeight: 1,
                     }}
                   >
@@ -637,9 +693,12 @@ export default function HeroSection() {
                   </p>
                   <p
                     style={{
-                      fontSize: '10px', fontWeight: 600,
-                      letterSpacing: '0.13em', textTransform: 'uppercase',
-                      color: '#9ca3af', marginTop: '5px',
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      letterSpacing: "0.13em",
+                      textTransform: "uppercase",
+                      color: "#9ca3af",
+                      marginTop: "5px",
                     }}
                   >
                     {label}
@@ -654,63 +713,90 @@ export default function HeroSection() {
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
+              transition={{
+                duration: 0.7,
+                delay: 0.3,
+                ease: [0.22, 1, 0.36, 1] as const,
+              }}
               className="photo-wrap relative w-full"
-              style={{ maxWidth: 'clamp(280px, 38vw, 480px)' }}
+              style={{ maxWidth: "clamp(280px, 38vw, 480px)" }}
             >
               {/* Image card */}
               <div
                 className="relative rounded-2xl overflow-hidden"
                 style={{
-                  boxShadow: '0 30px 70px -10px rgba(13,17,23,0.18), 0 4px 16px rgba(13,17,23,0.08)',
-                  border: '1px solid rgba(13,17,23,0.07)',
+                  boxShadow:
+                    "0 30px 70px -10px rgba(13,17,23,0.18), 0 4px 16px rgba(13,17,23,0.08)",
+                  border: "1px solid rgba(13,17,23,0.07)",
                 }}
               >
                 {/* Aspect ratio box */}
-                <div className="relative" style={{ aspectRatio: '4/5' }}>
+                <div className="relative" style={{ aspectRatio: "4/5" }}>
                   <img
                     src="/neel-aashish-seru.jpeg"
                     alt="Neel Aashish Seru — Interview & Career Mentor"
                     loading="lazy"
                     decoding="async"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top",
+                      display: "block",
+                    }}
                   />
 
                   {/* Bottom gradient scrim */}
                   <div
                     style={{
-                      position: 'absolute', inset: 0,
-                      background: 'linear-gradient(to top, rgba(10,14,26,0.72) 0%, rgba(10,14,26,0.15) 44%, transparent 68%)',
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(to top, rgba(10,14,26,0.72) 0%, rgba(10,14,26,0.15) 44%, transparent 68%)",
                     }}
                   />
 
                   {/* Glass name card */}
                   <div
                     style={{
-                      position: 'absolute', bottom: 20, left: 20, right: 20,
-                      background: 'rgba(255,255,255,0.10)',
-                      backdropFilter: 'blur(18px)',
-                      WebkitBackdropFilter: 'blur(18px)',
-                      border: '1px solid rgba(255,255,255,0.18)',
+                      position: "absolute",
+                      bottom: 20,
+                      left: 20,
+                      right: 20,
+                      background: "rgba(255,255,255,0.10)",
+                      backdropFilter: "blur(18px)",
+                      WebkitBackdropFilter: "blur(18px)",
+                      border: "1px solid rgba(255,255,255,0.18)",
                       borderRadius: 14,
-                      padding: '18px 22px',
+                      padding: "18px 22px",
                     }}
                   >
                     <p
                       style={{
-                        color: '#fff', fontWeight: 600, fontSize: 22,
-                        letterSpacing: '-0.01em', lineHeight: 1.1,
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: 22,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1.1,
                       }}
                     >
                       Neel Aashish Seru
                     </p>
-                    <p style={{ color: '#fff', fontSize: 12, fontWeight: 500, marginTop: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <p
+                      style={{
+                        color: "#fff",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        marginTop: 5,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       10+ Years Experience
                     </p>
                   </div>
                 </div>
               </div>
-
             </motion.div>
           </div>
         </div>
@@ -722,8 +808,26 @@ export default function HeroSection() {
           transition={{ duration: 0.5, delay: 1.2 }}
           className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
         >
-          <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#c4bfb5' }}>Scroll</span>
-          <div className="scroll-line" style={{ width: 1, height: 38, background: 'linear-gradient(to bottom, var(--blue), transparent)' }} />
+          <span
+            style={{
+              fontSize: "9px",
+              fontWeight: 700,
+              letterSpacing: "0.20em",
+              textTransform: "uppercase",
+              color: "#c4bfb5",
+            }}
+          >
+            Scroll
+          </span>
+          <div
+            className="scroll-line"
+            style={{
+              width: 1,
+              height: 38,
+              background:
+                "linear-gradient(to bottom, var(--blue), transparent)",
+            }}
+          />
         </motion.div>
         <div />
       </section>

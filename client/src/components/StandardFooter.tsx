@@ -21,8 +21,6 @@
 //   Legal: [
 //     { label: 'Privacy', href: '/privacy' },
 //     { label: 'Terms', href: '/terms' },
-//     { label: 'Cookie Policy', href: '/cookies' },
-//     { label: 'Status', href: '#status' },
 //   ],
 // };
 
@@ -129,37 +127,34 @@
 //   );
 // }
 
+"use client";
 
-'use client';
-
-import Link from 'next/link';
-import { Linkedin, Twitter, Mail, ArrowUpRight } from 'lucide-react';
+import Link from "next/link";
+import { Linkedin, Twitter, Mail, ArrowUpRight } from "lucide-react";
 
 const footerLinks = {
   Product: [
-    { label: 'Features', href: '/#features' },
-    { label: 'Pricing', href: '/#pricing' },
-    { label: 'How it works', href: '/#how-it-works' },
-    { label: 'Dashboard', href: '/dashboard' },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing", href: "/#pricing" },
+    { label: "How it works", href: "/#how-it-works" },
+    { label: "Dashboard", href: "/dashboard" },
   ],
   Company: [
-    { label: 'About', href: '/about' },
-    { label: 'Blog', href: '#blog' },
-    { label: 'Careers', href: '#careers' },
-    { label: 'Contact', href: '/contact' },
+    { label: "About", href: "/about" },
+    { label: "Blog", href: "#blog" },
+    { label: "Careers", href: "#careers" },
+    { label: "Contact", href: "/contact" },
   ],
   Legal: [
-    { label: 'Privacy', href: '/privacy' },
-    { label: 'Terms', href: '/terms' },
-    { label: 'Cookie Policy', href: '/cookies' },
-    { label: 'Status', href: '#status' },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
   ],
 };
 
 const socialLinks = [
-  { icon: Twitter, href: '#twitter', label: 'Twitter' },
-  { icon: Linkedin, href: '#linkedin', label: 'LinkedIn' },
-  { icon: Mail, href: 'mailto:hello@yourinterviewcoach.com', label: 'Email' },
+  { icon: Twitter, href: "#twitter", label: "Twitter" },
+  { icon: Linkedin, href: "#linkedin", label: "LinkedIn" },
+  { icon: Mail, href: "mailto:hello@yourinterviewcoach.com", label: "Email" },
 ];
 
 interface StandardFooterProps {
@@ -167,25 +162,26 @@ interface StandardFooterProps {
 }
 
 export default function StandardFooter({ dark = false }: StandardFooterProps) {
-
   /* ── token maps ── */
-  const bg = dark ? '#0d1117' : '#f8f6f1';
-  const borderTop = dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(29,78,216,0.10)';
-  const blob1 = dark ? 'rgba(29,78,216,0.12)' : 'rgba(29,78,216,0.05)';
-  const blob2 = dark ? 'rgba(8,145,178,0.08)' : 'rgba(8,145,178,0.04)';
-  const logoText = dark ? '#fff' : '#0f172a';
-  const logoSub = dark ? 'rgba(255,255,255,0.35)' : '#94a3b8';
-  const tagline = dark ? 'rgba(255,255,255,0.45)' : '#64748b';
-  const socialBg = dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)';
-  const socialBdr = dark ? 'rgba(255,255,255,0.10)' : 'rgba(29,78,216,0.14)';
-  const socialHBg = dark ? 'rgba(29,78,216,0.25)' : 'rgba(29,78,216,0.12)';
-  const socialHBdr = dark ? 'rgba(29,78,216,0.5)' : 'rgba(29,78,216,0.28)';
-  const catLabel = dark ? 'rgba(255,255,255,0.25)' : '#94a3b8';
-  const linkColor = dark ? 'rgba(255,255,255,0.5)' : '#475569';
-  const linkHover = dark ? '#60a5fa' : '#1d4ed8';
-  const divider = dark ? 'rgba(255,255,255,0.06)' : 'rgba(29,78,216,0.08)';
-  const bottomText = dark ? 'rgba(255,255,255,0.28)' : '#94a3b8';
-  const creditName = dark ? '#60a5fa' : '#1d4ed8';
+  const bg = dark ? "#0d1117" : "#f8f6f1";
+  const borderTop = dark
+    ? "1px solid rgba(255,255,255,0.06)"
+    : "1px solid rgba(29,78,216,0.10)";
+  const blob1 = dark ? "rgba(29,78,216,0.12)" : "rgba(29,78,216,0.05)";
+  const blob2 = dark ? "rgba(8,145,178,0.08)" : "rgba(8,145,178,0.04)";
+  const logoText = dark ? "#fff" : "#0f172a";
+  const logoSub = dark ? "rgba(255,255,255,0.35)" : "#94a3b8";
+  const tagline = dark ? "rgba(255,255,255,0.45)" : "#64748b";
+  const socialBg = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.7)";
+  const socialBdr = dark ? "rgba(255,255,255,0.10)" : "rgba(29,78,216,0.14)";
+  const socialHBg = dark ? "rgba(29,78,216,0.25)" : "rgba(29,78,216,0.12)";
+  const socialHBdr = dark ? "rgba(29,78,216,0.5)" : "rgba(29,78,216,0.28)";
+  const catLabel = dark ? "rgba(255,255,255,0.25)" : "#94a3b8";
+  const linkColor = dark ? "rgba(255,255,255,0.5)" : "#475569";
+  const linkHover = dark ? "#60a5fa" : "#1d4ed8";
+  const divider = dark ? "rgba(255,255,255,0.06)" : "rgba(29,78,216,0.08)";
+  const bottomText = dark ? "rgba(255,255,255,0.28)" : "#94a3b8";
+  const creditName = dark ? "#60a5fa" : "#1d4ed8";
 
   return (
     <>
@@ -225,43 +221,91 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
 
       <footer
         className="footer-grain relative overflow-hidden"
-        style={{ background: bg, fontFamily: "'DM Sans', system-ui, sans-serif", borderTop }}
+        style={{
+          background: bg,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          borderTop,
+        }}
       >
         {/* Ambient blobs */}
         <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
-          <div style={{ position: 'absolute', top: 0, left: '20%', width: 340, height: 200, borderRadius: '50%', background: `radial-gradient(circle,${blob1} 0%,transparent 70%)`, filter: 'blur(70px)', transform: 'translateY(-40%)' }} />
-          <div style={{ position: 'absolute', bottom: 0, right: '15%', width: 280, height: 180, borderRadius: '50%', background: `radial-gradient(circle,${blob2} 0%,transparent 70%)`, filter: 'blur(70px)', transform: 'translateY(30%)' }} />
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "20%",
+              width: 340,
+              height: 200,
+              borderRadius: "50%",
+              background: `radial-gradient(circle,${blob1} 0%,transparent 70%)`,
+              filter: "blur(70px)",
+              transform: "translateY(-40%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              right: "15%",
+              width: 280,
+              height: 180,
+              borderRadius: "50%",
+              background: `radial-gradient(circle,${blob2} 0%,transparent 70%)`,
+              filter: "blur(70px)",
+              transform: "translateY(30%)",
+            }}
+          />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-
           {/* ── Main grid ── */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12 mb-12 lg:mb-16">
-
             {/* Brand column */}
             <div className="col-span-2">
-              <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2.5 mb-5 group"
+              >
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200"
-                  style={{ background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)', boxShadow: '0 2px 12px rgba(29,78,216,0.25)' }}
+                  style={{
+                    background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
+                    boxShadow: "0 2px 12px rgba(29,78,216,0.25)",
+                  }}
                 >
                   <span className="text-white font-bold text-sm">YC</span>
                 </div>
                 <div>
-                  <p className="font-semibold leading-tight group-hover:text-blue-500 transition-colors"
-                    style={{ fontSize: 14.5, letterSpacing: '-0.01em', color: logoText }}>
+                  <p
+                    className="font-semibold leading-tight group-hover:text-blue-500 transition-colors"
+                    style={{
+                      fontSize: 14.5,
+                      letterSpacing: "-0.01em",
+                      color: logoText,
+                    }}
+                  >
                     YourInterviewCoach
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] leading-none mt-0.5"
-                    style={{ color: logoSub }}>
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-[0.12em] leading-none mt-0.5"
+                    style={{ color: logoSub }}
+                  >
                     Mentorship Platform
                   </p>
                 </div>
               </Link>
 
-              <p style={{ fontSize: 13.5, color: tagline, lineHeight: 1.75, maxWidth: 300, marginBottom: 20 }}>
-                Connect with Neel Aashish Seru and accelerate your career with expert,
-                personalised interview coaching.
+              <p
+                style={{
+                  fontSize: 13.5,
+                  color: tagline,
+                  lineHeight: 1.75,
+                  maxWidth: 300,
+                  marginBottom: 20,
+                }}
+              >
+                Connect with Neel Aashish Seru and accelerate your career with
+                expert, personalised interview coaching.
               </p>
 
               <div className="flex gap-2">
@@ -272,18 +316,30 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
                     aria-label={label}
                     className="footer-social w-9 h-9 rounded-xl flex items-center justify-center border"
                     style={{ background: socialBg, borderColor: socialBdr }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.background = socialHBg;
-                      (e.currentTarget as HTMLElement).style.borderColor = socialHBdr;
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background =
+                        socialHBg;
+                      (e.currentTarget as HTMLElement).style.borderColor =
+                        socialHBdr;
+                      (e.currentTarget as HTMLElement).style.transform =
+                        "translateY(-2px)";
                     }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.background = socialBg;
-                      (e.currentTarget as HTMLElement).style.borderColor = socialBdr;
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background =
+                        socialBg;
+                      (e.currentTarget as HTMLElement).style.borderColor =
+                        socialBdr;
+                      (e.currentTarget as HTMLElement).style.transform =
+                        "translateY(0)";
                     }}
                   >
-                    <Icon style={{ width: 15, height: 15, color: dark ? '#60a5fa' : '#1d4ed8' }} />
+                    <Icon
+                      style={{
+                        width: 15,
+                        height: 15,
+                        color: dark ? "#60a5fa" : "#1d4ed8",
+                      }}
+                    />
                   </a>
                 ))}
               </div>
@@ -292,7 +348,16 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
             {/* Link columns */}
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
-                <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: catLabel, marginBottom: 16 }}>
+                <h4
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    color: catLabel,
+                    marginBottom: 16,
+                  }}
+                >
                   {category}
                 </h4>
                 <ul className="space-y-2.5">
@@ -301,12 +366,25 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
                       <Link
                         href={href}
                         className="footer-link"
-                        style={{ fontSize: 13.5, color: linkColor, fontWeight: 400 }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = linkHover; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = linkColor; }}
+                        style={{
+                          fontSize: 13.5,
+                          color: linkColor,
+                          fontWeight: 400,
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.color =
+                            linkHover;
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.color =
+                            linkColor;
+                        }}
                       >
                         {label}
-                        <ArrowUpRight className="link-arrow" style={{ width: 12, height: 12, color: linkHover }} />
+                        <ArrowUpRight
+                          className="link-arrow"
+                          style={{ width: 12, height: 12, color: linkHover }}
+                        />
                       </Link>
                     </li>
                   ))}
@@ -323,14 +401,23 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
             <p style={{ fontSize: 12, color: bottomText, fontWeight: 400 }}>
               © 2026 YourInterviewCoach. All rights reserved.
             </p>
-            <p style={{ fontSize: 12, color: bottomText, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Made with <span style={{ color: '#f43f5e' }}>♥</span> in Bangalore by{' '}
+            <p
+              style={{
+                fontSize: 12,
+                color: bottomText,
+                fontWeight: 400,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              Made with <span style={{ color: "#f43f5e" }}>♥</span> in Bangalore
+              by{" "}
               <span style={{ fontWeight: 600, color: creditName }}>
                 <a href="https://a3neptune.kalawatiputra.com">A3Neptune</a>
               </span>
             </p>
           </div>
-
         </div>
       </footer>
     </>

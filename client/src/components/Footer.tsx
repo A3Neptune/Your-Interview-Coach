@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Github, Linkedin, Twitter } from 'lucide-react';
+import Link from "next/link";
+import { Github, Linkedin, Twitter } from "lucide-react";
 
 const footerLinks = [
-  { label: 'Privacy', href: '#privacy' },
-  { label: 'Terms', href: '#terms' },
-  { label: 'Status', href: '#status' },
-  { label: 'Contact', href: '#contact' },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Contact", href: "#contact" },
 ];
 
 export default function Footer() {
@@ -22,29 +21,43 @@ export default function Footer() {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-md">
                 <span className="text-white font-bold text-sm">C</span>
               </div>
-              <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">YourInterviewCoach</span>
+              <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                YourInterviewCoach
+              </span>
             </Link>
             <p className="text-sm text-slate-600 leading-relaxed font-medium">
-              Connecting students and professionals with expert mentors for career growth.
+              Connecting students and professionals with expert mentors for
+              career growth.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Product</h4>
+            <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">
+              Product
+            </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/#features" className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium">
+                <Link
+                  href="/#features"
+                  className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium"
+                >
                   Features
                 </Link>
               </li>
               <li>
-                <Link href="/#pricing" className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium">
+                <Link
+                  href="/#pricing"
+                  className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium"
+                >
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium">
+                <Link
+                  href="/login"
+                  className="text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium"
+                >
                   Sign In
                 </Link>
               </li>
@@ -53,7 +66,9 @@ export default function Footer() {
 
           {/* Social */}
           <div>
-            <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Connect</h4>
+            <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">
+              Connect
+            </h4>
             <div className="flex gap-3">
               <a
                 href="#twitter"
