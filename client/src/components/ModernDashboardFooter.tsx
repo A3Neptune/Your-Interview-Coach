@@ -21,21 +21,13 @@ export default function ModernDashboardFooter() {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="md:col-span-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 group mb-4"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all">
-                <span className="text-white font-bold text-lg">Y</span>
-              </div>
-              <div>
-                <span className="font-bold text-slate-900 text-lg block">
-                  YourInterviewCoach
-                </span>
-                <span className="text-xs text-slate-500 -mt-1 block">
-                  Master Your Career
-                </span>
-              </div>
+            <Link href="/dashboard" className="flex items-center group mb-4">
+              <img
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                className="w-[90px] sm:w-[110px] h-auto group-hover:scale-[1.02] transition-transform"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
+              />
             </Link>
             <p className="text-slate-600 text-sm leading-relaxed max-w-md mb-4">
               Empowering professionals with expert mentorship and personalized
@@ -155,9 +147,15 @@ export default function ModernDashboardFooter() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t-2 border-blue-100">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} YourInterviewCoach. All rights
-              reserved.
+            <p className="text-slate-500 text-sm flex items-center gap-2">
+              <span>© {new Date().getFullYear()}</span>
+              <img
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                className="w-[70px] h-auto"
+                style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.12))" }}
+              />
+              <span>All rights reserved.</span>
             </p>
             <div className="flex items-center gap-6 text-sm">
               <Link

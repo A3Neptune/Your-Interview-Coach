@@ -169,8 +169,6 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
     : "1px solid rgba(29,78,216,0.10)";
   const blob1 = dark ? "rgba(29,78,216,0.12)" : "rgba(29,78,216,0.05)";
   const blob2 = dark ? "rgba(8,145,178,0.08)" : "rgba(8,145,178,0.04)";
-  const logoText = dark ? "#fff" : "#0f172a";
-  const logoSub = dark ? "rgba(255,255,255,0.35)" : "#94a3b8";
   const tagline = dark ? "rgba(255,255,255,0.45)" : "#64748b";
   const socialBg = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.7)";
   const socialBdr = dark ? "rgba(255,255,255,0.10)" : "rgba(29,78,216,0.14)";
@@ -262,37 +260,13 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12 mb-12 lg:mb-16">
             {/* Brand column */}
             <div className="col-span-2">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2.5 mb-5 group"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200"
-                  style={{
-                    background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
-                    boxShadow: "0 2px 12px rgba(29,78,216,0.25)",
-                  }}
-                >
-                  <span className="text-white font-bold text-sm">YC</span>
-                </div>
-                <div>
-                  <p
-                    className="font-semibold leading-tight group-hover:text-blue-500 transition-colors"
-                    style={{
-                      fontSize: 14.5,
-                      letterSpacing: "-0.01em",
-                      color: logoText,
-                    }}
-                  >
-                    YourInterviewCoach
-                  </p>
-                  <p
-                    className="text-[10px] font-semibold uppercase tracking-[0.12em] leading-none mt-0.5"
-                    style={{ color: logoSub }}
-                  >
-                    Mentorship Platform
-                  </p>
-                </div>
+              <Link href="/" className="inline-flex items-center mb-5 group">
+                <img
+                  src="/yourinterviewcoach-logo1.png"
+                  alt="YourInterviewCoach"
+                  className="w-[80px] sm:w-[100px] h-auto group-hover:scale-[1.02] transition-transform duration-200"
+                  style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
+                />
               </Link>
 
               <p
@@ -398,9 +372,25 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
 
           {/* Bottom bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p style={{ fontSize: 12, color: bottomText, fontWeight: 400 }}>
-              © 2026 YourInterviewCoach. All rights reserved.
-            </p>
+            <div
+              style={{
+                fontSize: 12,
+                color: bottomText,
+                fontWeight: 400,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span>© 2026</span>
+              <img
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                className="w-[30px] h-auto"
+                style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.12))" }}
+              />
+              <span>All rights reserved.</span>
+            </div>
             <p
               style={{
                 fontSize: 12,

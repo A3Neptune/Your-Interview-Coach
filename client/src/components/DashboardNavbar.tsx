@@ -1,11 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Home, Calendar, BookOpen, User, Settings, LogOut } from 'lucide-react';
-import { getAuthToken, removeAuthToken } from '@/lib/api';
-import NotificationBell from './NotificationBell';
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Menu,
+  X,
+  Home,
+  Calendar,
+  BookOpen,
+  User,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { getAuthToken, removeAuthToken } from "@/lib/api";
+import NotificationBell from "./NotificationBell";
 
 export default function DashboardNavbar() {
   const pathname = usePathname();
@@ -19,21 +29,21 @@ export default function DashboardNavbar() {
       setIsScrolled(window.scrollY > 20);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLogout = () => {
     removeAuthToken();
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   const navLinks = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Content', href: '/dashboard/content', icon: BookOpen },
-    { name: 'Profile', href: '/dashboard/profile', icon: User },
+    { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Content", href: "/dashboard/content", icon: BookOpen },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -41,23 +51,26 @@ export default function DashboardNavbar() {
   return (
     <>
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 w-full z-50 border-b border-black/5"
+      <nav
+        className="fixed top-0 left-0 right-0 w-full z-50 border-b border-black/5"
         style={{
-          background: 'rgba(255, 255, 255, 0.65)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: "rgba(255, 255, 255, 0.65)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
-                <span className="text-white font-bold text-lg">Y</span>
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-bold text-slate-900 text-lg">YourInterviewCoach</span>
-              </div>
+            <Link href="/dashboard" className="flex items-center group">
+              <Image
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                width={140}
+                height={31}
+                priority
+                className="h-7 sm:h-8 w-auto group-hover:scale-[1.02] transition-transform"
+              />
             </Link>
 
             {/* Desktop Navigation */}
@@ -71,8 +84,8 @@ export default function DashboardNavbar() {
                     href={link.href}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                       active
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                        : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                        : "text-slate-600 hover:text-blue-600 hover:bg-blue-50"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -110,7 +123,11 @@ export default function DashboardNavbar() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
 
@@ -127,8 +144,8 @@ export default function DashboardNavbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
                       active
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-600 hover:bg-blue-50'
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-600 hover:bg-blue-50"
                     }`}
                   >
                     <Icon className="w-5 h-5" />

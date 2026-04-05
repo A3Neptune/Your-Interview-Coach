@@ -1,47 +1,52 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import ProfileDropdown from './ProfileDropdown';
-import NotificationBell from './NotificationBell';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import ProfileDropdown from "./ProfileDropdown";
+import NotificationBell from "./NotificationBell";
 
 const navLinks = [
-  { name: 'Features', href: '/#features' },
-  { name: 'How it works', href: '/#how-it-works' },
-  { name: 'Pricing', href: '/#pricing' },
-  { name: 'FAQ', href: '/#faq' },
+  { name: "Features", href: "/#features" },
+  { name: "How it works", href: "/#how-it-works" },
+  { name: "Pricing", href: "/#pricing" },
+  { name: "FAQ", href: "/#faq" },
 ];
 
 const footerLinks = [
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
-  { name: 'Blog', href: '/blog' },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contact" },
+  { name: "Blog", href: "/blog" },
 ];
 
 interface StandardNavbarProps {
-  variant?: 'landing' | 'dashboard';
+  variant?: "landing" | "dashboard";
 }
 
-export default function StandardNavbar({ variant = 'landing' }: StandardNavbarProps) {
+export default function StandardNavbar({
+  variant = "landing",
+}: StandardNavbarProps) {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState('');
+  const [activeLink, setActiveLink] = useState("");
   const { isLoggedIn, user, isLoading } = useAuth();
 
   // Check if on dashboard page
-  const isOnDashboard = pathname.includes('/dashboard') || pathname.includes('/user-dashboard') || pathname.includes('/mentor-dashboard');
+  const isOnDashboard =
+    pathname.includes("/dashboard") ||
+    pathname.includes("/user-dashboard") ||
+    pathname.includes("/mentor-dashboard");
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
 
       // Update active link based on scroll position
-      if (variant === 'landing') {
-        const sections = navLinks.map(link => link.href.slice(1));
+      if (variant === "landing") {
+        const sections = navLinks.map((link) => link.href.slice(1));
         for (const section of sections.reverse()) {
           const element = document.getElementById(section);
           if (element && window.scrollY >= element.offsetTop - 200) {
@@ -52,8 +57,8 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [variant]);
 
   return (
@@ -63,40 +68,38 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
         <div
           className={`transition-all duration-700 ease-out rounded-2xl ${
             isScrolled
-              ? 'w-full max-w-3xl bg-white/90 backdrop-blur-2xl border-2 border-blue-200 shadow-lg'
-              : 'w-full max-w-6xl bg-white/80 backdrop-blur-md border-2 border-blue-100'
+              ? "w-full max-w-3xl bg-white/90 backdrop-blur-2xl border-2 border-blue-200 shadow-lg"
+              : "w-full max-w-6xl bg-white/80 backdrop-blur-md border-2 border-blue-100"
           }`}
         >
-          <div className={`transition-all duration-700 ${isScrolled ? 'px-4 sm:px-5' : 'px-4 sm:px-8'}`}>
-            <div className={`flex items-center justify-between transition-all duration-700 ${isScrolled ? 'h-12' : 'h-16'}`}>
+          <div
+            className={`transition-all duration-700 ${isScrolled ? "px-4 sm:px-5" : "px-4 sm:px-8"}`}
+          >
+            <div
+              className={`flex items-center justify-between transition-all duration-700 ${isScrolled ? "h-12" : "h-16"}`}
+            >
               {/* Logo */}
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="relative">
-                  <div className={`rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center transition-all duration-500 group-hover:scale-110 shadow-md ${
-                    isScrolled ? 'w-8 h-8' : 'w-9 h-9'
-                  }`}>
-                    <span className={`text-white font-bold transition-all duration-500 ${isScrolled ? 'text-xs' : 'text-sm'}`}>C</span>
-                  </div>
-                  <div className="absolute inset-0 rounded-xl bg-blue-400/40 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-                <div className="flex flex-col">
-                  <span className={`font-semibold text-slate-900 leading-tight transition-all duration-500 ${isScrolled ? 'text-sm' : 'text-[15px]'}`}>
-                    YourInterviewCoach
-                  </span>
-                  <span className={`text-slate-500 uppercase tracking-widest leading-tight hidden sm:block transition-all duration-500 ${
-                    isScrolled ? 'text-[8px]' : 'text-[9px]'
-                  }`}>
-                    Mentorship
-                  </span>
-                </div>
+              <Link href="/" className="flex items-center group">
+                <img
+                  src="/yourinterviewcoach-logo1.png"
+                  alt="YourInterviewCoach"
+                  className={`w-[60px] sm:w-[80px] md:w-[95px] h-auto transition-all duration-500 group-hover:scale-[1.02] ${
+                    isScrolled ? "opacity-95" : "opacity-100"
+                  }`}
+                  style={{
+                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))",
+                  }}
+                />
               </Link>
 
               {/* Desktop Nav - Centered pill */}
               <div className="hidden md:flex items-center">
-                <div className={`flex items-center gap-0.5 rounded-xl bg-blue-50 transition-all duration-500 ${
-                  isScrolled ? 'p-0.5' : 'p-1'
-                }`}>
-                  {variant === 'landing' ? (
+                <div
+                  className={`flex items-center gap-0.5 rounded-xl bg-blue-50 transition-all duration-500 ${
+                    isScrolled ? "p-0.5" : "p-1"
+                  }`}
+                >
+                  {variant === "landing" ? (
                     <>
                       {navLinks.map((link) => {
                         const isActive = activeLink === link.href;
@@ -105,11 +108,13 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                             key={link.name}
                             href={link.href}
                             className={`relative rounded-lg transition-all duration-300 ${
-                              isScrolled ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                              isScrolled
+                                ? "px-3 py-1 text-xs"
+                                : "px-4 py-1.5 text-sm"
                             } ${
                               isActive
-                                ? 'text-blue-600'
-                                : 'text-slate-600 hover:text-blue-600'
+                                ? "text-blue-600"
+                                : "text-slate-600 hover:text-blue-600"
                             }`}
                           >
                             {isActive && (
@@ -124,7 +129,9 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                           key={link.name}
                           href={link.href}
                           className={`relative rounded-lg transition-all duration-300 ${
-                            isScrolled ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                            isScrolled
+                              ? "px-3 py-1 text-xs"
+                              : "px-4 py-1.5 text-sm"
                           } text-slate-600 hover:text-blue-600`}
                         >
                           {link.name}
@@ -137,7 +144,9 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                         <Link
                           href="/user-dashboard"
                           className={`relative rounded-lg transition-all duration-300 ${
-                            isScrolled ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                            isScrolled
+                              ? "px-3 py-1 text-xs"
+                              : "px-4 py-1.5 text-sm"
                           } text-slate-600 hover:text-blue-600`}
                         >
                           Dashboard
@@ -146,7 +155,9 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                       <Link
                         href="/"
                         className={`relative rounded-lg transition-all duration-300 ${
-                          isScrolled ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                          isScrolled
+                            ? "px-3 py-1 text-xs"
+                            : "px-4 py-1.5 text-sm"
                         } text-slate-600 hover:text-blue-600`}
                       >
                         Home
@@ -164,7 +175,9 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                       <Link
                         href="/user-dashboard"
                         className={`text-slate-600 hover:text-blue-600 transition-colors ${
-                          isScrolled ? 'text-xs px-3 py-1' : 'text-sm px-4 py-1.5'
+                          isScrolled
+                            ? "text-xs px-3 py-1"
+                            : "text-sm px-4 py-1.5"
                         }`}
                       >
                         Dashboard
@@ -178,7 +191,7 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                     <Link
                       href="/login"
                       className={`text-slate-600 hover:text-blue-600 transition-colors ${
-                        isScrolled ? 'text-xs px-3 py-1' : 'text-sm px-4 py-1.5'
+                        isScrolled ? "text-xs px-3 py-1" : "text-sm px-4 py-1.5"
                       }`}
                     >
                       Sign In
@@ -186,7 +199,7 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
                     <Link
                       href="/signup"
                       className={`rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-colors shadow-md ${
-                        isScrolled ? 'text-xs px-4 py-1.5' : 'text-sm px-5 py-2'
+                        isScrolled ? "text-xs px-4 py-1.5" : "text-sm px-5 py-2"
                       }`}
                     >
                       Get started
@@ -211,7 +224,7 @@ export default function StandardNavbar({ variant = 'landing' }: StandardNavbarPr
             {/* Mobile menu */}
             {isMobileMenuOpen && (
               <div className="md:hidden pb-4 space-y-2 border-t-2 border-blue-200 mt-2 pt-2">
-                {variant === 'landing' ? (
+                {variant === "landing" ? (
                   <>
                     {navLinks.map((link) => (
                       <Link

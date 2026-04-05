@@ -253,22 +253,20 @@
 //   );
 // }
 
+"use client";
 
-
-'use client';
-
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import ProfileDropdown from './ProfileDropdown';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import ProfileDropdown from "./ProfileDropdown";
 
 const navLinks = [
-  { name: 'Home',     href: '/'        },
-  { name: 'About',    href: '/about'   },
-  { name: 'Services', href: '/services'},
-  { name: 'Contact',  href: '/contact' },
+  { name: "Home", href: "/" },
+  { name: "About", href: "/about" },
+  { name: "Services", href: "/services" },
+  { name: "Contact", href: "/contact" },
 ];
 
 interface NavbarProps {
@@ -276,19 +274,21 @@ interface NavbarProps {
 }
 
 export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
-  const [isScrolled, setIsScrolled]         = useState(false);
-  const [isMobileMenuOpen, setMobileMenu]   = useState(false);
-  const pathname                            = usePathname();
-  const { isLoggedIn }                      = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setMobileMenu] = useState(false);
+  const pathname = usePathname();
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   /* close mobile menu on route change */
-  useEffect(() => { setMobileMenu(false); }, [pathname]);
+  useEffect(() => {
+    setMobileMenu(false);
+  }, [pathname]);
 
   return (
     <>
@@ -305,65 +305,46 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
         className="nav-root fixed left-0 right-0 z-50 w-full"
         style={{
           top: 0,
-          background: 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+          background: "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
         }}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-
             {/* ── LOGO ── */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <div
-                className="flex items-center justify-center rounded-xl"
-                style={{
-                  width: 34,
-                  height: 34,
-                  background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)',
-                  boxShadow: '0 2px 12px rgba(29,78,216,0.25)',
-                }}
-              >
-                <span className="text-white font-bold text-[12px]">YC</span>
-              </div>
-              <div>
-                <span
-                  className="block font-semibold text-slate-900 leading-tight"
-                  style={{ fontSize: 14.5, letterSpacing: '-0.01em' }}
-                >
-                  YourInterviewCoach
-                </span>
-                <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400 leading-none mt-0.5">
-                  Mentorship
-                </span>
-              </div>
+            <Link href="/" className="flex items-center shrink-0">
+              <img
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                className="w-[60px] sm:w-[80px] md:w-[95px] h-auto"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
+              />
             </Link>
 
             {/* ── DESKTOP LINKS ── */}
             <div className="hidden md:flex items-center gap-1">
-              {navLinks.map(link => {
+              {navLinks.map((link) => {
                 const active = pathname === link.href;
                 return (
                   <Link
                     key={link.name}
                     href={link.href}
                     className="relative px-3.5 py-1.5 rounded-lg text-[13px] font-medium"
-                    style={{ color: active ? '#1d4ed8' : '#475569' }}
+                    style={{ color: active ? "#1d4ed8" : "#475569" }}
                   >
                     {active && (
                       <span
                         className="absolute inset-0 rounded-lg"
-                        style={{ background: 'rgba(29,78,216,0.08)' }}
+                        style={{ background: "rgba(29,78,216,0.08)" }}
                       />
                     )}
-                    <span className="relative">
-                      {link.name}
-                    </span>
+                    <span className="relative">{link.name}</span>
                     {active && (
                       <span
                         className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
-                        style={{ background: '#1d4ed8', opacity: 0.6 }}
+                        style={{ background: "#1d4ed8", opacity: 0.6 }}
                       />
                     )}
                   </Link>
@@ -394,7 +375,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   <Link
                     href="/signup"
                     className="inline-flex items-center gap-1.5 text-white text-[13px] font-semibold rounded-xl"
-                    style={{ padding: '8px 16px', background: '#1d4ed8' }}
+                    style={{ padding: "8px 16px", background: "#1d4ed8" }}
                   >
                     Sign up
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -405,15 +386,23 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
 
             {/* ── HAMBURGER ── */}
             <button
-              onClick={() => setMobileMenu(p => !p)}
+              onClick={() => setMobileMenu((p) => !p)}
               className="md:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 rounded-xl"
               aria-label="Toggle menu"
             >
-              <span className="block w-5 h-0.5 rounded-sm" style={{ background: '#1e3a8a' }} />
-              <span className="block w-5 h-0.5 rounded-sm" style={{ background: '#1e3a8a' }} />
-              <span className="block w-5 h-0.5 rounded-sm" style={{ background: '#1e3a8a' }} />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
             </button>
-
           </div>
         </div>
       </nav>
@@ -422,13 +411,16 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
       <div
         className="fixed inset-0 z-40 md:hidden"
         style={{
-          display: isMobileMenuOpen ? 'block' : 'none',
+          display: isMobileMenuOpen ? "block" : "none",
         }}
       >
         {/* backdrop */}
         <div
           className="absolute inset-0"
-          style={{ background: 'rgba(15,23,42,0.15)', backdropFilter: 'blur(4px)' }}
+          style={{
+            background: "rgba(15,23,42,0.15)",
+            backdropFilter: "blur(4px)",
+          }}
           onClick={() => setMobileMenu(false)}
         />
 
@@ -437,10 +429,11 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
           className="absolute left-4 right-4 overflow-hidden"
           style={{
             top: `calc(${bannerHeight}px + 76px)`,
-            background: 'rgba(255, 255, 255, 0.97)',
-            border: '1px solid rgba(29, 78, 216, 0.14)',
+            background: "rgba(255, 255, 255, 0.97)",
+            border: "1px solid rgba(29, 78, 216, 0.14)",
             borderRadius: 18,
-            boxShadow: '0 12px 48px rgba(29,78,216,0.12), 0 2px 8px rgba(29,78,216,0.06)',
+            boxShadow:
+              "0 12px 48px rgba(29,78,216,0.12), 0 2px 8px rgba(29,78,216,0.06)",
           }}
         >
           {/* nav links */}
@@ -454,20 +447,27 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-between px-4 py-3.5 rounded-xl"
                   style={{
-                    background: active ? 'rgba(29,78,216,0.07)' : 'transparent',
+                    background: active ? "rgba(29,78,216,0.07)" : "transparent",
                   }}
                 >
                   <span
                     className="text-[15px] font-medium"
-                    style={{ color: active ? '#1d4ed8' : '#475569' }}
+                    style={{ color: active ? "#1d4ed8" : "#475569" }}
                   >
                     {link.name}
                   </span>
                   <span
                     className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: active ? 'rgba(29,78,216,0.10)' : 'transparent' }}
+                    style={{
+                      background: active
+                        ? "rgba(29,78,216,0.10)"
+                        : "transparent",
+                    }}
                   >
-                    <ArrowRight className="w-3 h-3" style={{ color: active ? '#1d4ed8' : '#94a3b8' }} />
+                    <ArrowRight
+                      className="w-3 h-3"
+                      style={{ color: active ? "#1d4ed8" : "#94a3b8" }}
+                    />
                   </span>
                 </Link>
               );
@@ -475,7 +475,10 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
           </div>
 
           {/* divider */}
-          <div className="mx-4 my-1 h-px" style={{ background: 'rgba(29,78,216,0.08)' }} />
+          <div
+            className="mx-4 my-1 h-px"
+            style={{ background: "rgba(29,78,216,0.08)" }}
+          />
 
           {/* auth buttons */}
           <div className="p-3 space-y-2">
@@ -485,7 +488,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   href="/dashboard"
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-slate-600 rounded-xl border hover:bg-blue-50"
-                  style={{ borderColor: 'rgba(29,78,216,0.12)' }}
+                  style={{ borderColor: "rgba(29,78,216,0.12)" }}
                 >
                   Dashboard <ArrowRight className="w-4 h-4 text-slate-400" />
                 </Link>
@@ -493,9 +496,10 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   href="/dashboard?tab=profile"
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-slate-600 rounded-xl border hover:bg-blue-50"
-                  style={{ borderColor: 'rgba(29,78,216,0.12)' }}
+                  style={{ borderColor: "rgba(29,78,216,0.12)" }}
                 >
-                  Profile Settings <ArrowRight className="w-4 h-4 text-slate-400" />
+                  Profile Settings{" "}
+                  <ArrowRight className="w-4 h-4 text-slate-400" />
                 </Link>
               </>
             ) : (
@@ -504,7 +508,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   href="/login"
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-slate-700 rounded-xl border hover:bg-blue-50 hover:text-blue-600"
-                  style={{ borderColor: 'rgba(29,78,216,0.14)' }}
+                  style={{ borderColor: "rgba(29,78,216,0.14)" }}
                 >
                   Sign in
                 </Link>
@@ -512,7 +516,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   href="/signup"
                   onClick={() => setMobileMenu(false)}
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white rounded-xl"
-                  style={{ background: '#1d4ed8' }}
+                  style={{ background: "#1d4ed8" }}
                 >
                   Get started free <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -523,9 +527,12 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
           {/* bottom links */}
           <div
             className="flex items-center justify-center gap-5 px-4 py-3 border-t"
-            style={{ borderColor: 'rgba(29,78,216,0.06)' }}
+            style={{ borderColor: "rgba(29,78,216,0.06)" }}
           >
-            {[['Privacy', '/privacy'], ['Terms', '/terms']].map(([label, href]) => (
+            {[
+              ["Privacy", "/privacy"],
+              ["Terms", "/terms"],
+            ].map(([label, href]) => (
               <Link
                 key={label}
                 href={href}

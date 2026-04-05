@@ -18,12 +18,12 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-md">
-                <span className="text-white font-bold text-sm">C</span>
-              </div>
-              <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                YourInterviewCoach
-              </span>
+              <img
+                src="/yourinterviewcoach-logo1.png"
+                alt="YourInterviewCoach"
+                className="w-[80px] sm:w-[100px] h-auto group-hover:scale-[1.02] transition-transform duration-300"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
+              />
             </Link>
             <p className="text-sm text-slate-600 leading-relaxed font-medium">
               Connecting students and professionals with expert mentors for
@@ -94,7 +94,16 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-600 font-medium">
-          <p>© 2026 YourInterviewCoach. All rights reserved.</p>
+          <p className="flex items-center gap-2">
+            <span>© 2026</span>
+            <img
+              src="/yourinterviewcoach-logo1.png"
+              alt="YourInterviewCoach"
+              className="w-[30px] h-auto"
+              style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.12))" }}
+            />
+            <span>All rights reserved.</span>
+          </p>
           <div className="flex items-center gap-6">
             {footerLinks.map((link) => (
               <Link
