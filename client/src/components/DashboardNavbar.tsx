@@ -64,7 +64,7 @@ export default function DashboardNavbar() {
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center group">
               <Image
-                src="/yourinterviewcoach-logo1.png"
+                src="/yourinterviewcoach-logo1.jpeg"
                 alt="YourInterviewCoach"
                 width={140}
                 height={31}

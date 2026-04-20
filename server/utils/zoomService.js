@@ -26,16 +26,25 @@ class ZoomService {
     return jwt.sign(payload, this.clientSecret, { algorithm: 'HS256' });
   }
 
+  // Generate a guaranteed-working Jitsi Meet room as fallback
+  generateFallbackMeeting(bookingId) {
+    const roomId = `YIC-${bookingId || Date.now()}`;
+    const joinUrl = `https://meet.jit.si/${roomId}`;
+    return {
+      meetingId: roomId,
+      joinUrl,
+      startUrl: joinUrl,
+      password: '',
+      provider: 'jitsi',
+    };
+  }
+
   // Create Zoom meeting for 1:1 booking
   async create1on1Meeting(meetingData) {
-    // If Zoom is not configured, return a placeholder
+    // If Zoom is not configured, use Jitsi as fallback
     if (!this.isConfigured) {
-      return {
-        meetingId: `placeholder-${Date.now()}`,
-        joinUrl: `https://zoom.us/j/placeholder?pwd=meeting${Date.now()}`,
-        startUrl: `https://zoom.us/s/placeholder?pwd=meeting${Date.now()}`,
-        password: 'NotConfigured',
-      };
+      console.log('ℹ️ Zoom not configured — using Jitsi Meet fallback');
+      return this.generateFallbackMeeting(meetingData.bookingId);
     }
 
     try {
@@ -69,10 +78,11 @@ class ZoomService {
         joinUrl: response.data.join_url,
         startUrl: response.data.start_url,
         password: response.data.password || '',
+        provider: 'zoom',
       };
     } catch (err) {
-      console.error('Error creating Zoom meeting:', err);
-      throw new Error('Failed to create Zoom meeting');
+      console.error('⚠️ Zoom meeting creation failed — falling back to Jitsi:', err.message);
+      return this.generateFallbackMeeting(meetingData.bookingId);
     }
   }
 

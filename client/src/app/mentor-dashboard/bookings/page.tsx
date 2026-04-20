@@ -303,11 +303,14 @@ export default function MentorBookingsPage() {
                             </p>
                           </div>
                         </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(booking.status)}`}
-                        >
-                          {booking.status}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {isConfirmed && !booking.meetingLink && (
+                            <span title="No meeting link" className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          )}
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(booking.status)}`}>
+                            {booking.status}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="space-y-2 text-sm text-zinc-400">
@@ -402,17 +405,43 @@ export default function MentorBookingsPage() {
                   </div>
                 )}
 
-                {selectedBooking.status === "confirmed" &&
-                  selectedBooking.meetingLink && (
-                    <a
-                      href={selectedBooking.meetingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors text-center"
-                    >
-                      Join Meeting
-                    </a>
-                  )}
+                {selectedBooking.status === "confirmed" && (
+                  <div className="space-y-2">
+                    {selectedBooking.meetingLink ? (
+                      <>
+                        <a
+                          href={selectedBooking.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors text-center"
+                        >
+                          Join Meeting
+                        </a>
+                        <p className="text-[11px] text-zinc-500 text-center truncate">{selectedBooking.meetingLink}</p>
+                      </>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                        <p className="text-amber-400 text-xs font-semibold mb-2">⚠ No meeting link — add one below</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={meetingLink}
+                            onChange={e => setMeetingLink(e.target.value)}
+                            placeholder="https://meet.jit.si/your-room or Zoom link"
+                            className="flex-1 px-2 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                          <button
+                            onClick={() => {
+                              if (!meetingLink) { toast.error("Enter a meeting link"); return; }
+                              handleConfirm(selectedBooking._id);
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors whitespace-nowrap"
+                          >Save</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

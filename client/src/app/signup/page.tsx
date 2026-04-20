@@ -360,6 +360,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import toast from 'react-hot-toast';
 import { authAPI, setAuthToken } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -541,15 +542,9 @@ export default function SignupPage() {
         <div className="relative z-10 w-full max-w-[480px]">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center justify-center gap-2.5 mb-7 group">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)' }}>
-              <span className="text-white font-bold text-sm">YC</span>
-            </div>
-            <span className="text-slate-800 font-semibold text-base tracking-tight group-hover:text-blue-600 transition-colors">
-              YourInterviewCoach
-            </span>
-          </Link>
+          <div className="flex justify-center mb-7">
+            <BrandLogo size="md" />
+          </div>
 
           {/* Card */}
           <div className="bg-white rounded-3xl p-7 card-shadow border border-slate-100">

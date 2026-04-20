@@ -96,6 +96,22 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 15,
     },
+    availabilitySettings: {
+      startHour:     { type: Number, default: 9 },
+      endHour:       { type: Number, default: 18 },
+      slotDuration:  { type: Number, default: 60 },
+      bufferMinutes: { type: Number, default: 0 },
+      daysOff:       { type: [Number], default: [] },  // 0=Sun … 6=Sat
+      blockedDates:  { type: [String], default: [] },  // ["YYYY-MM-DD"]
+      dateOverrides: {
+        type: [{
+          date:      String,
+          startHour: Number,
+          endHour:   Number,
+        }],
+        default: [],
+      },
+    },
     autoConfirmBookings: {
       type: Boolean,
       default: false,

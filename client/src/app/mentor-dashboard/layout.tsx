@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import {
   BarChart3,
   BookOpen,
@@ -247,14 +248,7 @@ export default function MentorDashboardLayout({
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <Link href="/mentor-dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                <span className="font-bold text-white text-sm">Y</span>
-              </div>
-              <span className="font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent hidden sm:block">
-                yourinterviewcoach
-              </span>
-            </Link>
+            <BrandLogo href="/mentor-dashboard" size="sm" dark={true} />
           </div>
 
           {/* Center: Page Title */}
@@ -348,7 +342,7 @@ export default function MentorDashboardLayout({
           isMobile ? "ml-0" : sidebarOpen ? "ml-64" : "ml-20"
         }`}
       >
-        <StandardFooter />
+        <StandardFooter dark={true} />
       </div>
     </div>
   );

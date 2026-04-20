@@ -338,7 +338,8 @@ const updateMentorSettings = async (userId, settings) => {
     'allowDirectMessages',
     'notifyNewBookings',
     'notifyJobMatches',
-    'emailNotifications'
+    'emailNotifications',
+    'availabilitySettings'
   ];
 
   allowedFields.forEach(field => {

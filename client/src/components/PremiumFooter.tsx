@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import BrandLogo from './BrandLogo';
 
 export default function PremiumFooter() {
   const currentYear = new Date().getFullYear();
@@ -33,9 +34,8 @@ export default function PremiumFooter() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600" />
-              <span className="font-bold text-xl">CareerCoach</span>
+            <div className="mb-4">
+              <BrandLogo size="md" dark={true} />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               Transform your career with expert mentorship and personalized guidance from industry leaders.
@@ -89,7 +89,7 @@ export default function PremiumFooter() {
 
         {/* Bottom */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-400 text-sm">
-          <p>&copy; {currentYear} CareerCoach LMS. All rights reserved.</p>
+          <p>&copy; {currentYear} YourInterviewCoach. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-white transition-colors">
               Privacy Policy

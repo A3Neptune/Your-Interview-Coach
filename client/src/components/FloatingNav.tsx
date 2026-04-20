@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import BrandLogo from './BrandLogo';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 
 export default function FloatingNav() {
@@ -85,8 +86,7 @@ export default function FloatingNav() {
         transition={{ duration: 0.6 }}
         className="fixed top-6 left-6 z-50 flex items-center gap-2"
       >
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600" />
-        <span className="font-bold text-xl hidden sm:block">CareerCoach</span>
+        <BrandLogo size="sm" />
       </motion.div>
     </>
   );

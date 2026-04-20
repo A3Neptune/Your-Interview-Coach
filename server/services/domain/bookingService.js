@@ -87,6 +87,104 @@ const getMentorAvailability = async (mentorId) => {
 };
 
 /**
+ * Get available slots for a specific date
+ * Returns only future slots that don't conflict with existing bookings
+ */
+const getAvailableSlots = async (dateStr) => {
+  const mentor = await User.findOne({ userType: 'admin', isActive: true });
+  if (!mentor) throw new NotFoundError('Mentor not found');
+
+  const settings      = mentor.availabilitySettings || {};
+  let   startHour     = settings.startHour    ?? 9;
+  let   endHour       = settings.endHour      ?? 18;
+  const slotDuration  = Math.max(1, settings.slotDuration  ?? 60);
+  const bufferMinutes = Math.max(0, settings.bufferMinutes ?? 0);
+  const daysOff       = settings.daysOff       ?? [];
+  const blockedDates  = settings.blockedDates  ?? [];
+  const dateOverrides = settings.dateOverrides ?? [];
+
+  // Parse the requested date (YYYY-MM-DD)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return { mentorId: mentor._id, slotDuration, slots: [] };
+  const [year, month, day] = dateStr.split('-').map(Number);
+
+  // Guard: date in the past
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const requested = new Date(year, month - 1, day);
+  if (requested < today) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Guard: more than 30 days away
+  const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 30);
+  if (requested > maxDate) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Guard: explicitly blocked date (takes priority over everything)
+  if (blockedDates.includes(dateStr)) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Guard: day of week off
+  const dayOfWeek = requested.getDay();
+  if (daysOff.includes(dayOfWeek)) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Apply date override for custom hours on this specific date
+  const override = dateOverrides.find(o => o.date === dateStr);
+  if (override) {
+    startHour = override.startHour;
+    endHour   = override.endHour;
+  }
+
+  // Guard: invalid hour range
+  if (startHour >= endHour) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Fetch existing bookings for that day
+  // Only confirmed OR recently-created pending bookings (within 30 min) block a slot.
+  // Stale pending/unpaid bookings do not hold the slot.
+  const dayStart        = new Date(year, month - 1, day, 0, 0, 0);
+  const dayEnd          = new Date(year, month - 1, day, 23, 59, 59);
+  const pendingCutoff   = new Date(Date.now() - 30 * 60 * 1000);
+  const existingBookings = await Booking.find({
+    mentorId: mentor._id,
+    scheduledDate: { $gte: dayStart, $lte: dayEnd },
+    $or: [
+      { status: 'confirmed' },
+      { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+    ],
+  }).select('scheduledDate duration').lean();
+
+  const now          = new Date();
+  const endBoundary  = new Date(year, month - 1, day, endHour, 0, 0);
+  const increment    = (slotDuration + bufferMinutes) / 60;
+  const slots        = [];
+  const pad          = (n) => String(n).padStart(2, '0');
+
+  for (let hour = startHour; hour < endHour; hour += increment) {
+    // Safety: break if increment is somehow 0 to prevent infinite loop
+    if (increment <= 0) break;
+
+    const slotStart = new Date(year, month - 1, day, Math.floor(hour), Math.round((hour % 1) * 60), 0);
+    const slotEnd   = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
+
+    if (slotEnd > endBoundary) break;
+
+    // Skip past slots (for today)
+    if (slotEnd <= now) continue;
+
+    // Skip conflicting slots
+    const hasConflict = existingBookings.some(b => {
+      const bStart = new Date(b.scheduledDate);
+      const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+      return slotStart < bEnd && slotEnd > bStart;
+    });
+
+    if (!hasConflict) {
+      slots.push({
+        start: `${pad(slotStart.getHours())}:${pad(slotStart.getMinutes())}`,
+        end:   `${pad(slotEnd.getHours())}:${pad(slotEnd.getMinutes())}`,
+      });
+    }
+  }
+
+  return { mentorId: mentor._id, slotDuration, slots };
+};
+
+/**
  * Calculate booking amount from pricing database (server-side)
  */
 const calculateBookingAmount = async (sessionType) => {
@@ -118,16 +216,13 @@ const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
   const newStart = new Date(scheduledDate);
   const newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
 
-  const now = new Date();
-  // Narrow to only bookings that could overlap: start before newEnd AND end after newStart
-  // (DB can't check existingEnd directly, so we bound scheduledDate from both sides)
+  const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
   const existingBookings = await Booking.find({
     mentorId,
-    status: { $in: ['pending', 'confirmed'] },
     scheduledDate: { $gte: new Date(newStart.getTime() - 4 * 60 * 60 * 1000), $lt: newEnd },
     $or: [
-      { paymentLocked: false },
-      { paymentLocked: true, paymentLockExpiresAt: { $gt: now } },
+      { status: 'confirmed' },
+      { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
     ],
   }).select('scheduledDate duration').lean();
 
@@ -371,6 +466,7 @@ const confirmBooking = async (bookingId, req) => {
       const meeting = await zoomService.create1on1Meeting({
         title: booking.title,
         duration: booking.duration,
+        bookingId: booking._id.toString(),
       });
       booking.meetingLink = meeting.joinUrl;
       booking.meetingId = meeting.meetingId;
@@ -473,6 +569,7 @@ export {
   getPublicAvailability,
   getAvailableMentors,
   getMentorAvailability,
+  getAvailableSlots,
   calculateBookingAmount,
   checkBookingConflict,
   createBooking,
@@ -489,6 +586,7 @@ export default {
   getPublicAvailability,
   getAvailableMentors,
   getMentorAvailability,
+  getAvailableSlots,
   calculateBookingAmount,
   checkBookingConflict,
   createBooking,

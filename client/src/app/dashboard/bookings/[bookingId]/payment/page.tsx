@@ -18,6 +18,7 @@ interface Booking {
   title: string;
   description: string;
   mentorId: { name: string; email: string };
+  studentId?: { name: string; email: string };
   sessionType: string;
   scheduledDate: string;
   duration: number;
@@ -66,15 +67,14 @@ export default function BookingPaymentPage() {
 
       const order = orderResponse.data.order;
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: orderResponse.data.keyId,
         order_id: order.id,
-        amount: booking.amount! * 100,
-        currency: 'INR',
+        amount: order.amount,
+        currency: order.currency || 'INR',
         name: 'Career Coach LMS',
         description: `${booking.title} - Booking Payment`,
         handler: async function (response: any) {
           try {
-            // Verify payment
             const verifyResponse = await api.post(
               `/bookings/${bookingId}/verify-payment`,
               {
@@ -91,8 +91,8 @@ export default function BookingPaymentPage() {
           }
         },
         prefill: {
-          name: booking.mentorId.name,
-          email: booking.mentorId.email,
+          name: booking.studentId?.name || '',
+          email: booking.studentId?.email || '',
         },
         theme: {
           color: '#3b82f6',

@@ -199,13 +199,14 @@ function CheckoutContent() {
       );
 
       const razorpayOrder = orderRes.data.order;
+      const razorpayKey = orderRes.data.keyId;
 
       // Step 5: Open Razorpay checkout modal
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         order_id: razorpayOrder.id,
         amount: razorpayOrder.amount,
-        currency: 'INR',
+        currency: razorpayOrder.currency || 'INR',
         name: 'Career Coach LMS',
         description: `${service.name} Session`,
         customer_notif: 1,

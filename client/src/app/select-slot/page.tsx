@@ -31,6 +31,11 @@ function SelectSlotContent() {
   const [mentor, setMentor] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bookedSlots, setBookedSlots] = useState<Booking[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<{ start: string; end: string }[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotDuration, setSlotDuration] = useState<number>(60);
+  const [daysOff, setDaysOff] = useState<number[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [hoveredTime] = useState<string>("");
@@ -49,7 +54,25 @@ function SelectSlotContent() {
         });
       }, 300);
     }
+    if (selectedDate) {
+      setAvailableSlots([]);
+      setSlotsLoading(true);
+      fetchSlotsForDate(selectedDate);
+    }
   }, [selectedDate]);
+
+  const fetchSlotsForDate = async (date: string) => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const res = await axios.get(`${API_URL}/bookings/public/slots?date=${date}`);
+      if (res.data.success) {
+        setAvailableSlots(res.data.slots || []);
+        if (res.data.slotDuration) setSlotDuration(res.data.slotDuration);
+      }
+    } catch {
+      setAvailableSlots([]);
+    }
+  };
 
   useEffect(() => {
     if (!serviceId) {
@@ -115,6 +138,18 @@ function SelectSlotContent() {
       } else {
         setBookedSlots([]);
       }
+
+      // Fetch mentor availability settings for daysOff info
+      try {
+        const settingsRes = await axios.get(`${API_URL}/bookings/public/availability`);
+        // daysOff is stored on the mentor; fetch it via the mentor endpoint
+        if (mentorRes.status === "fulfilled") {
+          const mentorData = mentorRes.value.data.mentors[0];
+          if (mentorData?.availabilitySettings?.daysOff) setDaysOff(mentorData.availabilitySettings.daysOff);
+          if (mentorData?.availabilitySettings?.slotDuration) setSlotDuration(mentorData.availabilitySettings.slotDuration);
+          if (mentorData?.availabilitySettings?.blockedDates) setBlockedDates(mentorData.availabilitySettings.blockedDates);
+        }
+      } catch { /* non-critical */ }
 
       setIsLoading(false);
     } catch (error) {
@@ -184,6 +219,12 @@ function SelectSlotContent() {
     // Check if date is beyond 30-day window
     if (dateStr > maxDateStr) return "past";
 
+    // Check if day is marked as off by mentor
+    if (daysOff.includes(date.getDay())) return "past";
+
+    // Check if this specific date is blocked
+    if (blockedDates.includes(dateStr)) return "past";
+
     // If selected date, show as selected
     if (dateStr === selectedDate) return "selected";
 
@@ -209,77 +250,32 @@ function SelectSlotContent() {
     if (newDate <= maxDate) setCurrentMonth(newDate);
   };
 
-  const isSlotAvailable = (date: string, time: string) => {
-    // Create slot start and end times in local timezone
-    const slotStart = new Date(`${date}T${time}:00`);
-    const slotDuration = 60; // Fixed 1-hour slots
-    const slotEnd = new Date(slotStart.getTime() + slotDuration * 60000);
-
-    // Check if this slot overlaps with any booked slot
-    const hasConflict = bookedSlots.some((booking) => {
-      const bookingStart = new Date(booking.scheduledDate);
-      const bookingEnd = new Date(
-        bookingStart.getTime() + booking.duration * 60000,
-      );
-
-      // Two time ranges overlap if: start1 < end2 AND end1 > start2
-      const overlaps = slotStart < bookingEnd && slotEnd > bookingStart;
-
-      // Debug logging (remove in production)
-      if (overlaps) {
-        console.log(`Slot ${time} blocked by booking:`, {
-          slotStart: slotStart.toISOString(),
-          slotEnd: slotEnd.toISOString(),
-          bookingStart: bookingStart.toISOString(),
-          bookingEnd: bookingEnd.toISOString(),
-        });
-      }
-
-      return overlaps;
-    });
-
-    return !hasConflict;
+  const isSlotAvailable = (_date: string, time: string) => {
+    return availableSlots.some(s => s.start === time);
   };
 
-  const isSlotBooked = (date: string, time: string) => {
-    // Create slot start and end times in local timezone
-    const slotStart = new Date(`${date}T${time}:00`);
-    const slotDuration = 60; // Fixed 1-hour slots
+  const isSlotBooked = (_date: string, time: string) => {
+    // A slot not in availableSlots but in the original booked range
+    const slotStart = new Date(`${_date}T${time}:00`);
     const slotEnd = new Date(slotStart.getTime() + slotDuration * 60000);
-
     return bookedSlots.some((booking) => {
-      const bookingStart = new Date(booking.scheduledDate);
-      const bookingEnd = new Date(
-        bookingStart.getTime() + booking.duration * 60000,
-      );
-      return slotStart < bookingEnd && slotEnd > bookingStart;
+      const bStart = new Date(booking.scheduledDate);
+      const bEnd = new Date(bStart.getTime() + booking.duration * 60000);
+      return slotStart < bEnd && slotEnd > bStart;
     });
   };
 
-  // Generate 1-hour time slots (fixed duration)
   const getTimeSlots = () => {
-    const slots: { start: string; end: string; display: string }[] = [];
-    if (!selectedDate) return slots;
-
-    const startHour = 9; // 9 AM
-    const endHour = 18; // 6 PM
-
-    for (let hour = startHour; hour < endHour; hour++) {
-      const startTime = `${String(hour).padStart(2, "0")}:00`;
-      const endTime = `${String(hour + 1).padStart(2, "0")}:00`;
-
-      // Format display: "9 AM - 10 AM"
-      const formatHour = (hr: number) => {
-        const period = hr >= 12 ? "PM" : "AM";
-        const displayHr = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
-        return `${displayHr} ${period}`;
+    return availableSlots.map(s => {
+      const [sh, sm] = s.start.split(':').map(Number);
+      const [eh, em] = s.end.split(':').map(Number);
+      const fmt = (h: number, m: number) => {
+        const period = h >= 12 ? 'PM' : 'AM';
+        const dh = h > 12 ? h - 12 : h === 0 ? 12 : h;
+        return m === 0 ? `${dh} ${period}` : `${dh}:${String(m).padStart(2,'0')} ${period}`;
       };
-
-      const display = `${formatHour(hour)} - ${formatHour(hour + 1)}`;
-      slots.push({ start: startTime, end: endTime, display });
-    }
-
-    return slots;
+      return { start: s.start, end: s.end, display: `${fmt(sh, sm)} - ${fmt(eh, em)}` };
+    });
   };
 
 
@@ -320,14 +316,14 @@ function SelectSlotContent() {
       JSON.stringify({
         date: selectedDate,
         time: selectedTime,
-        duration: 60, // Fixed 1-hour slots
+        duration: slotDuration,
       }),
     );
 
     router.push(`/checkout?serviceId=${serviceId}&slot=${slotData}`);
   };
 
-  const allTimes = useMemo(() => getAllTimes(), [selectedDate]);
+  const allTimes = useMemo(() => getAllTimes(), [selectedDate, availableSlots]);
 
   // Format selected date/time with slot range
   const formattedDateTime = useMemo(() => {
@@ -380,7 +376,7 @@ function SelectSlotContent() {
     ].filter((group) => group.times.length > 0);
   };
 
-  const timeGroups = useMemo(() => groupTimesByPeriod(allTimes), [allTimes, selectedDate, bookedSlots]);
+  const timeGroups = useMemo(() => groupTimesByPeriod(allTimes), [allTimes, availableSlots]);
 
 
   // Quick date helpers - show next 5 available days
@@ -799,7 +795,7 @@ function SelectSlotContent() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Duration</span>
-                        <span className="font-semibold">60 min</span>
+                        <span className="font-semibold">{slotDuration} min</span>
                       </div>
                       <div className="pt-2 mt-1 border-t border-green-200 flex justify-between text-sm">
                         <span className="font-semibold text-slate-700">Total</span>

@@ -51,6 +51,24 @@ export const getMentorAvailability = async (req, res) => {
 };
 
 /**
+ * Get available slots for a date
+ * GET /api/bookings/slots?date=YYYY-MM-DD
+ */
+export const getAvailableSlots = async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ success: false, message: 'Provide date as YYYY-MM-DD' });
+    }
+    const result = await bookingService.getAvailableSlots(date);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error fetching slots:', error);
+    handleControllerError(res, error);
+  }
+};
+
+/**
  * Create booking
  * POST /api/bookings/
  */
@@ -267,6 +285,7 @@ export default {
   getPublicAvailability,
   getAvailableMentors,
   getMentorAvailability,
+  getAvailableSlots,
   createBooking,
   getMentorBookings,
   getMentorStudentsList,

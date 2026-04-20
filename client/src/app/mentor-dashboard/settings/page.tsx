@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Settings, Bell, Lock, Globe, User, Save, AlertCircle } from 'lucide-react';
+import { Settings, Bell, Lock, Globe, User, Save, AlertCircle, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { authAPI } from '@/lib/api';
@@ -21,11 +21,22 @@ export default function SettingsPage() {
     website: '',
     maxStudentsPerDay: 5,
     sessionBuffer: 15,
+    availabilitySettings: {
+      startHour: 9,
+      endHour: 18,
+      slotDuration: 60,
+      bufferMinutes: 0,
+      daysOff: [] as number[],
+      blockedDates: [] as string[],
+      dateOverrides: [] as { date: string; startHour: number; endHour: number }[],
+    },
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalSettings, setOriginalSettings] = useState<any>({});
+  const [blockDateInput, setBlockDateInput] = useState('');
+  const [overrideForm, setOverrideForm] = useState({ date: '', startHour: 9, endHour: 18 });
 
   useEffect(() => {
     fetchSettings();
@@ -64,6 +75,15 @@ export default function SettingsPage() {
           notifyNewBookings: userData.notifyNewBookings !== undefined ? userData.notifyNewBookings : true,
           notifyJobMatches: userData.notifyJobMatches !== undefined ? userData.notifyJobMatches : true,
           emailNotifications: userData.emailNotifications !== undefined ? userData.emailNotifications : true,
+          availabilitySettings: {
+            startHour: userData.availabilitySettings?.startHour ?? 9,
+            endHour: userData.availabilitySettings?.endHour ?? 18,
+            slotDuration: userData.availabilitySettings?.slotDuration ?? 60,
+            bufferMinutes: userData.availabilitySettings?.bufferMinutes ?? 0,
+            daysOff: userData.availabilitySettings?.daysOff ?? [],
+            blockedDates: userData.availabilitySettings?.blockedDates ?? [],
+            dateOverrides: userData.availabilitySettings?.dateOverrides ?? [],
+          },
         };
         setSettings(loadedSettings);
         setOriginalSettings(loadedSettings);
@@ -252,6 +272,189 @@ export default function SettingsPage() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Slot Availability Settings */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-900/50 to-black border border-zinc-800 rounded-2xl p-8">
+        <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+          <Clock size={24} className="text-green-400" />
+          Slot Availability
+        </h2>
+        <p className="text-zinc-500 text-sm mb-6">Set your weekly schedule. Students only see open, future slots.</p>
+
+        {/* Working hours row */}
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">From</label>
+            <select
+              value={settings.availabilitySettings.startHour}
+              onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, startHour: Number(e.target.value) } })}
+              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>
+              ))}
+            </select>
+          </div>
+          <span className="text-zinc-500 text-sm pb-2.5">to</span>
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">To</label>
+            <select
+              value={settings.availabilitySettings.endHour}
+              onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, endHour: Number(e.target.value) } })}
+              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Slot Duration</label>
+            <select
+              value={settings.availabilitySettings.slotDuration}
+              onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, slotDuration: Number(e.target.value) } })}
+              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
+            >
+              {[30, 45, 60, 90, 120].map(d => <option key={d} value={d}>{d} min</option>)}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Break After</label>
+            <select
+              value={settings.availabilitySettings.bufferMinutes}
+              onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, bufferMinutes: Number(e.target.value) } })}
+              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
+            >
+              {[0, 5, 10, 15, 30].map(b => <option key={b} value={b}>{b === 0 ? 'None' : `${b} min`}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Days off */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Days Off</label>
+          <div className="flex gap-1.5">
+            {['S','M','T','W','T','F','S'].map((d, idx) => {
+              const isOff = settings.availabilitySettings.daysOff.includes(idx);
+              return (
+                <button key={idx} type="button"
+                  onClick={() => {
+                    const daysOff = isOff
+                      ? settings.availabilitySettings.daysOff.filter(x => x !== idx)
+                      : [...settings.availabilitySettings.daysOff, idx];
+                    setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, daysOff } });
+                  }}
+                  className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${isOff ? 'bg-red-600/30 border border-red-500 text-red-400' : 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-500'}`}
+                  title={['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][idx]}
+                >{d}</button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-zinc-800 my-6" />
+
+        {/* Block a date */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Block a Date</label>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={blockDateInput}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={e => setBlockDateInput(e.target.value)}
+              className="flex-1 px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-red-500 focus:outline-none transition"
+            />
+            <button type="button"
+              onClick={() => {
+                if (!blockDateInput) return;
+                if (settings.availabilitySettings.blockedDates.includes(blockDateInput)) { toast.error('Already blocked'); return; }
+                setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, blockedDates: [...settings.availabilitySettings.blockedDates, blockDateInput].sort() } });
+                setBlockDateInput('');
+              }}
+              className="px-4 py-2.5 rounded-lg bg-red-600/20 border border-red-500/60 text-red-400 text-sm font-semibold hover:bg-red-600/30 transition whitespace-nowrap"
+            >+ Block</button>
+          </div>
+          {settings.availabilitySettings.blockedDates.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {settings.availabilitySettings.blockedDates.map(d => (
+                <span key={d} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-600/20 border border-red-500/40 text-red-400 text-xs font-semibold">
+                  {new Date(d + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  <button type="button" onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, blockedDates: settings.availabilitySettings.blockedDates.filter(x => x !== d) } })} className="hover:text-white ml-0.5 leading-none">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Custom slot for a date */}
+        <div>
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Custom Hours for a Date</label>
+          <p className="text-zinc-600 text-xs mb-3">Override the working window for one specific date only.</p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="date"
+              value={overrideForm.date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={e => setOverrideForm(f => ({ ...f, date: e.target.value }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition flex-1 min-w-[130px]"
+            />
+            <select value={overrideForm.startHour} onChange={e => setOverrideForm(f => ({ ...f, startHour: Number(e.target.value) }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none">
+              {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>)}
+            </select>
+            <span className="text-zinc-500 text-sm self-center">–</span>
+            <select value={overrideForm.endHour} onChange={e => setOverrideForm(f => ({ ...f, endHour: Number(e.target.value) }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none">
+              {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>)}
+            </select>
+            <button type="button"
+              onClick={() => {
+                if (!overrideForm.date) { toast.error('Pick a date'); return; }
+                if (overrideForm.startHour >= overrideForm.endHour) { toast.error('Start must be before end'); return; }
+                if (settings.availabilitySettings.blockedDates.includes(overrideForm.date)) { toast.error('Date is blocked — unblock it first'); return; }
+                if (settings.availabilitySettings.dateOverrides.find(o => o.date === overrideForm.date)) { toast.error('Override already exists for this date'); return; }
+                setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, dateOverrides: [...settings.availabilitySettings.dateOverrides, { ...overrideForm }].sort((a, b) => a.date.localeCompare(b.date)) } });
+                setOverrideForm({ date: '', startHour: 9, endHour: 18 });
+              }}
+              className="px-4 py-2.5 rounded-lg bg-blue-600/20 border border-blue-500/60 text-blue-400 text-sm font-semibold hover:bg-blue-600/30 transition whitespace-nowrap"
+            >+ Add</button>
+          </div>
+          {settings.availabilitySettings.dateOverrides.length > 0 && (
+            <div className="space-y-1.5 mt-3">
+              {settings.availabilitySettings.dateOverrides.map(o => {
+                const fmt = (h: number) => h < 12 ? `${h || 12} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+                return (
+                  <div key={o.date} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700 text-sm">
+                    <span className="text-white font-semibold w-24 shrink-0">{new Date(o.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                    <span className="text-blue-400 flex-1">{fmt(o.startHour)} – {fmt(o.endHour)}</span>
+                    <button type="button" onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, dateOverrides: settings.availabilitySettings.dateOverrides.filter(x => x.date !== o.date) } })} className="text-zinc-600 hover:text-red-400 transition text-base leading-none">×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Live summary */}
+        {(() => {
+          const { startHour, endHour, slotDuration, bufferMinutes, blockedDates, dateOverrides, daysOff } = settings.availabilitySettings;
+          const fmt = (h: number) => h < 12 ? `${h || 12} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+          const inc = slotDuration + bufferMinutes;
+          const slots = inc > 0 && endHour > startHour ? Math.floor(((endHour - startHour) * 60) / inc) : 0;
+          const offDays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => daysOff.includes(i));
+          return (
+            <div className="mt-6 flex flex-wrap gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-full bg-green-600/15 border border-green-500/30 text-green-400">{fmt(startHour)} – {fmt(endHour)}</span>
+              <span className="px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">{slotDuration} min · {slots} slot{slots !== 1 ? 's' : ''}/day</span>
+              {offDays.length > 0 && <span className="px-2.5 py-1 rounded-full bg-red-600/15 border border-red-500/30 text-red-400">Off: {offDays.join(', ')}</span>}
+              {blockedDates.length > 0 && <span className="px-2.5 py-1 rounded-full bg-red-600/15 border border-red-500/30 text-red-400">{blockedDates.length} date{blockedDates.length > 1 ? 's' : ''} blocked</span>}
+              {dateOverrides.length > 0 && <span className="px-2.5 py-1 rounded-full bg-blue-600/15 border border-blue-500/30 text-blue-400">{dateOverrides.length} custom date{dateOverrides.length > 1 ? 's' : ''}</span>}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Notification Settings */}

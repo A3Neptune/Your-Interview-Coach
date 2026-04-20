@@ -223,21 +223,17 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   booking.razorpayOrderId = razorpay_order_id;
   booking.confirmedAt = new Date();
 
-  // Auto-generate Zoom meeting link for confirmed booking
+  // Generate meeting link (Zoom if configured, Jitsi fallback otherwise — never throws)
   if (!booking.meetingLink) {
-    try {
-      const { default: zoomService } = await import('../../utils/zoomService.js');
-      const meeting = await zoomService.create1on1Meeting({
-        title: booking.title,
-        duration: booking.duration,
-      });
-      booking.meetingLink = meeting.joinUrl;
-      booking.meetingId = meeting.meetingId;
-      console.log('✅ Zoom meeting created:', meeting.joinUrl);
-    } catch (error) {
-      console.error('Failed to create Zoom meeting:', error);
-      // Continue without Zoom link - don't block payment confirmation
-    }
+    const { default: zoomService } = await import('../../utils/zoomService.js');
+    const meeting = await zoomService.create1on1Meeting({
+      title: booking.title,
+      duration: booking.duration,
+      bookingId: booking._id.toString(),
+    });
+    booking.meetingLink = meeting.joinUrl;
+    booking.meetingId = meeting.meetingId;
+    console.log(`✅ Meeting link generated (${meeting.provider}):`, meeting.joinUrl);
   }
 
   await booking.save();

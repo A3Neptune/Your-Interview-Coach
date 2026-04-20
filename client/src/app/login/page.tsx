@@ -230,6 +230,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleLogin } from '@react-oauth/google';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, ChevronRight, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI, setAuthToken } from '@/lib/api';
@@ -375,15 +376,9 @@ function LoginForm() {
         <div className="relative z-10 w-full max-w-[420px] fade-up">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center justify-center gap-2.5 mb-7 group">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)', boxShadow: '0 2px 12px rgba(29,78,216,0.25)' }}>
-              <span className="text-white font-bold text-sm">YC</span>
-            </div>
-            <span className="font-semibold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors" style={{ fontSize: 15 }}>
-              YourInterviewCoach
-            </span>
-          </Link>
+          <div className="flex justify-center mb-7">
+            <BrandLogo size="md" />
+          </div>
 
           {/* Card */}
           <div className="bg-white rounded-3xl p-7 card-shadow border border-slate-100">

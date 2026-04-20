@@ -195,23 +195,6 @@ export const paymentAPI = {
   getInvoice: (paymentId: string) => apiClient.get(`/payments/invoice/${paymentId}`),
 };
 
-// Company Prep API
-export const companyPrepAPI = {
-  // Public methods
-  getCompanies: (params?: any) => apiClient.get('/company-prep', { params }),
-  getIndustries: () => apiClient.get('/company-prep/industries'),
-  getCompany: (id: string) => apiClient.get(`/company-prep/${id}`),
-  createOrder: (companyId: string) => apiClient.post(`/company-prep/${companyId}/create-order`),
-  verifyPayment: (companyId: string, data: any) =>
-    apiClient.post(`/company-prep/${companyId}/verify-payment`, data),
-
-  // Mentor methods
-  getAllCompanies: () => apiClient.get('/company-prep/mentor/all'),
-  createCompany: (data: any) => apiClient.post('/company-prep/mentor', data),
-  updateCompany: (id: string, data: any) => apiClient.put(`/company-prep/mentor/${id}`, data),
-  deleteCompany: (id: string) => apiClient.delete(`/company-prep/mentor/${id}`),
-};
-
 // Pricing API
 export const pricingAPI = {
   // Public methods
