@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3, BookOpen, Calendar, Users, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface UserData {
@@ -92,7 +92,6 @@ export default function MentorDashboard() {
             }));
           }
         } catch (err) {
-          console.error('Error fetching bookings:', err);
         }
 
         // Fetch total users count (students + professionals)
@@ -102,19 +101,15 @@ export default function MentorDashboard() {
           });
           if (usersResponse.ok) {
             const usersData = await usersResponse.json();
-            console.log('Users data:', usersData); // Debug log
             // Count all non-admin users (students + professionals)
             const totalUsers = usersData.users?.filter((u: any) => u.userType !== 'admin').length || 0;
-            console.log('Total non-admin users:', totalUsers); // Debug log
             setStats(prev => ({
               ...prev,
               totalStudents: totalUsers,
             }));
           } else {
-            console.error('Users API error:', usersResponse.status);
           }
         } catch (err) {
-          console.error('Error fetching users:', err);
         }
 
         // Fetch courses count
@@ -124,7 +119,6 @@ export default function MentorDashboard() {
           });
           if (coursesResponse.ok) {
             const coursesData = await coursesResponse.json();
-            console.log('Courses API response:', coursesData); // Debug log
             // API returns { success: true, data: { courses: [...], pagination: {...} } }
             const courses = coursesData.data?.courses || coursesData.courses || [];
             setStats(prev => ({
@@ -132,10 +126,8 @@ export default function MentorDashboard() {
               totalCourses: courses.length,
             }));
           } else {
-            console.error('Courses API error:', coursesResponse.status, await coursesResponse.text());
           }
         } catch (err) {
-          console.error('Error fetching courses:', err);
         }
       } catch (err: any) {
         removeAuthToken();

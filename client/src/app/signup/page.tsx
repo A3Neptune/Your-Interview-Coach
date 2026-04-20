@@ -3,7 +3,7 @@
 // import { useEffect, useState } from 'react';
 // import { useRouter } from 'next/navigation';
 // import Link from 'next/link';
-// import toast from 'react-hot-toast';
+// import { toast } from 'sonner';
 // import { authAPI, setAuthToken } from '@/lib/api';
 // import { useAuth } from '@/context/AuthContext';
 
@@ -361,7 +361,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI, setAuthToken } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Check, Eye, EyeOff, GraduationCap, Briefcase, User, Mail, Phone, Lock, Building2, BadgeCheck, Clock, ChevronRight } from 'lucide-react';

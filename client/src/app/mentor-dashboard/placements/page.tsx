@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Briefcase, MapPin, Users, DollarSign, Clock, Filter, Search, Send } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export default function JobOpeningsPage() {
@@ -42,14 +42,12 @@ export default function JobOpeningsPage() {
         });
         jobsData = response.data.jobs || [];
       } catch (err) {
-        console.error('Jobs API error:', err);
         jobsData = [];
       }
 
       setJobs(jobsData);
       setIsLoading(false);
     } catch (err) {
-      console.error('Error fetching jobs:', err);
       setIsLoading(false);
     }
   };

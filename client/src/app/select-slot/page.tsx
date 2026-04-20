@@ -16,7 +16,7 @@ import {
 
 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
-import toast from "react-hot-toast";
+import { toast } from 'sonner';
 import axios from "axios";
 
 interface Booking {
@@ -153,7 +153,6 @@ function SelectSlotContent() {
 
       setIsLoading(false);
     } catch (error) {
-      console.error("Error:", error);
       toast.error("Failed to load availability");
       setIsLoading(false);
     }

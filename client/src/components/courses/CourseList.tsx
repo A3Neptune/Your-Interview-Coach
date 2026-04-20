@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { MoreVertical, Edit2, Copy, Trash2, Eye, EyeOff, Users, Clock, DollarSign, TrendingUp, BookOpen } from 'lucide-react';
 import { getAuthToken } from '@/lib/api';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI } from '@/lib/api';
 
 export default function ForgotPasswordPage() {

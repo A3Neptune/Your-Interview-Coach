@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 import { Loader2, CheckCircle } from 'lucide-react';
 
@@ -34,58 +34,68 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [mentorId, setMentorId] = useState<string | null>(null);
 
   const serviceId = searchParams.get('serviceId');
   const slotData = searchParams.get('slot');
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
-    checkAuthAndLoadData();
-
-    // Decode slot data if present
+    // Parse slot from URL param
     if (slotData) {
       try {
-        const slot = JSON.parse(decodeURIComponent(slotData));
-        setSelectedSlot(slot);
-      } catch (e) {
-        console.error('Error parsing slot data:', e);
-      }
+        setSelectedSlot(JSON.parse(decodeURIComponent(slotData)));
+      } catch { /* invalid slot param — handled in render */ }
     }
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error('Please login first');
+      router.push(`/login?redirect=/checkout?serviceId=${serviceId}`);
+      return;
+    }
+
+    // Preload Razorpay script immediately in background
+    if (!document.querySelector('script[src*="razorpay"]')) {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.async = true;
+      document.body.appendChild(s);
+    }
+
+    checkAuthAndLoadData(token);
   }, [slotData]);
 
-  const checkAuthAndLoadData = async () => {
+  const checkAuthAndLoadData = async (token: string) => {
     try {
-      const token = localStorage.getItem('authToken');
-
-      if (!token) {
-        toast.error('Please login first');
-        router.push(`/login?redirect=/checkout?serviceId=${serviceId}`);
-        return;
-      }
-
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-      // Get current user
-      const userRes = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
+      // Fire all 3 requests in parallel — user, pricing, mentor
+      const [userRes, pricingRes, mentorRes] = await Promise.all([
+        axios.get(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }),
+        axios.get(`${API_URL}/pricing-section/public`),
+        axios.get(`${API_URL}/bookings/mentors`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }),
+      ]);
 
       setUser(userRes.data.user);
 
-      // Get pricing data
-      const pricingRes = await axios.get(`${API_URL}/pricing-section/public`);
       const selectedService = pricingRes.data.services.find((s: Service) => s.id === serviceId);
-
       if (!selectedService) {
         toast.error('Service not found');
         router.push('/');
         return;
       }
-
       setService(selectedService);
+
+      const mid = mentorRes.data.mentors[0]?._id;
+      if (mid) setMentorId(mid);
+
       setIsLoading(false);
-    } catch (error) {
-      console.error('Error loading checkout:', error);
+    } catch {
       toast.error('Failed to load checkout');
       setIsLoading(false);
     }
@@ -117,152 +127,121 @@ function CheckoutContent() {
     return getDiscountedPrice() + getGST();
   };
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const handlePayment = async () => {
     if (!service || !user || !selectedSlot) {
       toast.error('Missing required information');
       return;
     }
 
+    const token = localStorage.getItem('authToken');
+    if (!token) { router.push('/login'); return; }
+
     try {
       setIsProcessing(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('authToken');
 
-      // Step 1: Get admin mentor
-      const mentorRes = await axios.get(`${API_URL}/bookings/mentors`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
-
-      const mentorId = mentorRes.data.mentors[0]?._id;
-      if (!mentorId) {
+      // Use preloaded mentorId; fall back to fetch if somehow missing
+      let mid = mentorId;
+      if (!mid) {
+        const res = await axios.get(`${API_URL}/bookings/mentors`, {
+          headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
+        });
+        mid = res.data.mentors[0]?._id;
+      }
+      if (!mid) {
         toast.error('No mentor available');
         setIsProcessing(false);
         return;
       }
 
-      // Calculate final price with discount
-      const finalPrice = getDiscountedPrice();
+      // Use slot duration (dynamic), fall back to 60
+      const durationMinutes = selectedSlot.duration || 60;
 
-      // Fixed 1-hour slots
-      const durationMinutes = 60;
-
-      // Step 2: Create booking
-      // NOTE: amount is NOT sent to the server - it's calculated server-side from pricing database
-      // This prevents price tampering attacks
+      // Create booking (amount calculated server-side)
       const bookingRes = await axios.post(
         `${API_URL}/bookings`,
         {
-          mentorId,
+          mentorId: mid,
           sessionType: serviceId,
           title: `${service.name} Session`,
-          description: `Booked through marketplace`,
+          description: 'Booked through marketplace',
           scheduledDate: `${selectedSlot.date}T${selectedSlot.time}`,
           duration: durationMinutes,
-          // amount is NOT included - server calculates it from pricing database
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
 
       const bookingId = bookingRes.data.booking._id;
-      const serverCalculatedAmount = bookingRes.data.booking.amount;
 
-      // Step 3: Load Razorpay script
-      const razorpayLoaded = await loadRazorpayScript();
-      if (!razorpayLoaded) {
-        toast.error('Failed to load payment gateway');
+      // Wait for Razorpay to be ready (was preloaded on mount)
+      await new Promise<void>((resolve) => {
+        if (window.Razorpay) return resolve();
+        const interval = setInterval(() => {
+          if (window.Razorpay) { clearInterval(interval); resolve(); }
+        }, 100);
+        setTimeout(() => { clearInterval(interval); resolve(); }, 5000);
+      });
+
+      if (!window.Razorpay) {
+        toast.error('Payment gateway failed to load');
         setIsProcessing(false);
         return;
       }
 
-      // Step 4: Create Razorpay order
+      // Create payment order
       const orderRes = await axios.post(
         `${API_URL}/bookings/${bookingId}/create-payment`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
 
       const razorpayOrder = orderRes.data.order;
-      const razorpayKey = orderRes.data.keyId;
+      const razorpayKey   = orderRes.data.keyId;
 
-      // Step 5: Open Razorpay checkout modal
-      const options = {
+      const razorpayInstance = new window.Razorpay({
         key: razorpayKey,
         order_id: razorpayOrder.id,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency || 'INR',
-        name: 'Career Coach LMS',
+        name: 'YourInterviewCoach',
         description: `${service.name} Session`,
-        customer_notif: 1,
         handler: async (response: any) => {
           try {
-            toast.loading('Verifying payment...');
-
-            // Step 6: Verify payment with backend
+            const verifyId = toast.loading('Verifying payment...');
             const verifyRes = await axios.post(
               `${API_URL}/bookings/${bookingId}/verify-payment`,
               {
-                razorpay_order_id: response.razorpay_order_id,
+                razorpay_order_id:   response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
+                razorpay_signature:  response.razorpay_signature,
               },
-              {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true,
-              }
+              { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
             );
-
+            toast.dismiss(verifyId);
             if (verifyRes.data.success) {
               toast.success('Payment successful! Booking confirmed.');
-              setTimeout(() => {
-                router.push(`/user-dashboard/bookings`);
-              }, 1500);
+              setTimeout(() => router.push('/user-dashboard/bookings'), 1500);
             } else {
               toast.error('Payment verification failed');
               setIsProcessing(false);
             }
-          } catch (error: any) {
-            console.error('Error verifying payment:', error);
-            toast.error(error.response?.data?.error || 'Payment verification failed');
+          } catch (err: any) {
+            toast.error(err.response?.data?.error || 'Payment verification failed');
             setIsProcessing(false);
           }
         },
-        prefill: {
-          name: user.fullName || user.name,
-          email: user.email,
-        },
-        theme: {
-          color: '#ffffff',
-        },
+        prefill: { name: user.fullName || user.name, email: user.email },
+        theme: { color: '#1d4ed8' },
         modal: {
           ondismiss: () => {
             toast.error('Payment cancelled');
             setIsProcessing(false);
           },
         },
-      };
+      });
 
-      const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
-    } catch (error: any) {
-      console.error('Error processing payment:', error);
-      toast.error(error.response?.data?.error || 'Failed to process payment');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to process payment');
       setIsProcessing(false);
     }
   };
@@ -322,14 +301,17 @@ function CheckoutContent() {
             </p>
             <p className="text-blue-600 text-sm mt-1 font-semibold">
               {(() => {
-                const startHour = parseInt(selectedSlot.time.split(':')[0]);
-                const endHour = startHour + 1;
-                const formatHour = (hr: number) => {
-                  const period = hr >= 12 ? 'PM' : 'AM';
-                  const displayHr = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
-                  return `${displayHr} ${period}`;
+                const [sh, sm] = selectedSlot.time.split(':').map(Number);
+                const duration = selectedSlot.duration || 60;
+                const endTotal = sh * 60 + sm + duration;
+                const eh = Math.floor(endTotal / 60);
+                const em = endTotal % 60;
+                const fmt = (h: number, m: number) => {
+                  const p = h >= 12 ? 'PM' : 'AM';
+                  const d = h > 12 ? h - 12 : h === 0 ? 12 : h;
+                  return m === 0 ? `${d} ${p}` : `${d}:${String(m).padStart(2,'0')} ${p}`;
                 };
-                return `${formatHour(startHour)} - ${formatHour(endHour)} (1 hour)`;
+                return `${fmt(sh, sm)} – ${fmt(eh, em)} (${duration} min)`;
               })()}
             </p>
           </div>

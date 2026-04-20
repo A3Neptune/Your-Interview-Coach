@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Video, Phone, Plus, Calendar, Users, Clock, Play, Pause, Download, Share2, Edit2, AlertCircle, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import useSWR from 'swr';
 import axios from 'axios';
 import ScheduleGDModal from '@/components/ScheduleGDModal';

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, AlertCircle, User } from "lucide-react";
 import { motion } from "framer-motion";
-import toast from "react-hot-toast";
+import { toast } from 'sonner';
 import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
 interface BookingStudent {

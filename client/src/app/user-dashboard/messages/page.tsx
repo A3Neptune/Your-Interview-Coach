@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Send, Lock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export default function UserMessagesPage() {
@@ -64,7 +64,6 @@ export default function UserMessagesPage() {
 
       setIsLoading(false);
     } catch (err: any) {
-      console.error('Error fetching conversations:', err);
       setHasAccess(false);
       setIsLoading(false);
     }
@@ -83,7 +82,6 @@ export default function UserMessagesPage() {
 
       setMessages(response.data.messages || []);
     } catch (err: any) {
-      console.error('Error fetching messages:', err);
       if (err.response?.status === 403) {
         toast.error('Unable to load messages');
       }

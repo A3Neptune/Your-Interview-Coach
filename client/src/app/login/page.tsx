@@ -6,7 +6,7 @@
 // import { GoogleLogin } from '@react-oauth/google';
 // import Link from 'next/link';
 // import { Eye, EyeOff } from 'lucide-react';
-// import toast from 'react-hot-toast';
+// import { toast } from 'sonner';
 // import { authAPI, setAuthToken } from '@/lib/api';
 // import { useAuth } from '@/context/AuthContext';
 
@@ -232,7 +232,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, ChevronRight, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI, setAuthToken } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 

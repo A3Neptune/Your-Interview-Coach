@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Save, Plus, Trash2, Edit2, X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface Service {
@@ -62,7 +62,6 @@ export default function AdminPricingPage() {
       setPricingData(res.data);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching pricing data:', error);
       toast.error('Failed to load pricing data');
       setIsLoading(false);
     }
@@ -98,7 +97,6 @@ export default function AdminPricingPage() {
       toast.success('Header updated successfully!');
       setIsSaving(false);
     } catch (error) {
-      console.error('Error saving header:', error);
       toast.error('Failed to save header');
       setIsSaving(false);
     }
@@ -137,7 +135,6 @@ export default function AdminPricingPage() {
       setEditingServiceId(null);
       setIsSaving(false);
     } catch (error) {
-      console.error('Error saving service:', error);
       toast.error('Failed to save service');
       setIsSaving(false);
     }
@@ -161,7 +158,6 @@ export default function AdminPricingPage() {
 
       toast.success('Service deleted successfully!');
     } catch (error) {
-      console.error('Error deleting service:', error);
       toast.error('Failed to delete service');
     }
   };

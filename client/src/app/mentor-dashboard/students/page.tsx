@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Search, Mail, Phone, Award, Trash2, Edit2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 import EditStudentModal from '@/components/EditStudentModal';
 import AddStudentModal from '@/components/AddStudentModal';
@@ -32,47 +32,55 @@ export default function StudentsPage() {
       }
 
       try {
-        // Fetch all users except admin from the new endpoint
-        const usersRes = await axios.get(`${API_URL}/auth/all-users`, {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache'
-          },
-          timeout: 10000
+        const [usersRes, bookingsRes] = await Promise.allSettled([
+          axios.get(`${API_URL}/auth/all-users`, {
+            withCredentials: true,
+            headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' },
+            timeout: 10000,
+          }),
+          axios.get(`${API_URL}/bookings/mentor`, {
+            withCredentials: true,
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000,
+          }),
+        ]);
+
+        const users = usersRes.status === 'fulfilled' ? (usersRes.value.data.users || []) : [];
+        const bookings = bookingsRes.status === 'fulfilled' ? (bookingsRes.value.data.bookings || []) : [];
+
+        // Build per-student session count and spend from real bookings
+        const sessionMap: Record<string, number> = {};
+        const spendMap: Record<string, number> = {};
+        bookings.forEach((b: any) => {
+          const sid = b.studentId?._id || b.studentId;
+          if (!sid) return;
+          sessionMap[sid] = (sessionMap[sid] || 0) + 1;
+          if (b.paymentStatus === 'completed') spendMap[sid] = (spendMap[sid] || 0) + (b.amount || 0);
         });
 
-        // Map users to student list
-        const studentsList = (usersRes.data.users || []).map((student: any) => ({
-            id: student._id,
-            name: student.name,
-            email: student.email,
-            mobile: student.mobile || 'N/A',
-            joinDate: student.createdAt || new Date().toISOString(),
-            sessions: 0,
-            totalSpent: 0,
-            status: 'Active',
-            avatar: (student.name || '')
-              .split(' ')
-              .map((n: string) => n[0])
-              .join('')
-              .toUpperCase()
-              .slice(0, 2),
-            skills: student.skills || [],
-            userType: student.userType,
-            company: student.company || 'N/A',
-            designation: student.designation || 'N/A',
-          }));
+        const studentsList = users.map((student: any) => ({
+          id: student._id,
+          name: student.name,
+          email: student.email,
+          mobile: student.mobile || 'N/A',
+          joinDate: student.createdAt || new Date().toISOString(),
+          sessions: sessionMap[student._id] || 0,
+          totalSpent: spendMap[student._id] || 0,
+          status: student.isActive !== false ? 'Active' : 'Inactive',
+          avatar: (student.name || '').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+          skills: student.skills || [],
+          userType: student.userType,
+          company: student.company || 'N/A',
+          designation: student.designation || 'N/A',
+        }));
 
         setStudents(studentsList);
         setIsLoading(false);
       } catch (apiErr: any) {
-        console.error('Students API error:', apiErr?.response?.status, apiErr?.message);
         setStudents([]);
         setIsLoading(false);
       }
     } catch (err) {
-      console.error('Error fetching students:', err);
       setStudents([]);
       setIsLoading(false);
     }
@@ -122,7 +130,6 @@ export default function StudentsPage() {
       } catch (err: any) {
         const errorMsg = err.response?.data?.error || 'Failed to remove student';
         toast.error(errorMsg);
-        console.error('Delete error:', err);
       }
     }
   };
@@ -145,7 +152,6 @@ export default function StudentsPage() {
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to update status';
       toast.error(errorMsg);
-      console.error('Status update error:', err);
     }
   };
 
@@ -329,19 +335,15 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination — just a count since all records are shown */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-400">Showing {filteredStudents.length} of {students.length} students</p>
+        <p className="text-sm text-zinc-400">
+          Showing {filteredStudents.length} of {students.length} student{students.length !== 1 ? 's' : ''}
+        </p>
         <div className="flex gap-2">
-          <button className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm transition">
-            Previous
-          </button>
-          <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm transition">
-            1
-          </button>
-          <button className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm transition">
-            Next
-          </button>
+          <span className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-500 text-sm cursor-default">
+            All results shown
+          </span>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Search, Filter, Grid, List, TrendingUp, Eye, Users, DollarSign, MoreVertical, Edit2, Copy, Trash2, BookOpen, Play, FileText, Link as LinkIcon, ChevronDown } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import CreateCourseModal from '@/components/courses/CreateCourseModal';
 import CourseCard from '@/components/courses/CourseCard';
@@ -61,7 +61,6 @@ export default function AdvancedCoursesPage() {
         calculateStats(data.data.courses || []);
       }
     } catch (error) {
-      console.error('Fetch courses error:', error);
       toast.error('Failed to load courses');
     } finally {
       setIsLoading(false);

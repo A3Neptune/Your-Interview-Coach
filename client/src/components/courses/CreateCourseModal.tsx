@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Upload, Link as LinkIcon, FileText, Video } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { getAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';

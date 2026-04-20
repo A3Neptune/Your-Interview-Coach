@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Briefcase, MapPin, DollarSign, TrendingUp, Send, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export default function MatchedJobsPage() {
@@ -32,14 +32,12 @@ export default function MatchedJobsPage() {
         });
         setMatchedJobs(response.data.matchedJobs || []);
       } catch (err) {
-        console.error('Matched jobs API error:', err);
         toast.error('Failed to load matched jobs');
         setMatchedJobs([]);
       }
 
       setIsLoading(false);
     } catch (err) {
-      console.error('Error fetching matched jobs:', err);
       setIsLoading(false);
     }
   };

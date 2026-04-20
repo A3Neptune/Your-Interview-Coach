@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { Save, Edit2, X, Plus, Trash2, Globe, Clock, Tag, AlertCircle, CheckCircle2, TrendingDown } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { pricingAPI } from '@/lib/api';
 
 interface Service {
@@ -71,13 +71,10 @@ export default function MentorPricingPage() {
   const fetchMentorPricing = async () => {
     try {
       const res = await pricingAPI.getServices();
-      console.log('Pricing API Response:', res.data); // Debug log
       const servicesData = res.data.services || res.data || [];
-      console.log('Services:', servicesData); // Debug log
       setServices(Array.isArray(servicesData) ? servicesData : (servicesData.services || []));
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching pricing:', error);
       toast.error('Failed to load pricing');
       setIsLoading(false);
     }
@@ -99,17 +96,24 @@ export default function MentorPricingPage() {
     try {
       setIsSaving(true);
       const service = services.find(s => s.id === serviceId);
-
       if (!service) return;
 
-      await pricingAPI.updateService(serviceId, service);
+      if (!service.name || !service.price || !service.duration || !service.title) {
+        toast.error('Name, price, duration and title are required');
+        setIsSaving(false);
+        return;
+      }
+
+      // Never send discount in service update — discount has its own endpoint
+      const { discount: _omit, ...serviceFields } = service;
+      await pricingAPI.updateService(serviceId, serviceFields);
 
       toast.success('Service updated successfully!');
       setEditingServiceId(null);
-      setIsSaving(false);
+      await fetchMentorPricing();
     } catch (error) {
-      console.error('Error saving service:', error);
       toast.error('Failed to save service');
+    } finally {
       setIsSaving(false);
     }
   };
@@ -150,8 +154,8 @@ export default function MentorPricingPage() {
       toast.success('Discount updated successfully!');
       setDiscountMode({ ...discountMode, [serviceId]: false });
       setSavingDiscountId(null);
+      await fetchMentorPricing(); // re-sync with DB
     } catch (error: any) {
-      console.error('Error saving discount:', error);
       toast.error(error.response?.data?.error || 'Failed to save discount');
       setSavingDiscountId(null);
     }
@@ -159,17 +163,16 @@ export default function MentorPricingPage() {
 
   const handleDiscountChange = (serviceId: string, field: string, value: any) => {
     setServices(
-      services.map(s =>
-        s.id === serviceId
-          ? {
-              ...s,
-              discount: {
-                ...s.discount,
-                [field]: value,
-              } as any,
-            }
-          : s
-      )
+      services.map(s => {
+        if (s.id !== serviceId) return s;
+        const updated = { ...s.discount, [field]: value } as any;
+        // auto-deactivate when type is set to none, auto-reset value
+        if (field === 'type' && value === 'none') {
+          updated.isActive = false;
+          updated.value = 0;
+        }
+        return { ...s, discount: updated };
+      })
     );
   };
 
@@ -211,7 +214,6 @@ export default function MentorPricingPage() {
       // Refresh services
       await fetchMentorPricing();
     } catch (error: any) {
-      console.error('Error creating service:', error);
       toast.error(error.response?.data?.error || 'Failed to create service');
     } finally {
       setIsSaving(false);
@@ -225,7 +227,6 @@ export default function MentorPricingPage() {
       setDeleteTarget(null);
       await fetchMentorPricing();
     } catch (error: any) {
-      console.error('Error deleting service:', error);
       toast.error(error.response?.data?.error || 'Failed to delete service');
     }
   }, []);
@@ -311,23 +312,13 @@ export default function MentorPricingPage() {
 
       if (removedCount > 0) {
         // Show success toast with undo option
-        toast.success(
-          (t) => (
-            <div className="flex items-center gap-3">
-              <span>Removed discounts from {removedCount} service{removedCount > 1 ? 's' : ''}!</span>
-              <button
-                onClick={() => {
-                  handleUndoRemoveDiscounts();
-                  toast.dismiss(t.id);
-                }}
-                className="px-3 py-1 rounded bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition"
-              >
-                Undo
-              </button>
-            </div>
-          ),
-          { duration: 6000 }
-        );
+        toast.success(`Removed discounts from ${removedCount} service${removedCount > 1 ? 's' : ''}!`, {
+          duration: 6000,
+          action: {
+            label: 'Undo',
+            onClick: () => handleUndoRemoveDiscounts(),
+          },
+        });
 
         setLastAppliedDiscount(null);
       } else {
@@ -457,123 +448,116 @@ export default function MentorPricingPage() {
       {showGlobalDiscount && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-2xl w-full shadow-2xl">
+            {/* Header */}
             <div className="bg-black border-b border-zinc-700 p-6 flex justify-between items-center rounded-t-2xl">
               <div>
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <span className="text-2xl">🌐</span> Global Discount
+                  <span>🌐</span> Global Discount
                 </h3>
                 <p className="text-zinc-400 text-sm mt-1">Apply the same discount to all services at once</p>
               </div>
-              <button
-                onClick={() => setShowGlobalDiscount(false)}
-                className="p-2 hover:bg-zinc-800 rounded-lg text-white transition"
-              >
+              <button onClick={() => setShowGlobalDiscount(false)} className="p-2 hover:bg-zinc-800 rounded-lg text-white transition">
                 <X size={24} />
               </button>
             </div>
 
-            <div className="p-6">
-              <div className="space-y-4 p-4 bg-black/50 rounded-lg border border-zinc-800">
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="p-4 bg-black/50 rounded-lg border border-zinc-800 space-y-4">
                 <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm text-zinc-300 mb-2 font-semibold">Discount Type</label>
-                <select
-                  value={globalDiscount.type}
-                  onChange={(e) => setGlobalDiscount({ ...globalDiscount, type: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-purple-500 focus:outline-none text-sm"
-                >
-                  <option value="none">No Discount</option>
-                  <option value="percentage">Percentage (%)</option>
-                  <option value="fixed">Fixed Amount (₹)</option>
-                </select>
+                  <div>
+                    <label className="block text-sm text-zinc-300 mb-2 font-semibold">Discount Type</label>
+                    <select
+                      value={globalDiscount.type}
+                      onChange={(e) => setGlobalDiscount({ ...globalDiscount, type: e.target.value as any, value: 0 })}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-purple-500 focus:outline-none text-sm"
+                    >
+                      <option value="none">No Discount</option>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount (₹)</option>
+                    </select>
+                  </div>
+
+                  {globalDiscount.type !== 'none' && (
+                    <div>
+                      <label className="block text-sm text-zinc-300 mb-2 font-semibold">
+                        {globalDiscount.type === 'percentage' ? 'Discount %' : 'Discount Amount (₹)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={globalDiscount.value}
+                        onChange={(e) => setGlobalDiscount({ ...globalDiscount, value: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        max={globalDiscount.type === 'percentage' ? 100 : undefined}
+                        placeholder={globalDiscount.type === 'percentage' ? 'e.g., 20' : 'e.g., 500'}
+                        className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-purple-500 focus:outline-none text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {globalDiscount.type !== 'none' && (
+                    <div className="flex items-end">
+                      <button
+                        onClick={() => {
+                          if (!globalDiscount.value || globalDiscount.value <= 0) {
+                            toast.error('Please enter a valid discount value');
+                            return;
+                          }
+                          if (globalDiscount.type === 'fixed') {
+                            const minPrice = Math.min(...services.map(s => s.price));
+                            if (globalDiscount.value >= minPrice) {
+                              toast.error(`Fixed discount ₹${globalDiscount.value} exceeds lowest service price ₹${minPrice}`);
+                              return;
+                            }
+                          }
+                          const existing = services.filter(s => s.discount?.isActive && s.discount?.type !== 'none');
+                          if (existing.length > 0) {
+                            setServicesWithDiscounts(existing);
+                            setShowGlobalConfirmModal(true);
+                          } else {
+                            handleApplyGlobalDiscount('replace');
+                          }
+                        }}
+                        disabled={isSaving}
+                        className="w-full px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold transition disabled:opacity-50 text-sm"
+                      >
+                        Apply to All
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {globalDiscount.type !== 'none' && globalDiscount.value > 0 && (
+                  <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded text-sm">
+                    <p className="text-purple-300 font-semibold mb-2">Preview (student pays, incl. 18% GST):</p>
+                    <div className="space-y-1">
+                      {services.map((service) => {
+                        const discountAmt = globalDiscount.type === 'percentage'
+                          ? (service.price * globalDiscount.value) / 100
+                          : globalDiscount.value;
+                        const afterDiscount = Math.max(0, service.price - discountAmt);
+                        const withGst = Math.round(afterDiscount * 1.18);
+                        const origWithGst = Math.round(service.price * 1.18);
+                        const isValid = globalDiscount.type === 'percentage'
+                          ? globalDiscount.value <= 100
+                          : globalDiscount.value < service.price;
+                        return (
+                          <div key={service.id} className="flex justify-between items-center text-xs">
+                            <span className="text-zinc-400">{service.name}:</span>
+                            <span className={isValid ? 'text-purple-300' : 'text-red-400'}>
+                              {isValid
+                                ? `₹${origWithGst} → ₹${withGst} (save ₹${origWithGst - withGst})`
+                                : '⚠️ Discount ≥ price — will be skipped'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {globalDiscount.type !== 'none' && (
-                <div>
-                  <label className="block text-sm text-zinc-300 mb-2 font-semibold">
-                    {globalDiscount.type === 'percentage' ? 'Discount %' : 'Discount Amount (₹)'}
-                  </label>
-                  <input
-                    type="number"
-                    value={globalDiscount.value}
-                    onChange={(e) => setGlobalDiscount({ ...globalDiscount, value: parseFloat(e.target.value) || 0 })}
-                    min="0"
-                    max={globalDiscount.type === 'percentage' ? 100 : undefined}
-                    placeholder={globalDiscount.type === 'percentage' ? 'e.g., 20' : 'e.g., 500'}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-purple-500 focus:outline-none text-sm"
-                  />
-                </div>
-              )}
-
-              {globalDiscount.type !== 'none' && (
-                <div className="flex items-end">
-                  <button
-                    onClick={() => {
-                      if (!globalDiscount.value || globalDiscount.value <= 0) {
-                        toast.error('Please enter a valid discount value');
-                        return;
-                      }
-
-                      // Check if discount exceeds any service price
-                      if (globalDiscount.type === 'fixed') {
-                        const minPrice = Math.min(...services.map(s => s.price));
-                        if (globalDiscount.value >= minPrice) {
-                          toast.error(`Fixed discount (₹${globalDiscount.value}) exceeds the lowest service price (₹${minPrice})`);
-                          return;
-                        }
-                      }
-
-                      // Check for existing discounts
-                      const servicesWithExistingDiscounts = services.filter(
-                        s => s.discount?.isActive && s.discount?.type !== 'none'
-                      );
-
-                      if (servicesWithExistingDiscounts.length > 0) {
-                        setServicesWithDiscounts(servicesWithExistingDiscounts);
-                        setShowGlobalConfirmModal(true);
-                      } else {
-                        // No conflicts, apply directly
-                        handleApplyGlobalDiscount('replace');
-                      }
-                    }}
-                    disabled={isSaving}
-                    className="w-full px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold transition disabled:opacity-50 text-sm"
-                  >
-                    Apply to All Services
-                  </button>
-                </div>
-              )}
             </div>
-
-            {globalDiscount.type !== 'none' && globalDiscount.value > 0 && (
-              <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded text-sm">
-                <p className="text-purple-300 font-semibold mb-1">Preview:</p>
-                <div className="space-y-1">
-                  {services.map((service) => {
-                    const discount = globalDiscount.type === 'percentage'
-                      ? (service.price * globalDiscount.value) / 100
-                      : globalDiscount.value;
-                    const finalPrice = Math.max(0, service.price - discount);
-                    const isValid = globalDiscount.type === 'percentage'
-                      ? globalDiscount.value <= 100
-                      : globalDiscount.value < service.price;
-
-                    return (
-                      <div key={service.id} className="flex justify-between items-center text-xs">
-                        <span className="text-zinc-400">{service.name}:</span>
-                        <span className={isValid ? 'text-purple-300' : 'text-red-400'}>
-                          ₹{service.price} → ₹{Math.round(finalPrice)}
-                          {!isValid && ' ⚠️ Invalid'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-        </div>
         </div>
       )}
 

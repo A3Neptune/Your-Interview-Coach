@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Settings, Bell, Lock, Globe, User, Save, AlertCircle, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 import { authAPI } from '@/lib/api';
 import LaunchBannerManager from '@/components/admin/LaunchBannerManager';
@@ -89,7 +89,6 @@ export default function SettingsPage() {
         setOriginalSettings(loadedSettings);
         setHasChanges(false);
       } catch (err: any) {
-        console.error('Settings API error:', err);
         if (err?.response?.status === 401) {
           localStorage.removeItem('authToken');
         }
@@ -97,7 +96,6 @@ export default function SettingsPage() {
 
       setIsLoading(false);
     } catch (err) {
-      console.error('Error fetching settings:', err);
       setIsLoading(false);
     }
   };
@@ -113,7 +111,6 @@ export default function SettingsPage() {
       setHasChanges(false);
       setIsSaving(false);
     } catch (err: any) {
-      console.error('Error saving settings:', err);
       toast.error(err.response?.data?.error || 'Failed to save settings');
       setIsSaving(false);
     }

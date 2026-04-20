@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut, User, Settings } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI, removeAuthToken } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 

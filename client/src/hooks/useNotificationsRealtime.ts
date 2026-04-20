@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export interface Notification {
   _id: string;

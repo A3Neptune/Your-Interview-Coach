@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Loader2, Upload, X, Plus, Trash2, Video, FileText, Link as LinkIcon, GripVertical } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/api';
 
@@ -87,7 +87,6 @@ export default function EditCoursePage() {
         toast.error('Failed to load course');
       }
     } catch (error) {
-      console.error('Fetch course error:', error);
       toast.error('Failed to load course');
     } finally {
       setIsLoading(false);
@@ -118,7 +117,6 @@ export default function EditCoursePage() {
         toast.error(data.error || 'Failed to update course');
       }
     } catch (error) {
-      console.error('Update course error:', error);
       toast.error('Failed to update course');
     } finally {
       setIsSaving(false);
@@ -178,7 +176,6 @@ export default function EditCoursePage() {
         toast.error(data.error || 'Failed to upload thumbnail');
       }
     } catch (error) {
-      console.error('Upload error:', error);
       toast.error('Failed to upload thumbnail');
     } finally {
       setIsUploading(false);
@@ -218,7 +215,6 @@ export default function EditCoursePage() {
         toast.error(data.error || 'Failed to upload video');
       }
     } catch (error) {
-      console.error('Upload error:', error);
       toast.error('Failed to upload video');
     } finally {
       setUploadingVideo(false);

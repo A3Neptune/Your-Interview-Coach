@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Clock, User, CheckCircle, ExternalLink, Play, Lock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { contentAPI } from '@/lib/api';
 import { getAuthToken, removeAuthToken } from '@/lib/api';
 
@@ -132,7 +132,6 @@ export default function CourseDetailPage() {
         // Check enrollment status
         await checkEnrollmentStatus();
       } catch (err: any) {
-        console.error('Error fetching course:', err);
         if (err.response?.status === 401 || err.message?.includes('token')) {
           removeAuthToken();
           router.push('/login');
@@ -172,7 +171,6 @@ export default function CourseDetailPage() {
           setVideoProgress(prev => new Map(prev).set(content._id, parseFloat(savedProgress)));
         }
       } catch (error) {
-        console.error('Error preloading video:', error);
         setVideoError('Failed to load video. Please try again.');
       } finally {
         setIsVideoLoading(false);
@@ -211,7 +209,6 @@ export default function CourseDetailPage() {
         setIsEnrolled(data.isEnrolled);
       }
     } catch (error) {
-      console.error('Error checking enrollment:', error);
     }
   };
 
@@ -246,7 +243,6 @@ export default function CourseDetailPage() {
         toast.error(data.error || 'Failed to enroll');
       }
     } catch (error) {
-      console.error('Enrollment error:', error);
       toast.error('Failed to enroll in course');
     } finally {
       setIsEnrolling(false);

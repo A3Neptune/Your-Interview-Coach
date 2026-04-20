@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Download, ArrowRight } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { paymentAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface Payment {

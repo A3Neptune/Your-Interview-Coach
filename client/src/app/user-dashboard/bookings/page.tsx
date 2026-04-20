@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, MessageCircle, Clock, User, DollarSign, ExternalLink, MessageSquare } from 'lucide-react';
 // import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 const phoneNumber = "919718713646"; // no +
@@ -83,7 +83,6 @@ function UserBookingsContent() {
       setBookings(response.data.bookings || []);
       setIsLoading(false);
     } catch (error: any) {
-      console.error('Error fetching bookings:', error);
       if (error.response?.status === 401) {
         // Silently handle unauthorized - just show empty state
         setBookings([]);
@@ -118,7 +117,6 @@ function UserBookingsContent() {
       setNotes('');
       fetchBookings();
     } catch (error) {
-      console.error('Error adding notes:', error);
       toast.error('Failed to add notes');
     }
   };

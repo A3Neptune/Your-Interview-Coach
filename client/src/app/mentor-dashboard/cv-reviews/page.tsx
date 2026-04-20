@@ -10,7 +10,7 @@ import {
   Plus,
   AlertCircle,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from 'sonner';
 import axios from "axios";
 
 export default function CVReviewsPage() {
@@ -45,7 +45,6 @@ export default function CVReviewsPage() {
         });
         bookings = bookingsRes.data.bookings || [];
       } catch (apiErr: any) {
-        console.error("Bookings API error:", apiErr?.message);
         bookings = [];
       }
       const cvReviewBookings = bookings.filter(
@@ -54,7 +53,7 @@ export default function CVReviewsPage() {
 
       const formattedReviews = cvReviewBookings.map((booking: any) => ({
         id: booking._id,
-        student: booking.studentName,
+        student: booking.studentId?.name || booking.studentName || 'Student',
         uploadDate: new Date(booking.createdAt).toLocaleDateString(),
         status:
           booking.status === "completed"
@@ -62,21 +61,14 @@ export default function CVReviewsPage() {
             : booking.status === "confirmed"
               ? "pending"
               : "inprogress",
-        rating:
-          booking.status === "completed"
-            ? Math.floor(Math.random() * 2) + 4
-            : 0,
-        feedback:
-          booking.status === "completed"
-            ? "CV review completed. Great work!"
-            : "",
-        fileName: `${booking.studentName.replace(/\s/g, "_")}_CV.pdf`,
+        rating: booking.feedback?.rating || 0,
+        feedback: booking.feedback?.comment || booking.mentorNotes || '',
+        fileName: booking.studentNotes || '',
       }));
 
       setReviews(formattedReviews);
       setIsLoading(false);
     } catch (err) {
-      console.error("Error fetching CV reviews:", err);
       toast.error("Failed to load CV reviews");
       setIsLoading(false);
     }

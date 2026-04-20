@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Bell, X, CheckCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useNotificationsRealtime } from '@/hooks/useNotificationsRealtime';
 
 export default function NotificationBell() {

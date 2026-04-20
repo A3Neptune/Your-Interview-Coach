@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { X, Search, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface User {

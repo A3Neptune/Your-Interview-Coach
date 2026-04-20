@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { contentAPI, paymentAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -68,7 +68,6 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to load course');
       }
     } catch (err: any) {
-      console.error('Fetch course error:', err);
       if (err.response?.status === 401 || err.message?.includes('token')) {
         removeAuthToken();
         router.push('/login');

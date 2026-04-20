@@ -9,7 +9,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
+import { toast } from 'sonner';
 import axios from "axios";
 
 export default function AnalyticsPage() {
@@ -48,13 +48,7 @@ export default function AnalyticsPage() {
           timeout: 10000,
         });
         bookings = bookingsRes.data.bookings || [];
-      } catch (apiErr: any) {
-        console.error(
-          "Bookings API error:",
-          apiErr?.response?.status,
-          apiErr?.message,
-        );
-        // Use empty array if API fails - will show 0 stats
+      } catch {
         bookings = [];
       }
 
@@ -69,12 +63,46 @@ export default function AnalyticsPage() {
         (b: any) => b.status === "completed",
       ).length;
 
+      // Real month-over-month comparison
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+      const thisYear = now.getFullYear();
+      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+      const thisMonthBookings = bookings.filter((b: any) => {
+        const d = new Date(b.createdAt);
+        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+      });
+      const lastMonthBookings = bookings.filter((b: any) => {
+        const d = new Date(b.createdAt);
+        return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+      });
+
+      const thisMonthRevenue = thisMonthBookings.reduce((s: number, b: any) => s + (b.amount || 0), 0);
+      const lastMonthRevenue = lastMonthBookings.reduce((s: number, b: any) => s + (b.amount || 0), 0);
+      const revenueChange = lastMonthRevenue > 0
+        ? `${thisMonthRevenue >= lastMonthRevenue ? "+" : ""}${Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)}% vs last month`
+        : thisMonthRevenue > 0 ? "New this month" : "No data yet";
+
+      const thisMonthStudents = new Set(thisMonthBookings.map((b: any) => b.studentId)).size;
+      const lastMonthStudents = new Set(lastMonthBookings.map((b: any) => b.studentId)).size;
+      const studentChange = thisMonthStudents === 0 && lastMonthStudents === 0
+        ? "No sessions yet"
+        : `${thisMonthStudents >= lastMonthStudents ? "+" : ""}${thisMonthStudents - lastMonthStudents} vs last month`;
+
+      const thisMonthCompleted = thisMonthBookings.filter((b: any) => b.status === "completed").length;
+      const lastMonthCompleted = lastMonthBookings.filter((b: any) => b.status === "completed").length;
+      const sessionChange = thisMonthCompleted === 0 && lastMonthCompleted === 0
+        ? "No completed yet"
+        : `${thisMonthCompleted >= lastMonthCompleted ? "+" : ""}${thisMonthCompleted - lastMonthCompleted} vs last month`;
+
       const newStats = [
         {
           label: "Total Revenue",
           value: `₹${totalRevenue.toLocaleString()}`,
-          change: "+12.5%",
-          isPositive: true,
+          change: revenueChange,
+          isPositive: thisMonthRevenue >= lastMonthRevenue,
           icon: DollarSign,
           bgColor: "from-emerald-500/10 to-teal-500/10",
           borderColor: "border-emerald-500/20",
@@ -82,8 +110,8 @@ export default function AnalyticsPage() {
         {
           label: "Active Students",
           value: uniqueStudents,
-          change: `+${Math.floor(uniqueStudents * 0.2)} this month`,
-          isPositive: true,
+          change: studentChange,
+          isPositive: thisMonthStudents >= lastMonthStudents,
           icon: Users,
           bgColor: "from-blue-500/10 to-cyan-500/10",
           borderColor: "border-blue-500/20",
@@ -91,8 +119,8 @@ export default function AnalyticsPage() {
         {
           label: "Sessions Completed",
           value: completedSessions,
-          change: `+${Math.floor(completedSessions * 0.25)} this month`,
-          isPositive: true,
+          change: sessionChange,
+          isPositive: thisMonthCompleted >= lastMonthCompleted,
           icon: BookOpen,
           bgColor: "from-purple-500/10 to-pink-500/10",
           borderColor: "border-purple-500/20",
@@ -101,18 +129,20 @@ export default function AnalyticsPage() {
 
       setStats(newStats);
 
-      // Generate revenue data for last 6 months
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-      const monthlyRevenue = months.map((month, idx) => {
-        const monthBookings = bookings.filter((b: any) => {
-          const bookingDate = new Date(b.createdAt);
-          return bookingDate.getMonth() === idx;
-        });
-        const revenue = monthBookings.reduce(
-          (sum: number, b: any) => sum + (b.amount || 0),
-          0,
-        );
-        return { month, revenue: revenue || Math.random() * 3000 + 2000 };
+      // Revenue for last 6 actual calendar months
+      const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const m = d.getMonth();
+        const y = d.getFullYear();
+        const label = d.toLocaleString("default", { month: "short" });
+        const revenue = bookings
+          .filter((b: any) => {
+            const bd = new Date(b.createdAt);
+            return bd.getMonth() === m && bd.getFullYear() === y;
+          })
+          .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
+        return { month: label, revenue };
       });
 
       setRevenueData(monthlyRevenue);
@@ -197,7 +227,6 @@ export default function AnalyticsPage() {
 
       setIsLoading(false);
     } catch (err) {
-      console.error("Error fetching analytics:", err);
       toast.error("Failed to load analytics");
       setIsLoading(false);
     }

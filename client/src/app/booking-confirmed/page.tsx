@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, Calendar, Clock, User, DollarSign, Download } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface BookingDetails {
@@ -67,7 +67,6 @@ function BookingConfirmedContent() {
       setBooking(response.data.booking);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching booking details:', error);
       toast.error('Failed to load booking details');
       setIsLoading(false);
       router.push('/');
@@ -89,9 +88,7 @@ function BookingConfirmedContent() {
     try {
       toast.success('Receipt download initiated');
       // This would integrate with a PDF generation service
-      console.log('Downloading receipt for booking:', bookingId);
     } catch (error) {
-      console.error('Error downloading receipt:', error);
       toast.error('Failed to download receipt');
     }
   };

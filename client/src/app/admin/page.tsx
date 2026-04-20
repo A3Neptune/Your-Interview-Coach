@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3, Users, LogOut, Settings, Search, ChevronRight, ArrowUpRight, Zap } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface UserData {

@@ -223,9 +223,19 @@ const addService = async (serviceData) => {
  * Update service
  */
 const updateService = async (serviceId, serviceData) => {
+  // Only update non-discount fields — discount has its own endpoint
+  const { discount: _omit, ...fields } = serviceData;
+  const setPayload = {};
+  const allowed = ['name', 'price', 'duration', 'title', 'value', 'points', 'level', 'support', 'access'];
+  for (const key of allowed) {
+    if (fields[key] !== undefined) {
+      setPayload[`services.$.${key}`] = fields[key];
+    }
+  }
+
   const pricingSection = await PricingSection.findOneAndUpdate(
     { isGlobal: true, 'services.id': serviceId },
-    { $set: { 'services.$': serviceData } },
+    { $set: setPayload },
     { new: true }
   );
 

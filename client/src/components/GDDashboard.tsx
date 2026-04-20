@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Users, Calendar, Clock, MapPin, Check, X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import useSWR from 'swr';
 import axios from 'axios';
 

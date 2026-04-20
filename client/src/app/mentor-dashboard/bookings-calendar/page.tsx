@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Edit2, Trash2, Clock, MapPin } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export default function MeetingsCalendarPage() {
@@ -35,7 +35,6 @@ export default function MeetingsCalendarPage() {
         });
         bookings = bookingsRes.data.bookings || [];
       } catch (apiErr: any) {
-        console.error('Bookings API error:', apiErr?.message);
         bookings = [];
       }
       const formattedMeetings = bookings.map((booking: any) => ({
@@ -51,7 +50,6 @@ export default function MeetingsCalendarPage() {
       setMeetings(formattedMeetings);
       setIsLoading(false);
     } catch (err) {
-      console.error('Error fetching meetings:', err);
       toast.error('Failed to load meetings');
       setIsLoading(false);
     }

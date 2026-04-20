@@ -121,7 +121,6 @@ export default function DashboardPage() {
             .slice(0, 3);
           setUpcomingBookings(upcoming);
         } catch (err) {
-          console.error("Error fetching bookings:", err);
         }
       } catch (err: any) {
         removeAuthToken();

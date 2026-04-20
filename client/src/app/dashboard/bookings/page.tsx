@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { bookingAPI } from '@/lib/api';
 import { getAuthToken, removeAuthToken } from '@/lib/api';
 
@@ -46,7 +46,6 @@ export default function BookingsPage() {
         const response = await bookingAPI.getStudentBookings();
         setBookings(response.data.bookings || []);
       } catch (err: any) {
-        console.error('Error fetching bookings:', err);
         if (err.response?.status === 401) {
           removeAuthToken();
           router.push('/login');

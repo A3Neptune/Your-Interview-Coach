@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Play, Lock, BookOpen, Clock, User } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { contentAPI } from '@/lib/api';
 import { getAuthToken, removeAuthToken } from '@/lib/api';
 
@@ -80,7 +80,6 @@ export default function ContentPage() {
           toast.error('Failed to load courses');
         }
       } catch (err: any) {
-        console.error('Error fetching content:', err);
         if (err.response?.status === 401) {
           removeAuthToken();
           router.push('/login');
@@ -149,7 +148,6 @@ export default function ContentPage() {
         })));
       }
     } catch (error) {
-      console.error('Error fetching enrolled courses:', error);
     }
   };
 

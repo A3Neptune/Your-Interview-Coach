@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, Clock, ArrowRight, CheckCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface Booking {
@@ -69,7 +69,6 @@ function ScheduleSessionContent() {
       setBookedDates(availabilityRes.data.bookedSlots || []);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching booking:', error);
       toast.error('Failed to load booking details');
       setIsLoading(false);
     }
@@ -127,7 +126,6 @@ function ScheduleSessionContent() {
       toast.success('Session scheduled successfully!');
       router.push(`/user-dashboard/bookings`);
     } catch (error) {
-      console.error('Error scheduling session:', error);
       toast.error('Failed to schedule session');
     } finally {
       setIsSaving(false);

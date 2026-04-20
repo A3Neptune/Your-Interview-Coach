@@ -22,7 +22,7 @@ import {
   Award,
   Home,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from 'sonner';
 import { authAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 import StandardFooter from "@/components/StandardFooter";
 import ProfileDropdown from "@/components/ProfileDropdown";

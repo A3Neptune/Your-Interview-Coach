@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Calendar, Clock, Users, Check, X, Lock, AlertCircle } from 'lucide-react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import AcceptedGDCard from './AcceptedGDCard';
 
 interface GD {

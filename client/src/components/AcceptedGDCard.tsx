@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Calendar, Clock, Users, Lock, Unlock, ExternalLink, Video } from 'lucide-react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface AcceptedGDCardProps {
   gd: {
