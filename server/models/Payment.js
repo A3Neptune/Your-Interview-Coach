@@ -106,12 +106,18 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Generate invoice number before saving
-paymentSchema.pre('save', async function () {
+// Generate invoice number before saving — use timestamp+random to avoid race conditions
+paymentSchema.pre('save', function () {
   if (!this.invoiceNumber && this.status === 'completed') {
-    const count = await mongoose.model('Payment').countDocuments({ status: 'completed' });
-    this.invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(5, '0')}`;
+    const year = new Date().getFullYear();
+    const suffix = `${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    this.invoiceNumber = `INV-${year}-${suffix}`;
   }
 });
+
+paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index({ bookingId: 1 });
+paymentSchema.index({ razorpayOrderId: 1 });
+paymentSchema.index({ status: 1, createdAt: -1 });
 
 export default mongoose.model('Payment', paymentSchema);

@@ -31,5 +31,6 @@ router.put('/:bookingId/feedback', verifyToken, bookingController.addBookingFeed
 // Payment routes
 router.post('/:bookingId/create-payment', verifyToken, verifyUser, bookingController.createPaymentOrder);
 router.post('/:bookingId/verify-payment', verifyToken, verifyUser, bookingController.verifyPayment);
+router.post('/:bookingId/release-payment-lock', verifyToken, verifyUser, bookingController.releasePaymentLock);
 
 export default router;

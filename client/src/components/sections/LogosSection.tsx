@@ -204,19 +204,6 @@ export default function LogosSection() {
             }} />
             <LogoStrip items={row2} reverse={true} duration={44} />
           </div>
-
-          {/* Bottom note */}
-          <div className="flex justify-center mt-10 px-4">
-            <p style={{
-              fontSize: 12.5,
-              color: '#94a3b8',
-              fontWeight: 500,
-              letterSpacing: '0.02em',
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-            }}>
-              and 300+ more companies worldwide
-            </p>
-          </div>
         </div>
       </section>
     </>

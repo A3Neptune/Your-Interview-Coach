@@ -291,7 +291,10 @@ export default function BookingDetailsPage() {
                       {availableSlots.map((slot, idx) => (
                         <button
                           key={idx}
-                          onClick={() => setSelectedSlot(`${slot.startTime} - ${slot.endTime}`)}
+                          onClick={() => {
+                            const slotKey = `${slot.startTime} - ${slot.endTime}`;
+                            setSelectedSlot(prev => prev === slotKey ? '' : slotKey);
+                          }}
                           className={`w-full p-2 rounded-lg border text-left transition ${
                             selectedSlot === `${slot.startTime} - ${slot.endTime}`
                               ? 'bg-blue-600 border-blue-500'

@@ -6,18 +6,16 @@ import {
   ChevronRight,
   Check,
   Sparkles,
-  Users,
-  Video,
-  BarChart3,
-  Map,
   Clock,
-  Star,
   ArrowRight,
   Zap,
   Shield,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
+import useSWR from "swr";
+
+const swrFetcher = (url: string) => fetch(url).then(r => r.json());
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -65,91 +63,12 @@ function FadeUp({
   );
 }
 
-const services = [
-  {
-    icon: Video,
-    title: "1-on-1 Mock Interview",
-    tag: "Most popular",
-    tagColor: "#2563eb",
-    price: "₹999",
-    duration: "60 min",
-    desc: "A full-length live mock interview with expert feedback on every answer — tone, structure, confidence and content.",
-    highlights: [
-      "Real interview simulation",
-      "Live feedback session",
-      "Recording provided",
-      "Improvement plan",
-    ],
-    accent: "#2563eb",
-    accentLight: "rgba(37,99,235,0.08)",
-    accentBorder: "rgba(37,99,235,0.2)",
-    href: "/select-slot?service=mock-interview",
-    stat: "94%",
-    statLabel: "success rate",
-  },
-  {
-    icon: Map,
-    title: "Career Roadmap Session",
-    tag: "AI powered",
-    tagColor: "#0891b2",
-    price: "₹799",
-    duration: "45 min",
-    desc: "Get a personalised, step-by-step career roadmap built around your goals — with milestones, timelines and resources.",
-    highlights: [
-      "Goal clarity session",
-      "Custom milestones",
-      "Skill gap analysis",
-      "Resource guide",
-    ],
-    accent: "#0891b2",
-    accentLight: "rgba(8,145,178,0.08)",
-    accentBorder: "rgba(8,145,178,0.2)",
-    href: "/select-slot?service=roadmap",
-    stat: "98%",
-    statLabel: "goal hit rate",
-  },
-  {
-    icon: BarChart3,
-    title: "Resume & LinkedIn Review",
-    tag: "High impact",
-    tagColor: "#7c3aed",
-    price: "₹499",
-    duration: "30 min",
-    desc: "Line-by-line resume critique and LinkedIn optimisation. Make sure every recruiter who sees your profile wants to call you.",
-    highlights: [
-      "ATS optimisation",
-      "LinkedIn rewrite",
-      "Industry keywords",
-      "Before & after",
-    ],
-    accent: "#7c3aed",
-    accentLight: "rgba(124,58,237,0.08)",
-    accentBorder: "rgba(124,58,237,0.2)",
-    href: "/select-slot?service=resume",
-    stat: "3.2×",
-    statLabel: "more callbacks",
-  },
-  {
-    icon: Users,
-    title: "Group Workshop",
-    tag: "Best value",
-    tagColor: "#059669",
-    price: "₹299",
-    duration: "90 min",
-    desc: "Join a live cohort covering the most common interview patterns across tech, consulting and finance roles.",
-    highlights: [
-      "Live Q&A",
-      "Peer practice rounds",
-      "Recorded replay",
-      "Community access",
-    ],
-    accent: "#059669",
-    accentLight: "rgba(5,150,105,0.08)",
-    accentBorder: "rgba(5,150,105,0.2)",
-    href: "/select-slot?service=workshop",
-    stat: "500+",
-    statLabel: "sessions/mo",
-  },
+// Accent palette cycles per card index — same colours used in PricingSection
+const accentPalette = [
+  { accent: "#2563eb", accentLight: "rgba(37,99,235,0.08)",  accentBorder: "rgba(37,99,235,0.2)",  tagColor: "#2563eb" },
+  { accent: "#0891b2", accentLight: "rgba(8,145,178,0.08)",  accentBorder: "rgba(8,145,178,0.2)",  tagColor: "#0891b2" },
+  { accent: "#7c3aed", accentLight: "rgba(124,58,237,0.08)", accentBorder: "rgba(124,58,237,0.2)", tagColor: "#7c3aed" },
+  { accent: "#059669", accentLight: "rgba(5,150,105,0.08)",  accentBorder: "rgba(5,150,105,0.2)",  tagColor: "#059669" },
 ];
 
 const faqs = [
@@ -173,6 +92,41 @@ const faqs = [
 
 export default function ServicesPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const { data: pricingData } = useSWR(`${API_URL}/pricing-section/public`, swrFetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  });
+
+  // Build card data from API, falling back gracefully while loading
+  const dynamicServices = (pricingData?.services ?? []).map((svc: any, i: number) => {
+    const ac = accentPalette[i % accentPalette.length];
+    const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
+    const dAmt = hasDsc
+      ? svc.discount.type === "percentage"
+        ? (svc.price * svc.discount.value) / 100
+        : svc.discount.value
+      : 0;
+    const finalPrice = Math.round(svc.price - dAmt);
+    const gst = Math.round(finalPrice * 0.18);
+    return {
+      ...ac,
+      title: svc.name,
+      tag: svc.level || "",
+      price: hasDsc ? `₹${finalPrice}` : `₹${svc.price}`,
+      originalPrice: hasDsc ? `₹${svc.price}` : null,
+      gst,
+      discountLabel: hasDsc
+        ? svc.discount.type === "percentage"
+          ? `${svc.discount.value}% OFF`
+          : `Save ₹${svc.discount.value}`
+        : null,
+      duration: svc.duration,
+      desc: svc.value,
+      highlights: svc.points ?? [],
+      href: `/select-slot?serviceId=${svc.id}`,
+    };
+  });
 
   return (
     <main
@@ -381,9 +335,7 @@ export default function ServicesPage() {
       {/* ── CARDS GRID ── */}
       <section className="px-6 pb-20">
         <div className="max-w-6xl mx-auto grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          {services.map((s, i) => {
-            const Icon = s.icon;
-            return (
+          {dynamicServices.map((s: any, i: number) => (
               <FadeUp key={i} delay={i * 65}>
                 <div
                   className="sv-card h-full rounded-[20px] overflow-hidden"
@@ -393,227 +345,70 @@ export default function ServicesPage() {
                     boxShadow: `0 4px 20px ${s.accentLight}`,
                   }}
                 >
-                  <div
-                    style={{
-                      height: "3px",
-                      background: `linear-gradient(90deg,${s.accent},${s.accent}55,transparent)`,
-                    }}
-                  />
-                  <div
-                    style={{
-                      padding: "22px 20px 20px",
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "calc(100% - 3px)",
-                    }}
-                  >
+                  <div style={{ height:"3px", background:`linear-gradient(90deg,${s.accent},${s.accent}55,transparent)` }} />
+                  <div style={{ padding:"22px 20px 20px", display:"flex", flexDirection:"column", height:"calc(100% - 3px)" }}>
+
                     {/* Header row */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                        marginBottom: "14px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "44px",
-                          height: "44px",
-                          borderRadius: "13px",
-                          background: `linear-gradient(135deg,${s.accent}cc,${s.accent})`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxShadow: `0 4px 12px ${s.accentLight}`,
-                        }}
-                      >
-                        <Icon
-                          style={{
-                            width: "19px",
-                            height: "19px",
-                            color: "white",
-                          }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          gap: "4px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "9px",
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                            color: s.tagColor,
-                            background: `${s.tagColor}12`,
-                            border: `1px solid ${s.tagColor}28`,
-                            padding: "2px 8px",
-                            borderRadius: "100px",
-                          }}
-                        >
-                          {s.tag}
+                    <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"14px" }}>
+                      <div style={{ width:"44px", height:"44px", borderRadius:"13px", background:`linear-gradient(135deg,${s.accent}cc,${s.accent})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 4px 12px ${s.accentLight}` }}>
+                        <span style={{ fontSize:"11px", fontWeight:700, color:"#fff", letterSpacing:"-0.02em" }}>
+                          {s.duration?.replace(/\s/g,"").slice(0,4) || "60m"}
                         </span>
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            color: "#94a3b8",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "3px",
-                          }}
-                        >
-                          <Clock style={{ width: "10px", height: "10px" }} />{" "}
-                          {s.duration}
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"4px" }}>
+                        {s.tag && (
+                          <span style={{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:s.tagColor, background:`${s.tagColor}12`, border:`1px solid ${s.tagColor}28`, padding:"2px 8px", borderRadius:"100px" }}>
+                            {s.tag}
+                          </span>
+                        )}
+                        {s.discountLabel && (
+                          <span style={{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"#c2410c", background:"#fff7ed", border:"1px solid #fde8cc", padding:"2px 8px", borderRadius:"100px" }}>
+                            {s.discountLabel}
+                          </span>
+                        )}
+                        <span style={{ fontSize:"10px", color:"#94a3b8", display:"flex", alignItems:"center", gap:"3px" }}>
+                          <Clock style={{ width:"10px", height:"10px" }} /> {s.duration}
                         </span>
                       </div>
                     </div>
 
-                    <h3
-                      style={{
-                        fontSize: "15.5px",
-                        fontWeight: 700,
-                        color: "#0f172a",
-                        lineHeight: 1.25,
-                        marginBottom: "7px",
-                      }}
-                    >
+                    <h3 style={{ fontSize:"15.5px", fontWeight:700, color:"#0f172a", lineHeight:1.25, marginBottom:"7px" }}>
                       {s.title}
                     </h3>
-                    <p
-                      style={{
-                        fontSize: "12.5px",
-                        color: "#64748b",
-                        lineHeight: 1.65,
-                        marginBottom: "14px",
-                        flex: 1,
-                      }}
-                    >
+                    <p style={{ fontSize:"12.5px", color:"#64748b", lineHeight:1.65, marginBottom:"14px", flex:1 }}>
                       {s.desc}
                     </p>
 
                     {/* Highlights */}
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      {s.highlights.map((h, hi) => (
-                        <div
-                          key={hi}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: "17px",
-                              height: "17px",
-                              borderRadius: "5px",
-                              background: s.accentLight,
-                              border: `1px solid ${s.accentBorder}`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Check
-                              style={{
-                                width: "9px",
-                                height: "9px",
-                                color: s.accent,
-                              }}
-                              strokeWidth={3}
-                            />
+                    <div style={{ display:"flex", flexDirection:"column", gap:"6px", marginBottom:"16px" }}>
+                      {s.highlights.map((h: string, hi: number) => (
+                        <div key={hi} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                          <div style={{ width:"17px", height:"17px", borderRadius:"5px", background:s.accentLight, border:`1px solid ${s.accentBorder}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            <Check style={{ width:"9px", height:"9px", color:s.accent }} strokeWidth={3} />
                           </div>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              color: "#334155",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {h}
-                          </span>
+                          <span style={{ fontSize:"12px", color:"#334155", fontWeight:500 }}>{h}</span>
                         </div>
                       ))}
                     </div>
 
-                    <div
-                      style={{
-                        height: "1px",
-                        background: `linear-gradient(90deg,${s.accentBorder},transparent)`,
-                        marginBottom: "14px",
-                      }}
-                    />
+                    <div style={{ height:"1px", background:`linear-gradient(90deg,${s.accentBorder},transparent)`, marginBottom:"12px" }} />
 
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "20px",
-                            fontWeight: 800,
-                            color: s.accent,
-                            lineHeight: 1,
-                          }}
-                        >
-                          {s.price}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "10px",
-                            color: "#94a3b8",
-                            fontWeight: 500,
-                            marginTop: "2px",
-                          }}
-                        >
-                          per session
-                        </div>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px" }}>
+                      {/* Price block — highlighted */}
+                      <div style={{ background:s.accentLight, borderRadius:"10px", padding:"8px 12px", flex:1 }}>
+                        {s.originalPrice && (
+                          <div style={{ fontSize:"11px", color:"#94a3b8", textDecoration:"line-through", lineHeight:1, marginBottom:"2px" }}>{s.originalPrice}</div>
+                        )}
+                        <div style={{ fontSize:"20px", fontWeight:800, color:s.accent, lineHeight:1, letterSpacing:"-0.02em" }}>{s.price}</div>
+                        <div style={{ fontSize:"10px", color:"#64748b", fontWeight:500, marginTop:"3px" }}>excl. GST · +₹{s.gst} (18%)</div>
                       </div>
                       <Link
                         href={s.href}
                         className="sv-btn"
-                        style={{
-                          padding: "8px 15px",
-                          borderRadius: "10px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: "white",
-                          background: `linear-gradient(135deg,${s.accent}dd,${s.accent})`,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          textDecoration: "none",
-                          boxShadow: `0 3px 10px ${s.accentLight}`,
-                        }}
+                        style={{ padding:"8px 15px", borderRadius:"10px", fontSize:"12px", fontWeight:700, color:"white", background:`linear-gradient(135deg,${s.accent}dd,${s.accent})`, display:"flex", alignItems:"center", gap:"5px", textDecoration:"none", boxShadow:`0 3px 10px ${s.accentLight}` }}
                       >
                         <span className="sv-shim" />
-                        <span
-                          style={{
-                            position: "relative",
-                            zIndex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                          }}
-                        >
+                        <span style={{ position:"relative", zIndex:1, display:"flex", alignItems:"center", gap:"4px" }}>
                           Book{" "}
                           <ChevronRight
                             style={{ width: "12px", height: "12px" }}
@@ -624,8 +419,7 @@ export default function ServicesPage() {
                   </div>
                 </div>
               </FadeUp>
-            );
-          })}
+          ))}
         </div>
       </section>
 

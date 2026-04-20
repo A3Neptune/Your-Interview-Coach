@@ -248,6 +248,21 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
+/**
+ * Release payment lock
+ * POST /api/bookings/:bookingId/release-payment-lock
+ */
+export const releasePaymentLock = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const booking = await paymentService.releasePaymentLock(bookingId, req);
+    res.json({ success: true, booking });
+  } catch (error) {
+    console.error('Error releasing payment lock:', error);
+    handleControllerError(res, error);
+  }
+};
+
 export default {
   getPublicAvailability,
   getAvailableMentors,
@@ -263,4 +278,5 @@ export default {
   addBookingFeedback,
   createPaymentOrder,
   verifyPayment,
+  releasePaymentLock,
 };

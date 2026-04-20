@@ -99,7 +99,29 @@ export default function BookingPaymentPage() {
         },
       };
 
-      const razorpay = new window.Razorpay(options);
+      const razorpay = new window.Razorpay({
+        ...options,
+        modal: {
+          ondismiss: async () => {
+            try {
+              await api.post(`/bookings/${bookingId}/release-payment-lock`);
+            } catch {
+              // silently ignore — lock will need manual cleanup
+            }
+            toast.info('Payment cancelled. Your slot has been released.');
+          },
+        },
+      });
+
+      razorpay.on('payment.failed', async () => {
+        try {
+          await api.post(`/bookings/${bookingId}/release-payment-lock`);
+        } catch {
+          // silently ignore
+        }
+        toast.error('Payment failed. Your slot has been released.');
+      });
+
       razorpay.open();
     } catch (error) {
       toast.error('Failed to initiate payment');

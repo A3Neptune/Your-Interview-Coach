@@ -57,10 +57,15 @@ const notificationSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now,
-      index: { expires: '30d' }, // Auto-delete after 30 days
     },
   },
   { timestamps: true }
 );
+
+// TTL: auto-delete notifications after 30 days
+notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
+// Query indexes for dashboard unread counts and notification lists
+notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model('Notification', notificationSchema);

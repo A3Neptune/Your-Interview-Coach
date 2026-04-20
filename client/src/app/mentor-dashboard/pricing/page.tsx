@@ -47,6 +47,7 @@ export default function MentorPricingPage() {
     servicesCount: number;
   } | null>(null);
   const [showRemoveConfirmModal, setShowRemoveConfirmModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [removedDiscounts, setRemovedDiscounts] = useState<{
     serviceId: string;
     discount: { type: 'percentage' | 'fixed' | 'none'; value: number; isActive: boolean };
@@ -218,11 +219,10 @@ export default function MentorPricingPage() {
   }, [newService]);
 
   const handleDeleteService = useCallback(async (serviceId: string) => {
-    if (!confirm('Are you sure you want to delete this service?')) return;
-
     try {
       await pricingAPI.deleteService(serviceId);
       toast.success('Service deleted successfully!');
+      setDeleteTarget(null);
       await fetchMentorPricing();
     } catch (error: any) {
       console.error('Error deleting service:', error);
@@ -618,6 +618,41 @@ export default function MentorPricingPage() {
         </div>
       )}
 
+      {/* Delete Service Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 rounded-2xl border border-red-500/40 max-w-md w-full shadow-2xl">
+            <div className="bg-gradient-to-r from-red-900/30 to-red-800/20 border-b border-red-500/20 p-6 rounded-t-2xl">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <Trash2 size={20} className="text-red-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Delete Service?</h2>
+              </div>
+              <p className="text-zinc-400 text-sm mt-2 ml-[52px]">
+                This will permanently remove <span className="text-white font-semibold">"{deleteTarget.name}"</span> from your pricing. This cannot be undone.
+              </p>
+            </div>
+            <div className="p-6 flex gap-3">
+              <button
+                onClick={() => handleDeleteService(deleteTarget.id)}
+                disabled={isSaving}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                {isSaving ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Global Discount Confirmation Modal */}
       {showGlobalConfirmModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -972,13 +1007,22 @@ export default function MentorPricingPage() {
                     <h3 className="text-xl font-bold text-white">{service.name}</h3>
                     <p className="text-zinc-400">{service.title}</p>
                   </div>
-                  <button
-                    onClick={() => setEditingServiceId(service.id)}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition flex items-center gap-2"
-                  >
-                    <Edit2 size={18} />
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setEditingServiceId(service.id)}
+                      className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition flex items-center gap-2"
+                    >
+                      <Edit2 size={18} />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget({ id: service.id, name: service.name })}
+                      className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-red-600 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-white transition flex items-center gap-1.5"
+                      title="Delete service"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">

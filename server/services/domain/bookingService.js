@@ -118,16 +118,18 @@ const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
   const newStart = new Date(scheduledDate);
   const newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
 
-  // Find all bookings for this mentor in pending/confirmed status
-  // that could potentially overlap with the requested time slot
+  const now = new Date();
+  // Narrow to only bookings that could overlap: start before newEnd AND end after newStart
+  // (DB can't check existingEnd directly, so we bound scheduledDate from both sides)
   const existingBookings = await Booking.find({
     mentorId,
     status: { $in: ['pending', 'confirmed'] },
-    scheduledDate: {
-      // Only check bookings that start before our slot ends
-      $lt: newEnd,
-    },
-  });
+    scheduledDate: { $gte: new Date(newStart.getTime() - 4 * 60 * 60 * 1000), $lt: newEnd },
+    $or: [
+      { paymentLocked: false },
+      { paymentLocked: true, paymentLockExpiresAt: { $gt: now } },
+    ],
+  }).select('scheduledDate duration').lean();
 
   // Check each booking for actual overlap
   for (const booking of existingBookings) {
@@ -218,8 +220,7 @@ const createBooking = async (bookingData, req) => {
     null
   );
 
-  await booking.populate('mentorId', 'name email designation company profileImage');
-  await booking.populate('studentId', 'name email');
+  await booking.populate([{ path: 'mentorId', select: 'name email designation company profileImage' }, { path: 'studentId', select: 'name email' }]);
 
   return booking;
 };

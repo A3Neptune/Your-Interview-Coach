@@ -101,6 +101,10 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    paymentLockExpiresAt: {
+      type: Date,
+      default: null,
+    },
     meetingId: {
       type: String,
       default: null,

@@ -81,63 +81,48 @@ const inviteUsersToGD = async (gdId, adminId, userIds, broadcastFn) => {
     throw new NotFoundError('Group discussion not found');
   }
 
-  let addedCount = 0;
-  let notificationsSent = 0;
+  const [admin, users] = await Promise.all([
+    User.findById(adminId),
+    User.find({ _id: { $in: userIds } }).select('_id name email').lean(),
+  ]);
 
-  const admin = await User.findById(adminId);
+  const userMap = new Map(users.map(u => [u._id.toString(), u]));
+  const notificationDocs = [];
+  let addedCount = 0;
 
   for (const userId of userIds) {
     const alreadyParticipant = gd.participants.some(p => p.userId.toString() === userId);
     if (alreadyParticipant) continue;
 
-    const user = await User.findById(userId);
+    const user = userMap.get(userId);
     if (!user) continue;
 
     if (gd.participants.length < gd.maxParticipants) {
-      gd.participants.push({
-        userId: userId,
-        name: user.name,
-        email: user.email,
-      });
+      gd.participants.push({ userId, name: user.name, email: user.email });
     } else {
-      gd.waitlist.push({
-        userId: userId,
-        name: user.name,
-        email: user.email,
-      });
+      gd.waitlist.push({ userId, name: user.name, email: user.email });
     }
-
     addedCount++;
 
-    try {
-      const notification = new Notification({
-        userId: userId,
-        type: 'gd-invite',
-        title: 'You\'ve been invited to a Group Discussion!',
-        message: `${admin.name} invited you to join "${gd.title}" on ${new Date(gd.scheduledDate).toLocaleDateString()}`,
-        data: {
-          gdId: gd._id,
-          adminId: admin._id,
-          adminName: admin.name,
-          isPaid: gd.isPaid || false,
-          paymentAmount: gd.price || 0,
-        },
-        actionUrl: `/group-discussions/${gd._id}`,
-        isRead: false,
-      });
-      await notification.save();
-      notificationsSent++;
-    } catch (notifErr) {
-      console.error('Notification error:', notifErr);
-    }
+    notificationDocs.push({
+      userId,
+      type: 'gd-invite',
+      title: "You've been invited to a Group Discussion!",
+      message: `${admin.name} invited you to join "${gd.title}" on ${new Date(gd.scheduledDate).toLocaleDateString()}`,
+      data: { gdId: gd._id, adminId: admin._id, adminName: admin.name, isPaid: gd.isPaid || false, paymentAmount: gd.price || 0 },
+      actionUrl: `/group-discussions/${gd._id}`,
+      isRead: false,
+    });
   }
 
-  if (gd.participants.length >= gd.maxParticipants) {
-    gd.isFull = true;
-  }
-  await gd.save();
+  if (gd.participants.length >= gd.maxParticipants) gd.isFull = true;
 
-  return { addedCount, notificationsSent };
+  const [savedNotifications] = await Promise.all([
+    Notification.insertMany(notificationDocs, { ordered: false }),
+    gd.save(),
+  ]);
+
+  return { addedCount, notificationsSent: savedNotifications.length };
 };
 
 /**
@@ -157,28 +142,22 @@ const cancelGroupDiscussion = async (gdId, adminId, reason, broadcastFn) => {
   await gd.save();
 
   const allUsers = [...gd.participants, ...gd.waitlist];
-  for (const userInfo of allUsers) {
-    try {
-      const notification = new Notification({
-        userId: userInfo.userId,
-        type: 'gd-cancelled',
-        title: `GD "${gd.title}" has been cancelled`,
-        message: `The group discussion scheduled for ${new Date(gd.scheduledDate).toLocaleDateString()} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
-        data: {
-          gdId: gd._id,
-          reason: reason,
-          refundEligible: true,
-        },
-        actionUrl: `/dashboard/bookings`,
-      });
-      await notification.save();
+  const notificationDocs = allUsers.map(userInfo => ({
+    userId: userInfo.userId,
+    type: 'gd-cancelled',
+    title: `GD "${gd.title}" has been cancelled`,
+    message: `The group discussion scheduled for ${new Date(gd.scheduledDate).toLocaleDateString()} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
+    data: { gdId: gd._id, reason, refundEligible: true },
+    actionUrl: `/dashboard/bookings`,
+  }));
 
-      if (broadcastFn) {
-        broadcastFn(userInfo.userId.toString(), notification);
-      }
-    } catch (notifErr) {
-      console.error('Notification error:', notifErr);
+  try {
+    const saved = await Notification.insertMany(notificationDocs, { ordered: false });
+    if (broadcastFn) {
+      saved.forEach(n => broadcastFn(n.userId.toString(), n));
     }
+  } catch (notifErr) {
+    console.error('Notification bulk insert error:', notifErr);
   }
 
   return gd;
@@ -208,29 +187,22 @@ const rescheduleGroupDiscussion = async (gdId, adminId, newScheduledDate, reason
   await gd.save();
 
   const allUsers = [...gd.participants, ...gd.waitlist];
-  for (const userInfo of allUsers) {
-    try {
-      const notification = new Notification({
-        userId: userInfo.userId,
-        type: 'gd-rescheduled',
-        title: `GD "${gd.title}" has been rescheduled`,
-        message: `The group discussion has been moved from ${oldDate} to ${newDate}.${reason ? ` Reason: ${reason}` : ''}`,
-        data: {
-          gdId: gd._id,
-          oldDate: oldDate,
-          newDate: newDate,
-          reason: reason,
-        },
-        actionUrl: `/dashboard/gd-invitations`,
-      });
-      await notification.save();
+  const notificationDocs = allUsers.map(userInfo => ({
+    userId: userInfo.userId,
+    type: 'gd-rescheduled',
+    title: `GD "${gd.title}" has been rescheduled`,
+    message: `The group discussion has been moved from ${oldDate} to ${newDate}.${reason ? ` Reason: ${reason}` : ''}`,
+    data: { gdId: gd._id, oldDate, newDate, reason },
+    actionUrl: `/dashboard/gd-invitations`,
+  }));
 
-      if (broadcastFn) {
-        broadcastFn(userInfo.userId.toString(), notification);
-      }
-    } catch (notifErr) {
-      console.error('Notification error:', notifErr);
+  try {
+    const saved = await Notification.insertMany(notificationDocs, { ordered: false });
+    if (broadcastFn) {
+      saved.forEach(n => broadcastFn(n.userId.toString(), n));
     }
+  } catch (notifErr) {
+    console.error('Notification bulk insert error:', notifErr);
   }
 
   return gd;

@@ -73,8 +73,9 @@ const createPaymentOrder = async (bookingId, req) => {
     throw new ValidationError('Booking already paid');
   }
 
-  // FIX 4: Lock booking during payment to prevent cancellation
+  // Lock booking during payment; auto-expires in 15 min if client never completes/dismisses
   booking.paymentLocked = true;
+  booking.paymentLockExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
   await booking.save();
 
   // Create Razorpay order
@@ -214,9 +215,10 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   }
 
   // Update booking
-  booking.paymentStatus = 'completed'; // Use 'completed' instead of 'paid' to match enum
+  booking.paymentStatus = 'completed';
   booking.status = 'confirmed';
   booking.paymentLocked = false;
+  booking.paymentLockExpiresAt = null;
   booking.razorpayPaymentId = razorpay_payment_id;
   booking.razorpayOrderId = razorpay_order_id;
   booking.confirmedAt = new Date();
@@ -267,13 +269,44 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   return booking;
 };
 
+/**
+ * Release payment lock when payment is abandoned or fails
+ */
+const releasePaymentLock = async (bookingId, req) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) {
+    throw new NotFoundError('Booking not found');
+  }
+
+  if (booking.paymentStatus === 'completed') {
+    throw new ValidationError('Cannot release lock on a completed payment');
+  }
+
+  booking.paymentLocked = false;
+  booking.paymentLockExpiresAt = null;
+  await booking.save();
+
+  await AuditLogService.logBookingAction(
+    req,
+    'BOOKING_PAYMENT_LOCK_RELEASED',
+    booking._id,
+    { reason: 'payment_abandoned_or_failed' },
+    'SUCCESS',
+    null
+  );
+
+  return booking;
+};
+
 export {
   createPaymentOrder,
   verifyPaymentSignature,
   verifyAndCompletePayment,
+  releasePaymentLock,
 };
 export default {
   createPaymentOrder,
   verifyPaymentSignature,
   verifyAndCompletePayment,
+  releasePaymentLock,
 };

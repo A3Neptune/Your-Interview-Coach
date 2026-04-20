@@ -227,7 +227,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleLogin } from '@react-oauth/google';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, ChevronRight, Check } from 'lucide-react';
@@ -237,16 +237,22 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const { user, fetchUser, isLoggedIn, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  const getPostLoginPath = (userType: string) => {
+    if (redirectTo) return redirectTo;
+    return userType === 'admin' ? '/mentor-dashboard' : '/dashboard';
+  };
+
   useEffect(() => {
     if (!authLoading && isLoggedIn && user) {
-      if (user.userType === 'admin') router.push('/mentor-dashboard');
-      else router.push('/dashboard');
+      router.push(getPostLoginPath(user.userType));
     }
   }, [isLoggedIn, authLoading, user, router]);
 
@@ -269,13 +275,8 @@ export default function LoginPage() {
       setAuthToken(response.data.token);
       await fetchUser();
       const userType = response.data.user?.userType;
-      if (userType === 'admin') {
-        toast.success('Welcome back, Mentor!');
-        setTimeout(() => router.push('/mentor-dashboard'), 800);
-      } else {
-        toast.success('Welcome back!');
-        setTimeout(() => router.push('/dashboard'), 800);
-      }
+      toast.success(userType === 'admin' ? 'Welcome back, Mentor!' : 'Welcome back!');
+      setTimeout(() => router.push(getPostLoginPath(userType)), 800);
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Login failed');
     } finally {
@@ -295,13 +296,8 @@ export default function LoginPage() {
         setAuthToken(response.data.token);
         await fetchUser();
         const userType = response.data.user?.userType;
-        if (userType === 'admin') {
-          toast.success('Welcome back, Mentor!');
-          setTimeout(() => router.push('/mentor-dashboard'), 800);
-        } else {
-          toast.success('Welcome back!');
-          setTimeout(() => router.push('/dashboard'), 800);
-        }
+        toast.success(userType === 'admin' ? 'Welcome back, Mentor!' : 'Welcome back!');
+        setTimeout(() => router.push(getPostLoginPath(userType)), 800);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Google login failed');
