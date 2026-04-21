@@ -26,9 +26,10 @@ const getRazorpayInstance = () => {
     razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
 
     console.log('PaymentService Razorpay Config:', {
-      keyIdPresent: !!razorpayKeyId,
+      keyId: razorpayKeyId ? `${razorpayKeyId.slice(0, 16)}...` : 'MISSING',
       keyIdLength: razorpayKeyId?.length,
-      keySecretPresent: !!razorpayKeySecret,
+      secretLength: razorpayKeySecret?.length,
+      mode: razorpayKeyId?.startsWith('rzp_live_') ? 'LIVE' : 'TEST',
     });
 
     if (!razorpayKeyId || !razorpayKeySecret) {
@@ -145,11 +146,12 @@ const createPaymentOrder = async (bookingId, req) => {
       booking,
     };
   } catch (error) {
-    console.error('❌ Razorpay order creation failed:', {
-      error: error.error,
+    console.error('❌ Razorpay order creation failed — full error:', JSON.stringify({
       statusCode: error.statusCode,
+      error: error.error,
       message: error.message,
-    });
+      keyId: razorpayKeyId ? `${razorpayKeyId.slice(0, 12)}...` : 'MISSING',
+    }, null, 2));
 
     // Cancel booking if payment order creation fails
     // This frees up the time slot for other users
@@ -266,7 +268,9 @@ const verifyAndCompletePayment = async (paymentData, req) => {
 };
 
 /**
- * Release payment lock when payment is abandoned or fails
+ * Release payment lock when user dismisses the payment modal.
+ * Also cancels the pending booking so the slot is freed immediately
+ * (instead of being blocked for 30 minutes until the pending-cutoff expires).
  */
 const releasePaymentLock = async (bookingId, req) => {
   const booking = await Booking.findById(bookingId);
@@ -278,15 +282,23 @@ const releasePaymentLock = async (bookingId, req) => {
     throw new ValidationError('Cannot release lock on a completed payment');
   }
 
+  // Cancel the booking so the slot is freed immediately.
+  // A fresh 'pending' booking blocks the slot for 30 min; cancelling it
+  // removes it from the conflict query so others can book the same slot.
   booking.paymentLocked = false;
   booking.paymentLockExpiresAt = null;
+  booking.status = 'cancelled';
+  booking.paymentStatus = 'failed';
+  booking.cancelledBy = 'student';
+  booking.cancellationReason = 'payment_abandoned';
+  booking.cancelledAt = new Date();
   await booking.save();
 
   await AuditLogService.logBookingAction(
     req,
     'BOOKING_PAYMENT_LOCK_RELEASED',
     booking._id,
-    { reason: 'payment_abandoned_or_failed' },
+    { reason: 'payment_abandoned', slotFreed: true },
     'SUCCESS',
     null
   );

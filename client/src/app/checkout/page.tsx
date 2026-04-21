@@ -164,7 +164,7 @@ function CheckoutContent() {
           sessionType: serviceId,
           title: `${service.name} Session`,
           description: 'Booked through marketplace',
-          scheduledDate: `${selectedSlot.date}T${selectedSlot.time}`,
+          scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`,
           duration: durationMinutes,
         },
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
@@ -232,11 +232,26 @@ function CheckoutContent() {
         prefill: { name: user.fullName || user.name, email: user.email },
         theme: { color: '#1d4ed8' },
         modal: {
-          ondismiss: () => {
-            toast.error('Payment cancelled');
+          ondismiss: async () => {
+            // Release the 15-minute payment lock so the slot becomes available again
+            try {
+              await axios.post(
+                `${API_URL}/bookings/${bookingId}/release-payment-lock`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
+              );
+            } catch { /* lock auto-expires after 15 min anyway */ }
+            toast.error('Payment cancelled. Your slot has been released.');
             setIsProcessing(false);
           },
         },
+      });
+
+      // payment.failed fires when a card is declined / network drops inside the modal.
+      // The Razorpay modal STAYS OPEN so the user can retry with a different card.
+      // Do NOT release the lock here — wait for ondismiss (modal close) to free the slot.
+      razorpayInstance.on('payment.failed', () => {
+        toast.error('Payment failed. You can retry with a different card.');
       });
 
       razorpayInstance.open();

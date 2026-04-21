@@ -107,13 +107,14 @@ const getAvailableSlots = async (dateStr) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return { mentorId: mentor._id, slotDuration, slots: [] };
   const [year, month, day] = dateStr.split('-').map(Number);
 
-  // Guard: date in the past
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  // Guard: date in the past — compare using IST midnight
+  const todayIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  todayIST.setHours(0, 0, 0, 0);
   const requested = new Date(year, month - 1, day);
-  if (requested < today) return { mentorId: mentor._id, slotDuration, slots: [] };
+  if (requested < todayIST) return { mentorId: mentor._id, slotDuration, slots: [] };
 
   // Guard: more than 30 days away
-  const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 30);
+  const maxDate = new Date(todayIST); maxDate.setDate(maxDate.getDate() + 30);
   if (requested > maxDate) return { mentorId: mentor._id, slotDuration, slots: [] };
 
   // Guard: explicitly blocked date (takes priority over everything)
@@ -133,11 +134,17 @@ const getAvailableSlots = async (dateStr) => {
   // Guard: invalid hour range
   if (startHour >= endHour) return { mentorId: mentor._id, slotDuration, slots: [] };
 
-  // Fetch existing bookings for that day
+  // All slot times are in IST (UTC+05:30). Build Date objects using explicit IST offset
+  // so they're stored/compared in UTC correctly (IST 9:00 = UTC 03:30).
+  const pad = (n) => String(n).padStart(2, '0');
+  const makeIST = (y, mo, d, h, m) =>
+    new Date(`${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(m)}:00+05:30`);
+
+  // Fetch existing bookings for that day (use IST midnight boundaries)
   // Only confirmed OR recently-created pending bookings (within 30 min) block a slot.
   // Stale pending/unpaid bookings do not hold the slot.
-  const dayStart        = new Date(year, month - 1, day, 0, 0, 0);
-  const dayEnd          = new Date(year, month - 1, day, 23, 59, 59);
+  const dayStart        = makeIST(year, month, day, 0, 0);
+  const dayEnd          = makeIST(year, month, day, 23, 59);
   const pendingCutoff   = new Date(Date.now() - 30 * 60 * 1000);
   const existingBookings = await Booking.find({
     mentorId: mentor._id,
@@ -149,16 +156,17 @@ const getAvailableSlots = async (dateStr) => {
   }).select('scheduledDate duration').lean();
 
   const now          = new Date();
-  const endBoundary  = new Date(year, month - 1, day, endHour, 0, 0);
+  const endBoundary  = makeIST(year, month, day, endHour, 0);
   const increment    = (slotDuration + bufferMinutes) / 60;
   const slots        = [];
-  const pad          = (n) => String(n).padStart(2, '0');
 
   for (let hour = startHour; hour < endHour; hour += increment) {
     // Safety: break if increment is somehow 0 to prevent infinite loop
     if (increment <= 0) break;
 
-    const slotStart = new Date(year, month - 1, day, Math.floor(hour), Math.round((hour % 1) * 60), 0);
+    const hh = Math.floor(hour);
+    const mm = Math.round((hour % 1) * 60);
+    const slotStart = makeIST(year, month, day, hh, mm);
     const slotEnd   = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
 
     if (slotEnd > endBoundary) break;
@@ -174,9 +182,13 @@ const getAvailableSlots = async (dateStr) => {
     });
 
     if (!hasConflict) {
+      // Compute end time in IST by offsetting from start IST values
+      const endTotalMins = hh * 60 + mm + slotDuration;
+      const endHH = Math.floor(endTotalMins / 60) % 24;
+      const endMM = endTotalMins % 60;
       slots.push({
-        start: `${pad(slotStart.getHours())}:${pad(slotStart.getMinutes())}`,
-        end:   `${pad(slotEnd.getHours())}:${pad(slotEnd.getMinutes())}`,
+        start: `${pad(hh)}:${pad(mm)}`,
+        end:   `${pad(endHH)}:${pad(endMM)}`,
       });
     }
   }
@@ -243,6 +255,95 @@ const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
 };
 
 /**
+ * Validate that the requested slot is legitimate.
+ * Checks: not past, within 30-day window, working day, duration match,
+ * start-time boundary alignment, and session doesn't overrun end hour.
+ */
+const validateSlotBooking = (mentor, scheduledDate, duration) => {
+  const settings      = mentor.availabilitySettings || {};
+  let   startHour     = settings.startHour    ?? 9;
+  let   endHour       = settings.endHour      ?? 18;
+  const slotDuration  = Math.max(1, settings.slotDuration  ?? 60);
+  const bufferMinutes = Math.max(0, settings.bufferMinutes ?? 0);
+  const daysOff       = settings.daysOff      ?? [];
+  const blockedDates  = settings.blockedDates  ?? [];
+  const dateOverrides = settings.dateOverrides ?? [];
+
+  const schedDate = new Date(scheduledDate);
+
+  // 1. Reject past time slots
+  if (schedDate <= new Date()) {
+    throw new ValidationError('Cannot book a past time slot');
+  }
+
+  // 2. Extract IST date/time components.
+  //    toLocaleString returns the IST wall-clock values; re-parsing as a local Date
+  //    lets us read them via getHours()/getMinutes() regardless of server TZ.
+  const schedIST    = new Date(schedDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const yearIST     = schedIST.getFullYear();
+  const monthIST    = schedIST.getMonth() + 1;
+  const dayIST      = schedIST.getDate();
+  const hourIST     = schedIST.getHours();
+  const minIST      = schedIST.getMinutes();
+  const padZ        = (n) => String(n).padStart(2, '0');
+  const dateStr     = `${yearIST}-${padZ(monthIST)}-${padZ(dayIST)}`;
+
+  // 3. Within 30-day booking window
+  const todayIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  todayIST.setHours(0, 0, 0, 0);
+  const maxDate = new Date(todayIST);
+  maxDate.setDate(maxDate.getDate() + 30);
+  const requestedDay = new Date(yearIST, monthIST - 1, dayIST);
+  if (requestedDay > maxDate) {
+    throw new ValidationError('Booking too far in advance (30-day maximum)');
+  }
+
+  // 4. Not a blocked date or mentor day-off
+  const dayOfWeek = new Date(yearIST, monthIST - 1, dayIST).getDay();
+  if (daysOff.includes(dayOfWeek)) {
+    throw new ValidationError('Mentor is not available on this day of the week');
+  }
+  if (blockedDates.includes(dateStr)) {
+    throw new ValidationError('Mentor is not available on this date');
+  }
+
+  // 5. Apply date override (custom hours for specific dates)
+  const override = dateOverrides.find(o => o.date === dateStr);
+  if (override) {
+    startHour = override.startHour;
+    endHour   = override.endHour;
+  }
+
+  // 6. Duration must match configured slot duration
+  if (duration !== slotDuration) {
+    throw new ValidationError(`Invalid session duration. Sessions are ${slotDuration} minutes`);
+  }
+
+  const slotStartMins  = hourIST * 60 + minIST;
+  const incrementMins  = slotDuration + bufferMinutes;
+
+  // 7. Start time must be within working hours
+  if (slotStartMins < startHour * 60) {
+    throw new ValidationError("Slot starts before mentor's working hours");
+  }
+
+  // 8. Start time must align to a valid slot boundary (startHour + n × increment)
+  const offsetFromStart = slotStartMins - (startHour * 60);
+  if (offsetFromStart % incrementMins !== 0) {
+    throw new ValidationError('Slot start time is not on a valid booking boundary');
+  }
+
+  // 9. Session end must not exceed endHour — the same rule as getAvailableSlots
+  //    (slotEnd > endBoundary uses >, so ending exactly at endHour is allowed)
+  const sessionEndMins = slotStartMins + slotDuration;
+  if (sessionEndMins > endHour * 60) {
+    throw new ValidationError(
+      `Session ends at ${Math.floor(sessionEndMins / 60)}:${padZ(sessionEndMins % 60)} which exceeds mentor's working hours (until ${endHour}:00)`
+    );
+  }
+};
+
+/**
  * Create booking
  */
 const createBooking = async (bookingData, req) => {
@@ -254,7 +355,7 @@ const createBooking = async (bookingData, req) => {
     await AuditLogService.logBookingAction(
       req,
       'BOOKING_CREATED',
-      userId, // Use userId as resourceId for failed bookings
+      userId,
       { sessionType, mentorId },
       'FAILURE',
       'Mentor not found or inactive'
@@ -262,16 +363,19 @@ const createBooking = async (bookingData, req) => {
     throw new NotFoundError('Mentor not found or inactive');
   }
 
+  // Validate slot legitimacy (boundary, working hours, alignment, 30-day window)
+  validateSlotBooking(mentor, scheduledDate, duration);
+
   // Calculate server-side amount
   const serverCalculatedAmount = await calculateBookingAmount(sessionType);
 
-  // Check conflicts
+  // Check conflicts with existing bookings
   const hasConflict = await checkBookingConflict(mentorId, scheduledDate, duration);
   if (hasConflict) {
     await AuditLogService.logBookingAction(
       req,
       'BOOKING_CREATED',
-      userId, // Use userId as resourceId for failed bookings
+      userId,
       { sessionType, mentorId, serverCalculatedAmount },
       'FAILURE',
       'Time slot not available'
@@ -293,7 +397,7 @@ const createBooking = async (bookingData, req) => {
     description,
     scheduledDate: new Date(scheduledDate),
     duration,
-    amount: totalAmount, // Store total with GST
+    amount: totalAmount,
     status: 'pending',
     paymentStatus: 'pending',
     paymentRequired: true,
@@ -304,7 +408,15 @@ const createBooking = async (bookingData, req) => {
     },
   });
 
-  await booking.save();
+  try {
+    await booking.save();
+  } catch (err) {
+    // DB-level race condition: another booking for the exact same slot was saved first
+    if (err.code === 11000) {
+      throw new ConflictError('This slot was just taken. Please select a different time.');
+    }
+    throw err;
+  }
 
   await AuditLogService.logBookingAction(
     req,
