@@ -41,7 +41,7 @@ export default function MeetingsCalendarPage() {
         id: booking._id,
         title: `${booking.sessionType} - ${booking.studentName}`,
         time: new Date(booking.scheduledDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        duration: `${booking.duration || 60} min`,
+        duration: `${booking.duration || 60} mins`,
         student: booking.studentName,
         status: booking.status,
         date: new Date(booking.scheduledDate).toISOString().split('T')[0],

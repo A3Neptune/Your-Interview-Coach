@@ -268,7 +268,7 @@ export default function UserInvitedGDDashboard() {
                   </div>
                   <div className="flex items-center gap-2 text-zinc-300">
                     <Clock size={14} className="text-emerald-400" />
-                    {gd.duration} min
+                    {gd.duration} mins
                   </div>
                 </div>
 

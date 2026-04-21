@@ -313,7 +313,7 @@ export default function SettingsPage() {
               onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, slotDuration: Number(e.target.value) } })}
               className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
             >
-              {[30, 45, 60, 90, 120].map(d => <option key={d} value={d}>{d} min</option>)}
+              {[30, 45, 60, 90, 120].map(d => <option key={d} value={d}>{d} mins</option>)}
             </select>
           </div>
           <div className="flex-1 min-w-[120px]">
@@ -323,7 +323,7 @@ export default function SettingsPage() {
               onChange={(e) => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, bufferMinutes: Number(e.target.value) } })}
               className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
             >
-              {[0, 5, 10, 15, 30].map(b => <option key={b} value={b}>{b === 0 ? 'None' : `${b} min`}</option>)}
+              {[0, 5, 10, 15, 30].map(b => <option key={b} value={b}>{b === 0 ? 'None' : `${b} mins`}</option>)}
             </select>
           </div>
         </div>
@@ -445,7 +445,7 @@ export default function SettingsPage() {
           return (
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
               <span className="px-2.5 py-1 rounded-full bg-green-600/15 border border-green-500/30 text-green-400">{fmt(startHour)} – {fmt(endHour)}</span>
-              <span className="px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">{slotDuration} min · {slots} slot{slots !== 1 ? 's' : ''}/day</span>
+              <span className="px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">{slotDuration} mins · {slots} slot{slots !== 1 ? 's' : ''}/day</span>
               {offDays.length > 0 && <span className="px-2.5 py-1 rounded-full bg-red-600/15 border border-red-500/30 text-red-400">Off: {offDays.join(', ')}</span>}
               {blockedDates.length > 0 && <span className="px-2.5 py-1 rounded-full bg-red-600/15 border border-red-500/30 text-red-400">{blockedDates.length} date{blockedDates.length > 1 ? 's' : ''} blocked</span>}
               {dateOverrides.length > 0 && <span className="px-2.5 py-1 rounded-full bg-blue-600/15 border border-blue-500/30 text-blue-400">{dateOverrides.length} custom date{dateOverrides.length > 1 ? 's' : ''}</span>}

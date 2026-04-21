@@ -150,7 +150,7 @@ export default function GDPracticePage() {
                     </div>
                     <div className="flex items-center gap-2 text-zinc-300">
                       <Video size={16} className="text-emerald-400" />
-                      {session.duration} min
+                      {session.duration} mins
                     </div>
                   </div>
                 </div>

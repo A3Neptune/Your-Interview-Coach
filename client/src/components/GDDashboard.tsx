@@ -128,7 +128,7 @@ export default function GDDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <Clock size={16} />
-                {new Date(gd.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {gd.duration} min
+                {new Date(gd.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {gd.duration} mins
               </div>
               <div className="flex items-center gap-2">
                 <Users size={16} />

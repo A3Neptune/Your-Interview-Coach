@@ -579,7 +579,7 @@ export default function CourseDetailPage() {
                             <div className="flex items-center gap-3 mt-1.5">
                               <p className="text-xs text-blue-600 font-semibold flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
                                 <Clock className="w-3 h-3" />
-                                {content.duration} min
+                                {content.duration} mins
                               </p>
                               {isInProgress && (
                                 <p className="text-xs text-emerald-600 font-semibold">

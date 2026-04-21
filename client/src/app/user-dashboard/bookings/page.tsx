@@ -260,7 +260,7 @@ function UserBookingsContent() {
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Duration</p>
-                      <p className="text-sm text-slate-900 font-bold">{booking.duration} min</p>
+                      <p className="text-sm text-slate-900 font-bold">{booking.duration} mins</p>
                     </div>
                   </div>
 

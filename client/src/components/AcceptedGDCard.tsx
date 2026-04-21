@@ -135,7 +135,7 @@ export default function AcceptedGDCard({ gd, paymentVerified: initialPaymentVeri
           </div>
           <div className="flex items-center gap-2 text-zinc-300">
             <Clock size={14} className="text-emerald-400" />
-            <span>{gd.duration} min</span>
+            <span>{gd.duration} mins</span>
           </div>
         </div>
 

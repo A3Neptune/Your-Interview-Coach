@@ -321,7 +321,7 @@ export default function MentorBookingsPage() {
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           <span>
-                            {formattedTime} • {booking.duration} min
+                            {formattedTime} • {booking.duration} mins
                           </span>
                         </div>
                       </div>

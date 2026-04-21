@@ -326,7 +326,7 @@ function CheckoutContent() {
                   const d = h > 12 ? h - 12 : h === 0 ? 12 : h;
                   return m === 0 ? `${d} ${p}` : `${d}:${String(m).padStart(2,'0')} ${p}`;
                 };
-                return `${fmt(sh, sm)} – ${fmt(eh, em)} (${duration} min)`;
+                return `${fmt(sh, sm)} – ${fmt(eh, em)} (${duration} mins)`;
               })()}
             </p>
           </div>

@@ -206,7 +206,7 @@ export default function HeroSection() {
                 color: "#0f172a",
               }}
             >
-              Be{" "}
+              Crack your{" "}
               <span
                 style={{
                   fontWeight: 600,
@@ -214,10 +214,10 @@ export default function HeroSection() {
                   fontStyle: "italic",
                 }}
               >
-                Interview
+                next job
               </span>
               <br />
-              ready.
+              interview.
             </motion.h1>
 
             {/* Body */}
@@ -236,8 +236,11 @@ export default function HeroSection() {
                 fontWeight: 400,
               }}
             >
-             Crack you next job interview <br/>
-             <span style={{ color: '#1d4ed8' }}>Prepare, Practice & Get placed</span>
+              Prepare{" "}
+              <span style={{ color: "#1d4ed8", fontWeight: 600 }}>|</span>
+              {" "}Practice{" "}
+              <span style={{ color: "#1d4ed8", fontWeight: 600 }}>|</span>
+              {" "}Get Placed
             </motion.p>
 
             {/* CTAs */}

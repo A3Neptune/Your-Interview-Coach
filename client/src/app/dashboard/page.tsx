@@ -301,7 +301,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                      {booking.duration} min
+                      {booking.duration} mins
                     </div>
                   </div>
 
