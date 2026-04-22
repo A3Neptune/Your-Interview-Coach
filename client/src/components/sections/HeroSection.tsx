@@ -221,27 +221,35 @@ export default function HeroSection() {
             </motion.h1>
 
             {/* Body */}
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.35,
-                ease: [0.23, 1, 0.32, 1] as const,
-              }}
-              className="mb-9 leading-relaxed max-w-[440px] mx-auto lg:mx-0"
-              style={{
-                fontSize: "clamp(15px, 1.5vw, 17px)",
-                color: "#64748b",
-                fontWeight: 400,
-              }}
+              transition={{ duration: 0.6, delay: 0.35, ease: [0.23, 1, 0.32, 1] as const }}
+              className="mb-9 flex flex-wrap items-center gap-2 justify-center lg:justify-start"
             >
-              Prepare{" "}
-              <span style={{ color: "#1d4ed8", fontWeight: 600 }}>|</span>
-              {" "}Practice{" "}
-              <span style={{ color: "#1d4ed8", fontWeight: 600 }}>|</span>
-              {" "}Get Placed
-            </motion.p>
+              {["Prepare", "Practice", "Get Placed"].map((word, i) => (
+                <span key={word} className="flex items-center gap-2">
+                  <span
+                    style={{
+                      fontSize: "clamp(13px, 1.2vw, 15px)",
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      padding: "4px 14px",
+                      borderRadius: "100px",
+                      background: i === 2 ? "#1d4ed8" : "transparent",
+                      color: i === 2 ? "#fff" : "#1d4ed8",
+                      border: i === 2 ? "1.5px solid #1d4ed8" : "1.5px solid #93c5fd",
+                    }}
+                  >
+                    {word}
+                  </span>
+                  {i < 2 && (
+                    <span style={{ color: "#cbd5e1", fontSize: "18px", fontWeight: 300 }}>→</span>
+                  )}
+                </span>
+              ))}
+            </motion.div>
 
             {/* CTAs */}
             <motion.div
@@ -407,8 +415,8 @@ export default function HeroSection() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Interview Coach | Ex-IndiaMART & Tech <br/>
-                      Mahindra | 12+ Years Experience
+                      Interview Coach | Ex-IndiaMART & Tech Mahindra <br/>
+                       | 12+ Years Experience
                     </p>
                   </div>
                 </div>

@@ -37,65 +37,65 @@ export default function AnalyticsPage() {
       }
 
       let bookings = [];
+      let allUsers: any[] = [];
 
       try {
-        const bookingsRes = await axios.get(`${API_URL}/bookings/mentor`, {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-          },
-          timeout: 10000,
-        });
+        const [bookingsRes, usersRes] = await Promise.all([
+          axios.get(`${API_URL}/bookings/mentor`, {
+            withCredentials: true,
+            headers: { Authorization: `Bearer ${token}`, "Cache-Control": "no-cache" },
+            timeout: 10000,
+          }),
+          axios.get(`${API_URL}/auth/all-users`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000,
+          }),
+        ]);
         bookings = bookingsRes.data.bookings || [];
+        allUsers = (usersRes.data.users || []).filter((u: any) => u.userType !== 'admin');
       } catch {
         bookings = [];
       }
 
-      // Calculate stats from bookings (will be 0 if bookings is empty)
-      const totalRevenue = bookings.reduce(
-        (sum: number, b: any) => sum + (b.amount || 0),
-        0,
-      );
-      const uniqueStudents = new Set(bookings.map((b: any) => b.studentId))
-        .size;
-      const completedSessions = bookings.filter(
-        (b: any) => b.status === "completed",
-      ).length;
-
+      // Only count revenue from successfully paid bookings
+      const paidBookings = bookings.filter((b: any) => b.paymentStatus === "completed");
+      const totalRevenue = paidBookings.reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
       // Real month-over-month comparison
       const now = new Date();
+      const completedSessions = bookings.filter(
+        (b: any) => b.status === "completed" ||
+          (b.status === "confirmed" && new Date(b.scheduledDate).getTime() + (b.duration || 60) * 60000 <= now.getTime())
+      ).length;
       const thisMonth = now.getMonth();
       const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
       const thisYear = now.getFullYear();
       const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
       const thisMonthBookings = bookings.filter((b: any) => {
-        const d = new Date(b.createdAt);
+        const d = new Date(b.scheduledDate);
         return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
       });
       const lastMonthBookings = bookings.filter((b: any) => {
-        const d = new Date(b.createdAt);
+        const d = new Date(b.scheduledDate);
         return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
       });
 
-      const thisMonthRevenue = thisMonthBookings.reduce((s: number, b: any) => s + (b.amount || 0), 0);
-      const lastMonthRevenue = lastMonthBookings.reduce((s: number, b: any) => s + (b.amount || 0), 0);
+      const thisMonthRevenue = thisMonthBookings.filter((b: any) => b.paymentStatus === "completed").reduce((s: number, b: any) => s + (b.amount || 0), 0);
+      const lastMonthRevenue = lastMonthBookings.filter((b: any) => b.paymentStatus === "completed").reduce((s: number, b: any) => s + (b.amount || 0), 0);
       const revenueChange = lastMonthRevenue > 0
         ? `${thisMonthRevenue >= lastMonthRevenue ? "+" : ""}${Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)}% vs last month`
         : thisMonthRevenue > 0 ? "New this month" : "No data yet";
 
-      const thisMonthStudents = new Set(thisMonthBookings.map((b: any) => b.studentId)).size;
-      const lastMonthStudents = new Set(lastMonthBookings.map((b: any) => b.studentId)).size;
-      const studentChange = thisMonthStudents === 0 && lastMonthStudents === 0
-        ? "No sessions yet"
-        : `${thisMonthStudents >= lastMonthStudents ? "+" : ""}${thisMonthStudents - lastMonthStudents} vs last month`;
 
       const thisMonthCompleted = thisMonthBookings.filter((b: any) => b.status === "completed").length;
       const lastMonthCompleted = lastMonthBookings.filter((b: any) => b.status === "completed").length;
       const sessionChange = thisMonthCompleted === 0 && lastMonthCompleted === 0
         ? "No completed yet"
         : `${thisMonthCompleted >= lastMonthCompleted ? "+" : ""}${thisMonthCompleted - lastMonthCompleted} vs last month`;
+
+      const totalUsers = allUsers.length;
+      const studentCount = allUsers.filter((u: any) => u.userType === 'student').length;
+      const professionalCount = allUsers.filter((u: any) => u.userType === 'professional').length;
 
       const newStats = [
         {
@@ -108,10 +108,10 @@ export default function AnalyticsPage() {
           borderColor: "border-emerald-500/20",
         },
         {
-          label: "Active Students",
-          value: uniqueStudents,
-          change: studentChange,
-          isPositive: thisMonthStudents >= lastMonthStudents,
+          label: "Total Users",
+          value: totalUsers,
+          change: `${studentCount} students · ${professionalCount} professionals`,
+          isPositive: true,
           icon: Users,
           bgColor: "from-blue-500/10 to-cyan-500/10",
           borderColor: "border-blue-500/20",
@@ -124,6 +124,15 @@ export default function AnalyticsPage() {
           icon: BookOpen,
           bgColor: "from-purple-500/10 to-pink-500/10",
           borderColor: "border-purple-500/20",
+        },
+        {
+          label: "Professionals",
+          value: professionalCount,
+          change: `${studentCount} students registered`,
+          isPositive: true,
+          icon: Users,
+          bgColor: "from-amber-500/10 to-orange-500/10",
+          borderColor: "border-amber-500/20",
         },
       ];
 
@@ -138,8 +147,9 @@ export default function AnalyticsPage() {
         const label = d.toLocaleString("default", { month: "short" });
         const revenue = bookings
           .filter((b: any) => {
-            const bd = new Date(b.createdAt);
-            return bd.getMonth() === m && bd.getFullYear() === y;
+            // Use scheduledDate so revenue is attributed to when service was delivered
+            const bd = new Date(b.scheduledDate);
+            return bd.getMonth() === m && bd.getFullYear() === y && b.paymentStatus === "completed";
           })
           .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
         return { month: label, revenue };

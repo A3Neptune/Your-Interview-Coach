@@ -352,7 +352,7 @@ export default function ServicesPage() {
                     <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"14px" }}>
                       <div style={{ width:"44px", height:"44px", borderRadius:"13px", background:`linear-gradient(135deg,${s.accent}cc,${s.accent})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 4px 12px ${s.accentLight}` }}>
                         <span style={{ fontSize:"11px", fontWeight:700, color:"#fff", letterSpacing:"-0.02em" }}>
-                          {s.duration?.replace(/\s/g,"").slice(0,4) || "60m"}
+                          {(s.duration?.replace(/[^\d]/g,'') || '60') + ' min'}
                         </span>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"4px" }}>
@@ -367,7 +367,7 @@ export default function ServicesPage() {
                           </span>
                         )}
                         <span style={{ fontSize:"10px", color:"#94a3b8", display:"flex", alignItems:"center", gap:"3px" }}>
-                          <Clock style={{ width:"10px", height:"10px" }} /> {s.duration}
+                          <Clock style={{ width:"10px", height:"10px" }} /> {(s.duration?.replace(/[^\d]/g,'') || '60') + ' min'}
                         </span>
                       </div>
                     </div>

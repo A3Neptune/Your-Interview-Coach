@@ -2,15 +2,17 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MessageCircle, Clock, User, DollarSign, ExternalLink, MessageSquare } from 'lucide-react';
+import { Calendar, MessageCircle, Clock, DollarSign, ExternalLink, MessageSquare, User } from 'lucide-react';
 // import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const phoneNumber = "919718713646"; // no +
-const message = "Hi I enrolled the session";
-
-const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+const getWhatsappLink = (booking: Booking) => {
+  // Use mentor's mobile if available, otherwise fall back to default
+  const phone = booking.mentorId?.mobile?.replace(/\D/g, '') || "919718713646";
+  const msg = `Hi, I enrolled in "${booking.title}" scheduled for ${new Date(booking.scheduledDate).toLocaleDateString('en-IN')}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+};
 
 
 interface Booking {
@@ -28,6 +30,7 @@ interface Booking {
     fullName: string;
     name: string;
     email: string;
+    mobile?: string;
     profileImage?: string;
   };
   studentNotes?: string;
@@ -65,6 +68,13 @@ function UserBookingsContent() {
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  // Tick every 30s so join button appears/disappears in real-time
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchBookings = async () => {
     try {
@@ -136,7 +146,22 @@ function UserBookingsContent() {
   const displayedBookings = showAll ? filteredBookings : filteredBookings.slice(0, 5);
   const hasMoreBookings = filteredBookings.length > 5;
 
-  const isUpcoming = (date: string) => new Date(date) > new Date();
+
+// Show join button only 10 min before start and hide after session end
+const canJoinNow = (scheduledDate: string, duration: number, currentTime: number) => {
+  const start = new Date(scheduledDate).getTime();
+  const end = start + duration * 60 * 1000;
+  return currentTime >= start - 10 * 60 * 1000 && currentTime <= end;
+};
+
+const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
+  const start = new Date(scheduledDate).getTime();
+  const diff = start - currentTime;
+  if (diff <= 0) return null;
+  const mins = Math.ceil(diff / 60000);
+  if (mins > 60) return null; // too far, don't show countdown
+  return `Opens in ${mins} min`;
+};
 
   if (isLoading) {
     return (
@@ -287,26 +312,47 @@ function UserBookingsContent() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-3">
-                  {booking.meetingLink && booking.status === 'confirmed' && isUpcoming(booking.scheduledDate) && (
-                    <a
-                      href={booking.meetingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
-                    >
-                      <ExternalLink size={18} />
-                      Join Meeting
-                    </a>
-                  )}
+                  {booking.status === 'confirmed' && (() => {
+                    const joinable = canJoinNow(booking.scheduledDate, booking.duration, now);
+                    const countdown = getJoinCountdown(booking.scheduledDate, now);
+                    const sessionLink = booking.meetingLink || `https://meet.jit.si/yic-session-${booking._id}`;
+                    const endTime = new Date(new Date(booking.scheduledDate).getTime() + booking.duration * 60000);
+                    const expired = now > endTime.getTime();
+
+                    if (expired) return (
+                      <span className="flex items-center gap-2 px-5 py-2.5 bg-zinc-100 text-zinc-400 text-sm font-semibold rounded-xl border border-zinc-200">
+                        Session Ended
+                      </span>
+                    );
+
+                    if (joinable) return (
+                      <a
+                        href={sessionLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg animate-pulse"
+                      >
+                        <ExternalLink size={18} />
+                        Join Jitsi Session
+                      </a>
+                    );
+
+                    if (countdown) return (
+                      <span className="flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 text-sm font-semibold rounded-xl border border-amber-200">
+                        🕐 {countdown}
+                      </span>
+                    );
+                    return null;
+                  })()}
 
                   <a
-                    href={whatsappLink}
+                    href={getWhatsappLink(booking)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
                     <MessageCircle size={18} />
-                    Join WhatsApp
+                    WhatsApp Mentor
                   </a>
 
                   <button

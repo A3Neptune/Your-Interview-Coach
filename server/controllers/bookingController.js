@@ -6,6 +6,8 @@
 import bookingService from '../services/domain/bookingService.js';
 import paymentService from '../services/domain/paymentService.js';
 import {  handleControllerError  } from '../utils/errorHandler.js';
+import { ForbiddenError } from '../utils/errors.js';
+import Booking from '../models/Booking.js';
 
 /**
  * Get public availability
@@ -167,13 +169,19 @@ export const cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
     const { reason } = req.body;
-    const userId = req.user.id || req.user._id;
+    const userId = String(req.user.id || req.user._id);
     const userType = req.user.userType;
 
-    const cancelledBy = userType === 'admin' ? 'mentor' : 'student';
+    // Verify ownership — only the student or admin (mentor) can cancel
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    const isStudent = String(booking.studentId) === userId;
+    const isMentor = userType === 'admin';
+    if (!isStudent && !isMentor) throw new ForbiddenError('You are not authorised to cancel this booking');
 
-    const booking = await bookingService.cancelBooking(bookingId, cancelledBy, reason, req);
-    res.json({ success: true, booking });
+    const cancelledBy = isMentor ? 'mentor' : 'student';
+    const result = await bookingService.cancelBooking(bookingId, cancelledBy, reason, req);
+    res.json({ success: true, booking: result.booking });
   } catch (error) {
     console.error('Error cancelling booking:', error);
     handleControllerError(res, error);
@@ -187,6 +195,8 @@ export const cancelBooking = async (req, res) => {
 export const confirmBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
+    // Only admins (mentors) can confirm bookings
+    if (req.user.userType !== 'admin') throw new ForbiddenError('Only mentors can confirm bookings');
     const booking = await bookingService.confirmBooking(bookingId, req);
     res.json({ success: true, booking });
   } catch (error) {
@@ -202,8 +212,10 @@ export const confirmBooking = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { status } = req.body;
-    const booking = await bookingService.updateBookingStatus(bookingId, status, req);
+    const { status, meetingLink } = req.body;
+    // Only admins (mentors) can update booking status
+    if (req.user.userType !== 'admin') throw new ForbiddenError('Only mentors can update booking status');
+    const booking = await bookingService.updateBookingStatus(bookingId, status, req, meetingLink);
     res.json({ success: true, booking });
   } catch (error) {
     console.error('Error updating booking status:', error);

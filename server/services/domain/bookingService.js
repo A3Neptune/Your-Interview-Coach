@@ -438,7 +438,7 @@ const createBooking = async (bookingData, req) => {
 const getMentorBookings = async (mentorId, filters = {}) => {
   const query = { mentorId, ...filters };
   const bookings = await Booking.find(query)
-    .populate('studentId', 'name email profileImage mobile')
+    .populate('studentId', 'name email profileImage mobile userType')
     .populate('mentorId', 'name email designation profileImage')
     .sort({ createdAt: -1 });
 
@@ -449,12 +449,16 @@ const getMentorBookings = async (mentorId, filters = {}) => {
  * Get students list for mentor
  */
 const getMentorStudentsList = async (mentorId) => {
-  const students = await Booking.find({
+  // .distinct() returns raw IDs — populate separately
+  const studentIds = await Booking.find({
     mentorId,
     status: { $in: ['confirmed', 'completed'] },
-  })
-    .distinct('studentId')
-    .populate('name email profileImage mobile');
+  }).distinct('studentId');
+
+  const students = await User.find(
+    { _id: { $in: studentIds } },
+    'name email profileImage mobile userType'
+  ).lean();
 
   return students;
 };

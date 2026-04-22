@@ -24,7 +24,7 @@ router.get('/mentor/students/list', verifyToken, verifyMentor, bookingController
 
 // Shared routes (student & mentor)
 router.get('/:bookingId', verifyToken, verifyUser, bookingController.getBookingById);
-router.put('/:bookingId/cancel', verifyToken, verifyUser, bookingController.cancelBooking);
+router.put('/:bookingId/cancel', verifyToken, bookingController.cancelBooking);
 router.put('/:bookingId/confirm', verifyToken, bookingController.confirmBooking);
 router.put('/:bookingId/status', verifyToken, bookingController.updateBookingStatus);
 router.put('/:bookingId/feedback', verifyToken, bookingController.addBookingFeedback);

@@ -730,11 +730,11 @@ function SelectSlotContent() {
                         }
                         className={`aspect-square rounded-xl text-sm font-medium transition-all flex items-center justify-center ${
                           status === "past"
-                            ? "text-slate-200 cursor-default"
+                            ? "text-slate-300 cursor-not-allowed opacity-40"
                           : status === "future-limit"
-                            ? "text-slate-200 cursor-default border border-dashed border-slate-150"
+                            ? "text-slate-300 cursor-not-allowed opacity-40 border border-dashed border-slate-200"
                           : status === "unavailable"
-                            ? "text-rose-200 bg-rose-50 cursor-default text-xs"
+                            ? "text-slate-300 bg-slate-100 cursor-not-allowed opacity-50 line-through decoration-slate-300"
                           : status === "selected"
                             ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-200"
                           : status === "today"
@@ -761,7 +761,7 @@ function SelectSlotContent() {
                     {[
                       { label: "Today", className: "bg-blue-50 ring-2 ring-blue-300", textClass: "text-slate-500" },
                       { label: "Available", className: "bg-white border border-slate-200", textClass: "text-slate-500" },
-                      { label: "Mentor off", className: "bg-rose-50 border border-rose-100", textClass: "text-slate-500" },
+                      { label: "Unavailable", className: "bg-slate-100 opacity-50", textClass: "text-slate-400" },
                       { label: "Outside 30-day window", className: "border border-dashed border-slate-200", textClass: "text-slate-400" },
                     ].map(({ label, className, textClass }) => (
                       <span key={label} className={`flex items-center gap-1.5 text-[11px] ${textClass}`}>

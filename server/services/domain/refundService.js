@@ -68,11 +68,6 @@ const processRefund = async (bookingId, reason, req) => {
     throw new PaymentError('Cannot refund - no payment ID found');
   }
 
-  // Check if already refunded
-  if (booking.paymentStatus === 'refunded') {
-    throw new PaymentError('Booking already refunded');
-  }
-
   try {
     console.log(`Processing refund for booking ${bookingId}...`);
     console.log(`Payment ID: ${booking.razorpayPaymentId}, Amount: ${booking.amount}`);
@@ -135,7 +130,20 @@ const processRefund = async (bookingId, reason, req) => {
   } catch (error) {
     console.error('❌ Refund processing failed:', error);
 
-    // Log failed refund attempt
+    const isInvalidPayment = error.error?.description?.includes('does not exist')
+      || error.message?.includes('does not exist');
+
+    // If payment ID doesn't exist in Razorpay (test/fixture data), mark as refunded to avoid stuck state
+    if (isInvalidPayment) {
+      booking.paymentStatus = 'refunded';
+      booking.refundId = 'not_applicable_test_payment';
+      booking.refundedAt = new Date();
+      booking.refundReason = 'Payment ID not found in Razorpay — likely a test payment';
+      await booking.save();
+      console.warn('⚠️ Payment ID not in Razorpay — marked as refunded (test data)');
+      return { success: false, reason: 'test_payment', message: 'No real Razorpay payment found' };
+    }
+
     await AuditLogService.logBookingAction(
       req,
       'BOOKING_CANCELLED',
@@ -153,9 +161,7 @@ const processRefund = async (bookingId, reason, req) => {
  * Check refund status
  */
 const getRefundStatus = async (refundId) => {
-  if (!razorpay) {
-    throw new PaymentError('Razorpay not configured');
-  }
+  const razorpay = getRazorpayInstance();
 
   try {
     const refund = await razorpay.refunds.fetch(refundId);

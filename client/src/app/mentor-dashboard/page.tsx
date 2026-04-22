@@ -35,6 +35,7 @@ export default function MentorDashboard() {
   const [stats, setStats] = useState({
     totalCourses: 0,
     upcomingSessions: 0,
+    completedSessions: 0,
     totalStudents: 0,
     totalRevenue: 0,
   });
@@ -75,12 +76,18 @@ export default function MentorDashboard() {
               .slice(0, 5);
             setBookings(upcomingBookings);
 
-            // Count upcoming sessions
+            const now = new Date();
             const upcomingCount = allBookings.filter(
-              (b: Booking) => new Date(b.scheduledDate) > new Date() && b.status === 'confirmed'
+              (b: any) => new Date(b.scheduledDate) > now && b.status === 'confirmed'
             ).length;
 
-            // Calculate total revenue from completed payments
+            // completed = status 'completed' OR confirmed sessions that have already passed
+            const completedCount = allBookings.filter(
+              (b: any) => b.status === 'completed' ||
+                (b.status === 'confirmed' && new Date(b.scheduledDate).getTime() + (b.duration || 60) * 60000 <= now.getTime())
+            ).length;
+
+            // Revenue = only paymentStatus 'completed' (excludes refunded/failed/pending)
             const totalRevenue = allBookings
               .filter((b: any) => b.paymentStatus === 'completed')
               .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
@@ -88,10 +95,12 @@ export default function MentorDashboard() {
             setStats(prev => ({
               ...prev,
               upcomingSessions: upcomingCount,
+              completedSessions: completedCount,
               totalRevenue: totalRevenue,
             }));
           }
         } catch (err) {
+          console.error('Failed to fetch bookings for dashboard:', err);
         }
 
         // Fetch total users count (students + professionals)
@@ -108,8 +117,10 @@ export default function MentorDashboard() {
               totalStudents: totalUsers,
             }));
           } else {
+            console.error('Failed to fetch users:', usersResponse.status);
           }
         } catch (err) {
+          console.error('Error fetching users:', err);
         }
 
         // Fetch courses count
@@ -119,15 +130,16 @@ export default function MentorDashboard() {
           });
           if (coursesResponse.ok) {
             const coursesData = await coursesResponse.json();
-            // API returns { success: true, data: { courses: [...], pagination: {...} } }
             const courses = coursesData.data?.courses || coursesData.courses || [];
             setStats(prev => ({
               ...prev,
               totalCourses: courses.length,
             }));
           } else {
+            console.error('Failed to fetch courses:', coursesResponse.status);
           }
         } catch (err) {
+          console.error('Error fetching courses:', err);
         }
       } catch (err: any) {
         removeAuthToken();
@@ -212,60 +224,24 @@ export default function MentorDashboard() {
         )}
 
         {/* Quick Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <Link
-            href="/mentor-dashboard/courses"
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm mb-1">Total Courses</p>
-                <p className="text-3xl font-bold text-white">{stats.totalCourses}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          {[
+            { href: "/mentor-dashboard/bookings", label: "Upcoming", value: stats.upcomingSessions, sub: "confirmed sessions", icon: <Calendar className="w-8 h-8" />, color: "text-blue-400" },
+            { href: "/mentor-dashboard/bookings", label: "Completed", value: stats.completedSessions, sub: "sessions done", icon: <Clock className="w-8 h-8" />, color: "text-emerald-400" },
+            { href: "/mentor-dashboard/students", label: "Students", value: stats.totalStudents, sub: "registered users", icon: <Users className="w-8 h-8" />, color: "text-purple-400" },
+            { href: "/mentor-dashboard/analytics", label: "Revenue", value: `₹${stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`, sub: "from paid sessions", icon: <BarChart3 className="w-8 h-8" />, color: "text-amber-400" },
+          ].map(s => (
+            <Link key={s.label} href={s.href}
+              className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-white/20 hover:bg-white/8 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <p className="text-zinc-400 text-xs font-medium uppercase tracking-wide">{s.label}</p>
+                <span className={`${s.color} opacity-40 group-hover:opacity-80 transition-opacity`}>{s.icon}</span>
               </div>
-              <BookOpen className="w-10 h-10 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
-            </div>
-          </Link>
-
-          <Link
-            href="/mentor-dashboard/bookings"
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm mb-1">Upcoming Sessions</p>
-                <p className="text-3xl font-bold text-white">{stats.upcomingSessions}</p>
-              </div>
-              <Calendar className="w-10 h-10 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
-            </div>
-          </Link>
-
-          <Link
-            href="/mentor-dashboard/students"
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm mb-1">Students</p>
-                <p className="text-3xl font-bold text-white">{stats.totalStudents}</p>
-              </div>
-              <Users className="w-10 h-10 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
-            </div>
-          </Link>
-
-          <Link
-            href="/mentor-dashboard/analytics"
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm mb-1">Revenue</p>
-                <p className="text-3xl font-bold text-white">
-                  ₹{stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-              </div>
-              <BarChart3 className="w-10 h-10 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" />
-            </div>
-          </Link>
+              <p className={`text-3xl font-bold text-white mb-1`}>{s.value}</p>
+              <p className="text-xs text-zinc-600">{s.sub}</p>
+            </Link>
+          ))}
         </div>
 
         {/* Main Navigation */}

@@ -759,8 +759,11 @@ export default function MentorPricingPage() {
                   <label className="block text-sm font-semibold text-white mb-2">Price (₹) *</label>
                   <input
                     type="number"
-                    value={newService.price}
-                    onChange={(e) => setNewService({ ...newService, price: parseInt(e.target.value) || 0 })}
+                    value={newService.price === 0 ? '' : newService.price}
+                    min={0}
+                    step={1}
+                    onKeyDown={(e) => ['e','E','+','-','.'].includes(e.key) && e.preventDefault()}
+                    onChange={(e) => setNewService({ ...newService, price: e.target.value === '' ? 0 : Math.abs(parseInt(e.target.value)) || 0 })}
                     placeholder="2000"
                     className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
                   />
@@ -896,8 +899,11 @@ export default function MentorPricingPage() {
                     <label className="block text-sm font-semibold text-white mb-2">Price (₹)</label>
                     <input
                       type="number"
-                      value={service.price || 0}
-                      onChange={(e) => handleFieldChange(service.id, 'price', parseInt(e.target.value) || 0)}
+                      value={service.price === 0 ? '' : service.price}
+                      min={0}
+                      step={1}
+                      onKeyDown={(e) => ['e','E','+','-','.'].includes(e.key) && e.preventDefault()}
+                      onChange={(e) => handleFieldChange(service.id, 'price', e.target.value === '' ? 0 : Math.abs(parseInt(e.target.value)) || 0)}
                       className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-blue-500 focus:outline-none"
                     />
                   </div>

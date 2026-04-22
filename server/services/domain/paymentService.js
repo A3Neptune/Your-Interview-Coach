@@ -225,17 +225,23 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   booking.razorpayOrderId = razorpay_order_id;
   booking.confirmedAt = new Date();
 
-  // Generate meeting link (Zoom if configured, Jitsi fallback otherwise — never throws)
+  // Generate meeting link — wrapped so any failure never blocks payment completion
   if (!booking.meetingLink) {
-    const { default: zoomService } = await import('../../utils/zoomService.js');
-    const meeting = await zoomService.create1on1Meeting({
-      title: booking.title,
-      duration: booking.duration,
-      bookingId: booking._id.toString(),
-    });
-    booking.meetingLink = meeting.joinUrl;
-    booking.meetingId = meeting.meetingId;
-    console.log(`✅ Meeting link generated (${meeting.provider}):`, meeting.joinUrl);
+    try {
+      const { default: zoomService } = await import('../../utils/zoomService.js');
+      const meeting = await zoomService.create1on1Meeting({
+        title: booking.title,
+        duration: booking.duration,
+        bookingId: booking._id.toString(),
+      });
+      booking.meetingLink = meeting.joinUrl;
+      booking.meetingId = meeting.meetingId;
+      console.log(`✅ Meeting link generated (${meeting.provider}):`, meeting.joinUrl);
+    } catch (meetingErr) {
+      // Fallback to Jitsi so payment is never blocked
+      booking.meetingLink = `https://meet.jit.si/yic-session-${booking._id}`;
+      console.error('⚠️ Meeting link generation failed — using Jitsi fallback:', meetingErr.message);
+    }
   }
 
   await booking.save();

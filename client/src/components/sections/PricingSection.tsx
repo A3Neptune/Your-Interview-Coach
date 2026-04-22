@@ -126,7 +126,7 @@ export default function PricingSection() {
                     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16 }}>
                       <div style={{ width:48, height:48, borderRadius:14, background:`linear-gradient(135deg,${ac.bar}cc,${ac.bar})`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 12px ${ac.light}` }}>
                         <span style={{ fontSize:12, fontWeight:700, color:'#fff', letterSpacing:'-0.02em' }}>
-                          {svc.duration?.replace(/\s/g,'') || '60m'}
+                          {(svc.duration?.replace(/[^\d]/g,'') || '60') + ' min'}
                         </span>
                       </div>
                       <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:5 }}>
