@@ -77,6 +77,7 @@ function SelectSlotContent() {
   const [daysOff, setDaysOff] = useState<number[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [fullyBookedDates, setFullyBookedDates] = useState<Set<string>>(new Set());
+  const [calendarReady, setCalendarReady] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -157,6 +158,7 @@ function SelectSlotContent() {
     if (newFull.size > 0) {
       setFullyBookedDates((prev) => new Set([...prev, ...newFull]));
     }
+    setCalendarReady(true);
   };
 
   useEffect(() => {
@@ -297,6 +299,7 @@ function SelectSlotContent() {
       newDate.getFullYear() > now.getFullYear() ||
       (newDate.getFullYear() === now.getFullYear() && newDate.getMonth() >= now.getMonth())
     ) {
+      setCalendarReady(false);
       setCurrentMonth(newDate);
       prefetchMonthSlots(newDate, daysOff, blockedDates);
     }
@@ -308,6 +311,7 @@ function SelectSlotContent() {
     const navLimit = new Date();
     navLimit.setMonth(navLimit.getMonth() + 3);
     if (newDate <= navLimit) {
+      setCalendarReady(false);
       setCurrentMonth(newDate);
       prefetchMonthSlots(newDate, daysOff, blockedDates);
     }
@@ -826,12 +830,22 @@ function SelectSlotContent() {
                 </div>
 
                 {/* Calendar Days */}
-                <div className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                    <div key={`e-${i}`} />
-                  ))}
-                  {Array.from({ length: daysInMonth }).map((_, i) =>
-                    renderDayCell(i + 1),
+                <div className="relative">
+                  <div className="grid grid-cols-7 gap-1">
+                    {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                      <div key={`e-${i}`} />
+                    ))}
+                    {Array.from({ length: daysInMonth }).map((_, i) =>
+                      renderDayCell(i + 1),
+                    )}
+                  </div>
+
+                  {/* Skeleton overlay while prefetch runs */}
+                  {!calendarReady && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] rounded-xl flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+                      <p className="text-xs text-slate-400 font-medium">Checking availability…</p>
+                    </div>
                   )}
                 </div>
 
