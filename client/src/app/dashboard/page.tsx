@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -67,7 +67,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
-  const [now, setNow] = useState(() => new Date());
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -133,39 +132,6 @@ export default function DashboardPage() {
 
     fetchData();
   }, [router]);
-
-  // Tick every 30 s so join-button visibility and session expiry stay current
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Mark a booking completed via API and remove it from local list
-  const markCompleted = useCallback(async (bookingId: string) => {
-    try {
-      const token = getAuthToken();
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-      await axios.put(
-        `${API_URL}/bookings/${bookingId}/status`,
-        { status: "completed" },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-    } catch {
-      // fail silently — UI already hides the card
-    }
-    setUpcomingBookings((prev) => prev.filter((b) => b._id !== bookingId));
-  }, []);
-
-  // Returns per-booking timing state
-  const getSessionState = useCallback((booking: Booking) => {
-    const start = new Date(booking.scheduledDate).getTime();
-    const end   = start + booking.duration * 60_000;
-    const ms    = now.getTime();
-    return {
-      showJoin:   ms >= start - 10 * 60_000 && ms < end,
-      isExpired:  ms >= end,
-    };
-  }, [now]);
 
   const getInitials = () => {
     if (!user?.name) return "U";
@@ -301,7 +267,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming Sessions Section */}
-        {upcomingBookings.filter((b) => !getSessionState(b).isExpired).length > 0 && (
+        {upcomingBookings.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -322,67 +288,69 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {upcomingBookings.map((booking) => {
-                const { showJoin, isExpired } = getSessionState(booking);
-                if (isExpired) {
-                  // Fire-and-forget mark-completed on next tick so render isn't blocked
-                  setTimeout(() => markCompleted(booking._id), 0);
-                  return null;
-                }
-                return (
-                  <div
-                    key={booking._id}
-                    className="rounded-xl border border-slate-200 bg-white shadow-md shadow-blue-500/5 p-6 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 transition-all duration-300"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                        <span className="text-sm font-medium text-blue-600">Confirmed</span>
-                      </div>
-                      <div className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                        {booking.duration} mins
-                      </div>
+              {upcomingBookings.map((booking) => (
+                <div
+                  key={booking._id}
+                  className="rounded-xl border border-slate-200 bg-white shadow-md shadow-blue-500/5 p-6 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                      <span className="text-sm font-medium text-blue-600">
+                        Confirmed
+                      </span>
                     </div>
-
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{booking.title}</h3>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar className="w-4 h-4 text-blue-500" />
-                        {new Date(booking.scheduledDate).toLocaleDateString("en-US", {
-                          weekday: "short", month: "short", day: "numeric", year: "numeric",
-                        })}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Clock className="w-4 h-4 text-blue-500" />
-                        {new Date(booking.scheduledDate).toLocaleTimeString("en-US", {
-                          hour: "2-digit", minute: "2-digit",
-                        })}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <User className="w-4 h-4 text-blue-500" />
-                        {booking.mentorId.name}
-                      </div>
+                    <div className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                      {booking.duration} min
                     </div>
-
-                    {showJoin && booking.meetingLink ? (
-                      <a
-                        href={booking.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02]"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Join Meeting
-                      </a>
-                    ) : !showJoin ? (
-                      <div className="w-full py-2 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-400 text-xs text-center">
-                        Join link available 10 min before session
-                      </div>
-                    ) : null}
                   </div>
-                );
-              })}
+
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">
+                    {booking.title}
+                  </h3>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Calendar className="w-4 h-4 text-blue-500" />
+                      {new Date(booking.scheduledDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        },
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Clock className="w-4 h-4 text-blue-500" />
+                      {new Date(booking.scheduledDate).toLocaleTimeString(
+                        "en-US",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <User className="w-4 h-4 text-blue-500" />
+                      {booking.mentorId.name}
+                    </div>
+                  </div>
+
+                  {booking.meetingLink && (
+                    <a
+                      href={booking.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02]"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Join Meeting
+                    </a>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
