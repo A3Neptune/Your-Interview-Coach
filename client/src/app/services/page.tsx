@@ -15,7 +15,7 @@ import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
 import useSWR from "swr";
 
-const swrFetcher = (url: string) => fetch(url).then(r => r.json());
+const swrFetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -65,10 +65,30 @@ function FadeUp({
 
 // Accent palette cycles per card index — same colours used in PricingSection
 const accentPalette = [
-  { accent: "#2563eb", accentLight: "rgba(37,99,235,0.08)",  accentBorder: "rgba(37,99,235,0.2)",  tagColor: "#2563eb" },
-  { accent: "#0891b2", accentLight: "rgba(8,145,178,0.08)",  accentBorder: "rgba(8,145,178,0.2)",  tagColor: "#0891b2" },
-  { accent: "#7c3aed", accentLight: "rgba(124,58,237,0.08)", accentBorder: "rgba(124,58,237,0.2)", tagColor: "#7c3aed" },
-  { accent: "#059669", accentLight: "rgba(5,150,105,0.08)",  accentBorder: "rgba(5,150,105,0.2)",  tagColor: "#059669" },
+  {
+    accent: "#2563eb",
+    accentLight: "rgba(37,99,235,0.08)",
+    accentBorder: "rgba(37,99,235,0.2)",
+    tagColor: "#2563eb",
+  },
+  {
+    accent: "#0891b2",
+    accentLight: "rgba(8,145,178,0.08)",
+    accentBorder: "rgba(8,145,178,0.2)",
+    tagColor: "#0891b2",
+  },
+  {
+    accent: "#7c3aed",
+    accentLight: "rgba(124,58,237,0.08)",
+    accentBorder: "rgba(124,58,237,0.2)",
+    tagColor: "#7c3aed",
+  },
+  {
+    accent: "#059669",
+    accentLight: "rgba(5,150,105,0.08)",
+    accentBorder: "rgba(5,150,105,0.2)",
+    tagColor: "#059669",
+  },
 ];
 
 const faqs = [
@@ -92,41 +112,48 @@ const faqs = [
 
 export default function ServicesPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-  const { data: pricingData } = useSWR(`${API_URL}/pricing-section/public`, swrFetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 60000,
-  });
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const { data: pricingData } = useSWR(
+    `${API_URL}/pricing-section/public`,
+    swrFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000,
+    },
+  );
 
   // Build card data from API, falling back gracefully while loading
-  const dynamicServices = (pricingData?.services ?? []).map((svc: any, i: number) => {
-    const ac = accentPalette[i % accentPalette.length];
-    const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
-    const dAmt = hasDsc
-      ? svc.discount.type === "percentage"
-        ? (svc.price * svc.discount.value) / 100
-        : svc.discount.value
-      : 0;
-    const finalPrice = Math.round(svc.price - dAmt);
-    const gst = Math.round(finalPrice * 0.18);
-    return {
-      ...ac,
-      title: svc.name,
-      tag: svc.level || "",
-      price: hasDsc ? `₹${finalPrice}` : `₹${svc.price}`,
-      originalPrice: hasDsc ? `₹${svc.price}` : null,
-      gst,
-      discountLabel: hasDsc
+  const dynamicServices = (pricingData?.services ?? []).map(
+    (svc: any, i: number) => {
+      const ac = accentPalette[i % accentPalette.length];
+      const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
+      const dAmt = hasDsc
         ? svc.discount.type === "percentage"
-          ? `${svc.discount.value}% OFF`
-          : `Save ₹${svc.discount.value}`
-        : null,
-      duration: svc.duration,
-      desc: svc.value,
-      highlights: svc.points ?? [],
-      href: `/select-slot?serviceId=${svc.id}`,
-    };
-  });
+          ? (svc.price * svc.discount.value) / 100
+          : svc.discount.value
+        : 0;
+      const finalPrice = Math.round(svc.price - dAmt);
+      const gst = Math.round(finalPrice * 0.18);
+      return {
+        ...ac,
+        title: svc.name,
+        tag: svc.level || "",
+        price: hasDsc ? `₹${finalPrice}` : `₹${svc.price}`,
+        originalPrice: hasDsc ? `₹${svc.price}` : null,
+        gst,
+        discountLabel: hasDsc
+          ? svc.discount.type === "percentage"
+            ? `${svc.discount.value}% OFF`
+            : `Save ₹${svc.discount.value}`
+          : null,
+        duration: svc.duration,
+        desc: svc.value,
+        highlights: svc.points ?? [],
+        href: `/select-slot?serviceId=${svc.id}`,
+      };
+    },
+  );
 
   return (
     <main
@@ -336,89 +363,291 @@ export default function ServicesPage() {
       <section className="px-6 pb-20">
         <div className="max-w-6xl mx-auto grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {dynamicServices.map((s: any, i: number) => (
-              <FadeUp key={i} delay={i * 65}>
+            <FadeUp key={i} delay={i * 65}>
+              <div
+                className="sv-card h-full rounded-[20px] overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.97)",
+                  border: `1.5px solid ${s.accentBorder}`,
+                  boxShadow: `0 4px 20px ${s.accentLight}`,
+                }}
+              >
                 <div
-                  className="sv-card h-full rounded-[20px] overflow-hidden"
                   style={{
-                    background: "rgba(255,255,255,0.97)",
-                    border: `1.5px solid ${s.accentBorder}`,
-                    boxShadow: `0 4px 20px ${s.accentLight}`,
+                    height: "3px",
+                    background: `linear-gradient(90deg,${s.accent},${s.accent}55,transparent)`,
+                  }}
+                />
+                <div
+                  style={{
+                    padding: "22px 20px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "calc(100% - 3px)",
                   }}
                 >
-                  <div style={{ height:"3px", background:`linear-gradient(90deg,${s.accent},${s.accent}55,transparent)` }} />
-                  <div style={{ padding:"22px 20px 20px", display:"flex", flexDirection:"column", height:"calc(100% - 3px)" }}>
-
-                    {/* Header row */}
-                    <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"14px" }}>
-                      <div style={{ width:"44px", height:"44px", borderRadius:"13px", background:`linear-gradient(135deg,${s.accent}cc,${s.accent})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 4px 12px ${s.accentLight}` }}>
-                        <span style={{ fontSize:"11px", fontWeight:700, color:"#fff", letterSpacing:"-0.02em" }}>
-                          {(s.duration?.replace(/[^\d]/g,'') || '60') + ' min'}
-                        </span>
-                      </div>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"4px" }}>
-                        {s.tag && (
-                          <span style={{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:s.tagColor, background:`${s.tagColor}12`, border:`1px solid ${s.tagColor}28`, padding:"2px 8px", borderRadius:"100px" }}>
-                            {s.tag}
-                          </span>
-                        )}
-                        {s.discountLabel && (
-                          <span style={{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"#c2410c", background:"#fff7ed", border:"1px solid #fde8cc", padding:"2px 8px", borderRadius:"100px" }}>
-                            {s.discountLabel}
-                          </span>
-                        )}
-                        <span style={{ fontSize:"10px", color:"#94a3b8", display:"flex", alignItems:"center", gap:"3px" }}>
-                          <Clock style={{ width:"10px", height:"10px" }} /> {(s.duration?.replace(/[^\d]/g,'') || '60') + ' min'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 style={{ fontSize:"15.5px", fontWeight:700, color:"#0f172a", lineHeight:1.25, marginBottom:"7px" }}>
-                      {s.title}
-                    </h3>
-                    <p style={{ fontSize:"12.5px", color:"#64748b", lineHeight:1.65, marginBottom:"14px", flex:1 }}>
-                      {s.desc}
-                    </p>
-
-                    {/* Highlights */}
-                    <div style={{ display:"flex", flexDirection:"column", gap:"6px", marginBottom:"16px" }}>
-                      {s.highlights.map((h: string, hi: number) => (
-                        <div key={hi} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                          <div style={{ width:"17px", height:"17px", borderRadius:"5px", background:s.accentLight, border:`1px solid ${s.accentBorder}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            <Check style={{ width:"9px", height:"9px", color:s.accent }} strokeWidth={3} />
-                          </div>
-                          <span style={{ fontSize:"12px", color:"#334155", fontWeight:500 }}>{h}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div style={{ height:"1px", background:`linear-gradient(90deg,${s.accentBorder},transparent)`, marginBottom:"12px" }} />
-
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px" }}>
-                      {/* Price block — highlighted */}
-                      <div style={{ background:s.accentLight, borderRadius:"10px", padding:"8px 12px", flex:1 }}>
-                        {s.originalPrice && (
-                          <div style={{ fontSize:"11px", color:"#94a3b8", textDecoration:"line-through", lineHeight:1, marginBottom:"2px" }}>{s.originalPrice}</div>
-                        )}
-                        <div style={{ fontSize:"20px", fontWeight:800, color:s.accent, lineHeight:1, letterSpacing:"-0.02em" }}>{s.price}</div>
-                        <div style={{ fontSize:"10px", color:"#64748b", fontWeight:500, marginTop:"3px" }}>excl. GST · +₹{s.gst} (18%)</div>
-                      </div>
-                      <Link
-                        href={s.href}
-                        className="sv-btn"
-                        style={{ padding:"8px 15px", borderRadius:"10px", fontSize:"12px", fontWeight:700, color:"white", background:`linear-gradient(135deg,${s.accent}dd,${s.accent})`, display:"flex", alignItems:"center", gap:"5px", textDecoration:"none", boxShadow:`0 3px 10px ${s.accentLight}` }}
+                  {/* Header row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      marginBottom: "14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "13px",
+                        background: `linear-gradient(135deg,${s.accent}cc,${s.accent})`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: `0 4px 12px ${s.accentLight}`,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          color: "#fff",
+                          letterSpacing: "-0.02em",
+                        }}
                       >
-                        <span className="sv-shim" />
-                        <span style={{ position:"relative", zIndex:1, display:"flex", alignItems:"center", gap:"4px" }}>
-                          Book{" "}
-                          <ChevronRight
-                            style={{ width: "12px", height: "12px" }}
-                          />
+                        {(s.duration?.replace(/[^\d]/g, "") || "60") + " min"}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: "4px",
+                      }}
+                    >
+                      {s.tag && (
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                            color: s.tagColor,
+                            background: `${s.tagColor}12`,
+                            border: `1px solid ${s.tagColor}28`,
+                            padding: "2px 8px",
+                            borderRadius: "100px",
+                          }}
+                        >
+                          {s.tag}
                         </span>
-                      </Link>
+                      )}
+                      {s.discountLabel && (
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            color: "#c2410c",
+                            background: "#fff7ed",
+                            border: "1px solid #fde8cc",
+                            padding: "2px 8px",
+                            borderRadius: "100px",
+                          }}
+                        >
+                          {s.discountLabel}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#94a3b8",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "3px",
+                        }}
+                      >
+                        <Clock style={{ width: "10px", height: "10px" }} />{" "}
+                        {(s.duration?.replace(/[^\d]/g, "") || "60") + " min"}
+                      </span>
                     </div>
                   </div>
+
+                  <h3
+                    style={{
+                      fontSize: "15.5px",
+                      fontWeight: 700,
+                      color: "#0f172a",
+                      lineHeight: 1.25,
+                      marginBottom: "7px",
+                    }}
+                  >
+                    {s.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "12.5px",
+                      color: "#64748b",
+                      lineHeight: 1.65,
+                      marginBottom: "14px",
+                      flex: 1,
+                    }}
+                  >
+                    {s.desc}
+                  </p>
+
+                  {/* Highlights */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {s.highlights.map((h: string, hi: number) => (
+                      <div
+                        key={hi}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "17px",
+                            height: "17px",
+                            borderRadius: "5px",
+                            background: s.accentLight,
+                            border: `1px solid ${s.accentBorder}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Check
+                            style={{
+                              width: "9px",
+                              height: "9px",
+                              color: s.accent,
+                            }}
+                            strokeWidth={3}
+                          />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#334155",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {h}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      height: "1px",
+                      background: `linear-gradient(90deg,${s.accentBorder},transparent)`,
+                      marginBottom: "12px",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "10px",
+                    }}
+                  >
+                    {/* Price block — highlighted */}
+                    <div
+                      style={{
+                        background: s.accentLight,
+                        borderRadius: "10px",
+                        padding: "8px 12px",
+                        flex: 1,
+                      }}
+                    >
+                      {s.originalPrice && (
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "#94a3b8",
+                            textDecoration: "line-through",
+                            lineHeight: 1,
+                            marginBottom: "2px",
+                          }}
+                        >
+                          {s.originalPrice}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          fontSize: "20px",
+                          fontWeight: 800,
+                          color: s.accent,
+                          lineHeight: 1,
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {s.price}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          color: "#64748b",
+                          fontWeight: 500,
+                          marginTop: "3px",
+                        }}
+                      >
+                        excl. GST · +₹{s.gst} (18%)
+                      </div>
+                    </div>
+                    <Link
+                      href={s.href}
+                      className="sv-btn"
+                      style={{
+                        padding: "8px 15px",
+                        borderRadius: "10px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "white",
+                        background: `linear-gradient(135deg,${s.accent}dd,${s.accent})`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        textDecoration: "none",
+                        boxShadow: `0 3px 10px ${s.accentLight}`,
+                      }}
+                    >
+                      <span className="sv-shim" />
+                      <span
+                        style={{
+                          position: "relative",
+                          zIndex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        Book{" "}
+                        <ChevronRight
+                          style={{ width: "12px", height: "12px" }}
+                        />
+                      </span>
+                    </Link>
+                  </div>
                 </div>
-              </FadeUp>
+              </div>
+            </FadeUp>
           ))}
         </div>
       </section>
@@ -485,7 +714,7 @@ export default function ServicesPage() {
                       label:
                         "Satisfaction guarantee — full refund if unsatisfied",
                     },
-                    // { icon:Star, val:'4.4★',label:'Average rating across 12,000+ coached sessions' },
+                    // { icon:Star, val:'4.4★',label:'Average rating across 5000+ coached sessions' },
                   ].map((item, i) => {
                     const Icon = item.icon;
                     return (

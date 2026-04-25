@@ -81,7 +81,7 @@ export default function StandardNavbar({
               {/* Logo */}
               <Link href="/" className="flex items-center group">
                 <img
-                  src="/yourinterviewcoach-logo1.jpeg"
+                  src="/yic-logo-sm.png"
                   alt="YourInterviewCoach"
                   className={`w-[60px] sm:w-[80px] md:w-[95px] h-auto transition-all duration-500 group-hover:scale-[1.02] ${
                     isScrolled ? "opacity-95" : "opacity-100"

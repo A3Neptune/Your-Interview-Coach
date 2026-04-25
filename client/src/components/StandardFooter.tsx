@@ -262,7 +262,7 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
             <div className="col-span-2">
               <Link href="/" className="inline-flex items-center mb-5 group">
                 <img
-                  src="/yourinterviewcoach-logo1.jpeg"
+                  src="/yic-logo-sm.png"
                   alt="YourInterviewCoach"
                   className="w-[80px] sm:w-[100px] h-auto group-hover:scale-[1.02] transition-transform duration-200"
                   style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
@@ -384,7 +384,7 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
             >
               <span>© 2026</span>
               <img
-                src="/yourinterviewcoach-logo1.jpeg"
+                src="/yic-logo-sm.png"
                 alt="YourInterviewCoach"
                 className="w-[30px] h-auto"
                 style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.12))" }}

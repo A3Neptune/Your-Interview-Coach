@@ -90,7 +90,7 @@ const pricingSectionSchema = new mongoose.Schema(
       {
         stat: {
           type: String,
-          default: '3000+',
+          default: '5000+',
         },
         desc: {
           type: String,

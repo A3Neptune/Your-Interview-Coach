@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { ArrowRight, Mail } from 'lucide-react';
-import ScrollReveal from '@/components/ScrollReveal';
+import { motion } from "framer-motion";
+import { ArrowRight, Mail } from "lucide-react";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export default function CTASection() {
   return (
@@ -31,7 +31,9 @@ export default function CTASection() {
                 viewport={{ once: true }}
                 className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto leading-relaxed"
               >
-                Join thousands of professionals who have successfully transformed their careers through personalized mentorship and strategic guidance.
+                Join thousands of professionals who have successfully
+                transformed their careers through personalized mentorship and
+                strategic guidance.
               </motion.p>
 
               <motion.div
@@ -51,17 +53,6 @@ export default function CTASection() {
                   Get Early Access
                 </button>
               </motion.div>
-
-              {/* Trust Badge */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                viewport={{ once: true }}
-                className="text-sm text-gray-500 mt-8"
-              >
-                ✓ No credit card required • ✓ 14-day free trial • ✓ Cancel anytime
-              </motion.p>
             </div>
           </div>
         </div>

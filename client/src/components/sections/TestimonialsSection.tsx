@@ -502,7 +502,7 @@ export default function TestimonialsSection() {
 
       <section
         ref={sectionRef}
-        className="test-grain relative py-20 lg:py-32 overflow-hidden"
+        className="test-grain relative py-6 lg:py-8 overflow-hidden"
         style={{
           background: "#f8f6f1",
           fontFamily: "'DM Sans', system-ui, sans-serif",

@@ -184,10 +184,9 @@ export default function HeroSection() {
         />
 
         {/* ── Main content ── */}
-        <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 pt-[100px] pb-20 lg:pt-[118px] lg:pb-0 grid grid-cols-1 lg:grid-cols-[55%_45%] items-center gap-16 lg:gap-0">
+        <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 pt-[100px] pb-8 lg:pt-[118px] lg:pb-0 grid grid-cols-1 lg:grid-cols-[55%_45%] items-center gap-16 lg:gap-0">
           {/* ════ LEFT ════ */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:pr-16">
-
             {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
@@ -195,27 +194,28 @@ export default function HeroSection() {
               transition={{
                 duration: 0.6,
                 delay: 0.2,
-                ease: [0.23, 1, 0.32, 1] as const,
+                ease: [0.23, 1, 0.32, 1],
               }}
               className="mb-6"
               style={{
-                fontSize: "clamp(40px, 5.5vw, 72px)",
-                lineHeight: 1.08,
+                fontSize: "clamp(56px, 5.0vw, 120px)", // slightly reduced for fit
+                lineHeight: 1.1,
                 letterSpacing: "-0.025em",
-                fontWeight: 300,
+                fontWeight: 500,
                 color: "#0f172a",
+                whiteSpace: "nowrap", // 🔥 KEY LINE
               }}
             >
               Crack your{" "}
               <span
                 style={{
-                  fontWeight: 600,
-                  color: "#1d4ed8",
+                  fontWeight: 700,
+                  color: "#075a20be",
                   fontStyle: "italic",
                 }}
               >
                 next job
-              </span>
+              </span>{" "}
               <br />
               interview.
             </motion.h1>
@@ -224,33 +224,59 @@ export default function HeroSection() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35, ease: [0.23, 1, 0.32, 1] as const }}
-              className="mb-9 flex flex-wrap items-center gap-2 justify-center lg:justify-start"
+              transition={{
+                duration: 0.6,
+                delay: 0.35,
+                ease: [0.23, 1, 0.32, 1],
+              }}
+              className="mb-9 flex flex-wrap items-center gap-3 justify-center lg:justify-start"
             >
-              {["Prepare", "Practice", "Get Placed"].map((word, i) => (
-                <span key={word} className="flex items-center gap-2">
+              {[
+                { label: "Prepare" },
+                { label: "Practice" },
+                { label: "Get Placed" },
+              ].map(({ label }, i) => (
+                <span key={label} className="flex items-center gap-3">
+                  {/* BUTTON */}
                   <span
                     style={{
                       fontSize: "clamp(13px, 1.2vw, 15px)",
                       fontWeight: 700,
                       letterSpacing: "0.06em",
                       textTransform: "uppercase",
-                      padding: "4px 14px",
-                      borderRadius: "100px",
-                      background: i === 2 ? "#1d4ed8" : "transparent",
-                      color: i === 2 ? "#fff" : "#1d4ed8",
-                      border: i === 2 ? "1.5px solid #1d4ed8" : "1.5px solid #93c5fd",
+                      padding: "5px 16px",
+                      borderRadius: "999px",
+
+                      // SAME COLOR FOR ALL
+                      background: "#2563EB", // Tailwind blue-600
+                      color: "#ffffff",
+
+                      border: "1.5px solid #2563EB",
+
+                      boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
+
+                      transition: "all 0.25s ease",
+                      cursor: "pointer",
                     }}
                   >
-                    {word}
+                    {label}
                   </span>
+
+                  {/* ARROW */}
                   {i < 2 && (
-                    <span style={{ color: "#cbd5e1", fontSize: "18px", fontWeight: 300 }}>→</span>
+                    <span
+                      style={{
+                        color: "rgba(148,163,184,0.6)",
+                        fontSize: "18px",
+                        fontWeight: 400,
+                      }}
+                    >
+                      {"→"}
+                    </span>
                   )}
                 </span>
               ))}
             </motion.div>
-
             {/* CTAs */}
             <motion.div
               {...FADE_UP(0.4)}
@@ -295,7 +321,7 @@ export default function HeroSection() {
               }}
             >
               {[
-                { num: "12,000+", label: "Students Coached" },
+                { num: "5000+", label: "Students Coached" },
                 { num: "94%", label: "Success Rate" },
               ].map(({ num, label }) => (
                 <div
@@ -415,8 +441,8 @@ export default function HeroSection() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Interview Coach | Ex-IndiaMART & Tech Mahindra <br/>
-                       | 12+ Years Experience
+                      Interview Coach | Ex-IndiaMART & Tech Mahindra | <br />{" "}
+                      12+ Years Experience
                     </p>
                   </div>
                 </div>

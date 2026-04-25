@@ -215,42 +215,59 @@
 //   );
 // }
 
+"use client";
 
-
-
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Users, Map, MessageSquare, TrendingUp, Check } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Users, Map, MessageSquare, TrendingUp, Check } from "lucide-react";
 
 const features = [
   {
     icon: Users,
-    title: 'Expert Mentorship',
-    subtitle: 'Learn from the best',
-    description: 'Get personalized guidance from Neel Aashish Seru — an expert with 10+ years of experience. Tailored coaching for your unique career path and target role.',
-    highlights: ['10+ years of experience', 'Industry-specific coaching', 'Personalised every session'],
+    title: "Expert Mentorship",
+    subtitle: "Learn from the best",
+    description:
+      "Get personalized guidance from Neel Aashish Seru — an expert with 10+ years of experience. Tailored coaching for your unique career path and target role.",
+    highlights: [
+      "10+ years of experience",
+      "Industry-specific coaching",
+      "Personalised every session",
+    ],
   },
   {
     icon: Map,
-    title: 'Smart Roadmaps',
-    subtitle: 'Your personalised path',
-    description: 'AI-powered career roadmaps that adapt to your goals. Step-by-step guidance with milestones, curated resources, and real progress tracking.',
-    highlights: ['Custom learning paths', 'Progress milestones', 'Adaptive goal-setting'],
+    title: "Smart Roadmaps",
+    subtitle: "Your personalised path",
+    description:
+      "AI-powered career roadmaps that adapt to your goals. Step-by-step guidance with milestones, curated resources, and real progress tracking.",
+    highlights: [
+      "Custom learning paths",
+      "Progress milestones",
+      "Adaptive goal-setting",
+    ],
   },
   {
     icon: MessageSquare,
-    title: 'Live Sessions',
-    subtitle: 'Real-time guidance',
-    description: 'Book 1-on-1 video calls, join group workshops, and attend live Q&As. Learn at your own pace with on-demand session recordings.',
-    highlights: ['1-on-1 video calls', 'Group workshops', 'On-demand recordings'],
+    title: "Live Sessions",
+    subtitle: "Real-time guidance",
+    description:
+      "Book 1-on-1 video calls, join group workshops, and attend live Q&As. Learn at your own pace with on-demand session recordings.",
+    highlights: [
+      "1-on-1 video calls",
+      "Group workshops",
+      "On-demand recordings",
+    ],
   },
   {
     icon: TrendingUp,
-    title: 'Career Analytics',
-    subtitle: 'Track your growth',
-    description: 'Monitor your improvement with detailed analytics. See skill gains, milestone completions, and get AI-powered recommendations for what to work on next.',
-    highlights: ['Skill progression charts', 'Goal completion tracking', 'AI-powered insights'],
+    title: "Career Analytics",
+    subtitle: "Track your growth",
+    description:
+      "Monitor your improvement with detailed analytics. See skill gains, milestone completions, and get AI-powered recommendations for what to work on next.",
+    highlights: [
+      "Skill progression charts",
+      "Goal completion tracking",
+      "AI-powered insights",
+    ],
   },
 ];
 
@@ -258,24 +275,24 @@ const INTERVAL = 4000;
 
 export default function FeaturesSection() {
   const [current, setCurrent] = useState(0);
-  const [paused, setPaused]   = useState(false);
+  const [paused, setPaused] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
     if (paused) return;
     const t = setTimeout(() => {
-      setCurrent(p => (p + 1) % features.length);
-      setAnimKey(k => k + 1);
+      setCurrent((p) => (p + 1) % features.length);
+      setAnimKey((k) => k + 1);
     }, INTERVAL);
     return () => clearTimeout(t);
   }, [current, paused]);
 
   const handleSelect = (idx: number) => {
     setCurrent(idx);
-    setAnimKey(k => k + 1);
+    setAnimKey((k) => k + 1);
   };
 
-  const active     = features[current];
+  const active = features[current];
   const ActiveIcon = active.icon;
 
   return (
@@ -317,44 +334,93 @@ export default function FeaturesSection() {
 
       <section
         id="features"
-        className="feat-grain relative py-20 lg:py-32 px-4 sm:px-6 overflow-hidden"
-        style={{ background: '#f8f6f1', fontFamily: "'DM Sans', system-ui, sans-serif" }}
+        className="feat-grain relative py-6 lg:py-8 px-4 sm:px-6 overflow-hidden"
+        style={{
+          background: "#f8f6f1",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         {/* Ambient blobs — no grid, just soft light */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-0"
-          style={{ background: 'radial-gradient(circle, rgba(29,78,216,0.06) 0%, transparent 70%)', filter: 'blur(90px)', transform: 'translate(25%,-25%)' }} />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none z-0"
-          style={{ background: 'radial-gradient(circle, rgba(8,145,178,0.05) 0%, transparent 70%)', filter: 'blur(90px)', transform: 'translate(-25%,25%)' }} />
-        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] rounded-full pointer-events-none z-0"
-          style={{ background: 'radial-gradient(circle, rgba(29,78,216,0.04) 0%, transparent 70%)', filter: 'blur(80px)', transform: 'translate(-50%,-50%)' }} />
+        <div
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-0"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(29,78,216,0.06) 0%, transparent 70%)",
+            filter: "blur(90px)",
+            transform: "translate(25%,-25%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none z-0"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(8,145,178,0.05) 0%, transparent 70%)",
+            filter: "blur(90px)",
+            transform: "translate(-25%,25%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 w-[300px] h-[300px] rounded-full pointer-events-none z-0"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(29,78,216,0.04) 0%, transparent 70%)",
+            filter: "blur(80px)",
+            transform: "translate(-50%,-50%)",
+          }}
+        />
 
         <div className="relative z-10 max-w-6xl mx-auto">
-
           {/* Section header */}
           <div className="text-center mb-14 lg:mb-18">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5 border"
-              style={{ background: 'rgba(29,78,216,0.05)', borderColor: 'rgba(29,78,216,0.15)' }}>
+            <div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5 border"
+              style={{
+                background: "rgba(29,78,216,0.05)",
+                borderColor: "rgba(29,78,216,0.15)",
+              }}
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-              <span className="text-[11px] font-semibold text-blue-700 tracking-[0.10em] uppercase">Platform</span>
+              <span className="text-[11px] font-semibold text-blue-700 tracking-[0.10em] uppercase">
+                Platform
+              </span>
             </div>
-            <h2 className="text-slate-900 mb-4"
-              style={{ fontSize: 'clamp(28px,4vw,48px)', fontWeight: 300, letterSpacing: '-0.025em', lineHeight: 1.1 }}>
-              Built for <span style={{ fontWeight: 600, color: '#1d4ed8', fontStyle: 'italic' }}>career growth</span>
+            <h2
+              className="text-slate-900 mb-4"
+              style={{
+                fontSize: "clamp(28px,4vw,48px)",
+                fontWeight: 300,
+                letterSpacing: "-0.025em",
+                lineHeight: 1.1,
+              }}
+            >
+              Built for{" "}
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "#1d4ed8",
+                  fontStyle: "italic",
+                }}
+              >
+                career growth
+              </span>
             </h2>
-            <p className="text-slate-500 max-w-md mx-auto" style={{ fontSize: 16, lineHeight: 1.7 }}>
-              Everything you need to accelerate your professional journey — all in one place.
+            <p
+              className="text-slate-500 max-w-md mx-auto"
+              style={{ fontSize: 16, lineHeight: 1.7 }}
+            >
+              Everything you need to accelerate your professional journey — all
+              in one place.
             </p>
           </div>
 
           {/* Main grid */}
           <div className="grid lg:grid-cols-[1fr_1.1fr] gap-6 lg:gap-10 items-start">
-
             {/* ── LEFT: feature nav ── */}
             <div className="space-y-2">
               {features.map((feat, idx) => {
-                const Icon  = feat.icon;
+                const Icon = feat.icon;
                 const isAct = current === idx;
                 return (
                   <button
@@ -362,12 +428,14 @@ export default function FeaturesSection() {
                     onClick={() => handleSelect(idx)}
                     className={`feat-nav-btn w-full text-left rounded-2xl border transition-all duration-300 ${
                       isAct
-                        ? 'border-blue-200 bg-white'
-                        : 'border-transparent bg-transparent hover:bg-white/60 hover:border-slate-200'
+                        ? "border-blue-200 bg-white"
+                        : "border-transparent bg-transparent hover:bg-white/60 hover:border-slate-200"
                     }`}
                     style={{
-                      padding: '14px 16px',
-                      boxShadow: isAct ? '0 4px 20px rgba(29,78,216,0.08)' : 'none',
+                      padding: "14px 16px",
+                      boxShadow: isAct
+                        ? "0 4px 20px rgba(29,78,216,0.08)"
+                        : "none",
                     }}
                   >
                     <div className="flex items-center gap-3.5">
@@ -375,30 +443,70 @@ export default function FeaturesSection() {
                       <div
                         className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300"
                         style={{
-                          background: isAct ? 'linear-gradient(135deg,#1e3a8a,#1d4ed8)' : 'rgba(29,78,216,0.07)',
-                          boxShadow: isAct ? '0 4px 14px rgba(29,78,216,0.28)' : 'none',
+                          background: isAct
+                            ? "linear-gradient(135deg,#1e3a8a,#1d4ed8)"
+                            : "rgba(29,78,216,0.07)",
+                          boxShadow: isAct
+                            ? "0 4px 14px rgba(29,78,216,0.28)"
+                            : "none",
                         }}
                       >
-                        <Icon className="w-4.5 h-4.5" style={{ color: isAct ? '#fff' : 'rgba(29,78,216,0.55)', width: 18, height: 18 }} />
+                        <Icon
+                          className="w-4.5 h-4.5"
+                          style={{
+                            color: isAct ? "#fff" : "rgba(29,78,216,0.55)",
+                            width: 18,
+                            height: 18,
+                          }}
+                        />
                       </div>
 
                       {/* text */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm leading-tight transition-colors duration-200"
-                          style={{ color: isAct ? '#0f172a' : '#64748b' }}>
+                        <p
+                          className="font-semibold text-sm leading-tight transition-colors duration-200"
+                          style={{ color: isAct ? "#0f172a" : "#64748b" }}
+                        >
                           {feat.title}
                         </p>
-                        <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>{feat.subtitle}</p>
+                        <p
+                          className="text-xs mt-0.5"
+                          style={{ color: "#94a3b8" }}
+                        >
+                          {feat.subtitle}
+                        </p>
                       </div>
 
                       {/* progress ring */}
                       {isAct && !paused && (
                         <div className="shrink-0 hidden sm:block">
-                          <svg key={animKey} className="-rotate-90" width="28" height="28" viewBox="0 0 32 32">
-                            <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(29,78,216,0.12)" strokeWidth="2.5" />
-                            <circle cx="16" cy="16" r="12" fill="none" stroke="#1d4ed8" strokeWidth="2.5"
-                              strokeDasharray="75.4" strokeDashoffset="75.4" strokeLinecap="round"
-                              className="ring-anim" />
+                          <svg
+                            key={animKey}
+                            className="-rotate-90"
+                            width="28"
+                            height="28"
+                            viewBox="0 0 32 32"
+                          >
+                            <circle
+                              cx="16"
+                              cy="16"
+                              r="12"
+                              fill="none"
+                              stroke="rgba(29,78,216,0.12)"
+                              strokeWidth="2.5"
+                            />
+                            <circle
+                              cx="16"
+                              cy="16"
+                              r="12"
+                              fill="none"
+                              stroke="#1d4ed8"
+                              strokeWidth="2.5"
+                              strokeDasharray="75.4"
+                              strokeDashoffset="75.4"
+                              strokeLinecap="round"
+                              className="ring-anim"
+                            />
                           </svg>
                         </div>
                       )}
@@ -414,12 +522,16 @@ export default function FeaturesSection() {
               {/* mobile dots */}
               <div className="flex justify-center gap-2 pt-4 lg:hidden">
                 {features.map((_, idx) => (
-                  <button key={idx} onClick={() => handleSelect(idx)}
+                  <button
+                    key={idx}
+                    onClick={() => handleSelect(idx)}
                     className="h-1.5 rounded-full transition-all duration-300"
                     style={{
                       width: current === idx ? 28 : 8,
-                      background: current === idx ? '#1d4ed8' : 'rgba(29,78,216,0.25)',
-                    }} />
+                      background:
+                        current === idx ? "#1d4ed8" : "rgba(29,78,216,0.25)",
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -428,34 +540,66 @@ export default function FeaturesSection() {
             <div className="lg:sticky lg:top-28">
               <div
                 className="feat-card-shadow rounded-3xl overflow-hidden border"
-                style={{ borderColor: 'rgba(29,78,216,0.12)', background: '#fff' }}
+                style={{
+                  borderColor: "rgba(29,78,216,0.12)",
+                  background: "#fff",
+                }}
               >
                 {/* Top accent */}
-                <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#1e3a8a,#1d4ed8,#3b82f6)' }} />
+                <div
+                  className="h-1 w-full"
+                  style={{
+                    background:
+                      "linear-gradient(90deg,#1e3a8a,#1d4ed8,#3b82f6)",
+                  }}
+                />
 
                 <div key={current} className="feat-fade p-7 sm:p-8">
                   {/* Icon */}
-                  <div className="w-13 h-13 rounded-2xl flex items-center justify-center mb-6"
+                  <div
+                    className="w-13 h-13 rounded-2xl flex items-center justify-center mb-6"
                     style={{
-                      width: 52, height: 52,
-                      background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)',
-                      boxShadow: '0 6px 20px rgba(29,78,216,0.28)',
-                    }}>
-                    <ActiveIcon className="text-white" style={{ width: 22, height: 22 }} />
+                      width: 52,
+                      height: 52,
+                      background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
+                      boxShadow: "0 6px 20px rgba(29,78,216,0.28)",
+                    }}
+                  >
+                    <ActiveIcon
+                      className="text-white"
+                      style={{ width: 22, height: 22 }}
+                    />
                   </div>
 
                   {/* Badge */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-4 border"
-                    style={{ background: 'rgba(29,78,216,0.05)', borderColor: 'rgba(29,78,216,0.14)' }}>
+                  <div
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-4 border"
+                    style={{
+                      background: "rgba(29,78,216,0.05)",
+                      borderColor: "rgba(29,78,216,0.14)",
+                    }}
+                  >
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
-                    <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">{active.subtitle}</span>
+                    <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+                      {active.subtitle}
+                    </span>
                   </div>
 
-                  <h3 className="mb-3 text-slate-900"
-                    style={{ fontSize: 'clamp(20px,2.5vw,26px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                  <h3
+                    className="mb-3 text-slate-900"
+                    style={{
+                      fontSize: "clamp(20px,2.5vw,26px)",
+                      fontWeight: 600,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {active.title}
                   </h3>
-                  <p className="text-slate-500 leading-relaxed mb-7" style={{ fontSize: 15 }}>
+                  <p
+                    className="text-slate-500 leading-relaxed mb-7"
+                    style={{ fontSize: 15 }}
+                  >
                     {active.description}
                   </p>
 
@@ -463,9 +607,15 @@ export default function FeaturesSection() {
                   <div className="space-y-2.5 mb-7">
                     {active.highlights.map((h, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: 'rgba(29,78,216,0.09)' }}>
-                          <Check className="text-blue-600" style={{ width: 11, height: 11 }} strokeWidth={3} />
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: "rgba(29,78,216,0.09)" }}
+                        >
+                          <Check
+                            className="text-blue-600"
+                            style={{ width: 11, height: 11 }}
+                            strokeWidth={3}
+                          />
                         </span>
                         <span className="text-sm text-slate-600">{h}</span>
                       </div>
@@ -475,31 +625,48 @@ export default function FeaturesSection() {
                   {/* Footer strip */}
                   <div
                     className="flex items-center justify-between pt-5"
-                    style={{ borderTop: '1px solid rgba(29,78,216,0.08)' }}
+                    style={{ borderTop: "1px solid rgba(29,78,216,0.08)" }}
                   >
                     <div className="flex items-center gap-3">
                       {/* avatar stack */}
                       <div className="flex -space-x-2">
-                        {['NK', 'SR', 'AM'].map((init, i) => (
-                          <div key={i}
+                        {["NK", "SR", "AM"].map((init, i) => (
+                          <div
+                            key={i}
                             className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold"
-                            style={{ background: ['rgba(29,78,216,0.15)','rgba(29,78,216,0.22)','rgba(29,78,216,0.10)'][i], color: '#1d4ed8' }}>
+                            style={{
+                              background: [
+                                "rgba(29,78,216,0.15)",
+                                "rgba(29,78,216,0.22)",
+                                "rgba(29,78,216,0.10)",
+                              ][i],
+                              color: "#1d4ed8",
+                            }}
+                          >
                             {init}
                           </div>
                         ))}
                       </div>
-                      <p className="text-xs text-slate-400 font-medium">Join 12,000+ professionals</p>
+                      <p className="text-xs text-slate-400 font-medium">
+                        Join 5000+ professionals
+                      </p>
                     </div>
 
                     {/* active step indicator */}
                     <div className="flex items-center gap-1">
                       {features.map((_, i) => (
-                        <div key={i} className="rounded-full transition-all duration-300"
+                        <div
+                          key={i}
+                          className="rounded-full transition-all duration-300"
                           style={{
                             width: current === i ? 18 : 5,
                             height: 5,
-                            background: current === i ? '#1d4ed8' : 'rgba(29,78,216,0.18)',
-                          }} />
+                            background:
+                              current === i
+                                ? "#1d4ed8"
+                                : "rgba(29,78,216,0.18)",
+                          }}
+                        />
                       ))}
                     </div>
                   </div>
