@@ -4,8 +4,6 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/sections/HeroSection";
 import LogosSection from "@/components/sections/LogosSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import FeaturesSection from "@/components/sections/FeaturesSection";
-import StatsSection from "@/components/sections/StatsSection";
 import HowItWorksSection from "@/components/sections/HowItWorksSection";
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
@@ -22,10 +20,8 @@ export default function Home() {
       <HeroSection />
       <LogosSection />
       <TestimonialsSection />
-      {/* <StatsSection /> */}
-      <FeaturesSection />
-      <HowItWorksSection />
       <PricingSection />
+      <HowItWorksSection />
       <FAQSection />
       <CTASectionPremium />
       <StandardFooter />

@@ -2,13 +2,13 @@
 
 import { useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import Link from "next/link";
 
 const FADE_UP = (delay = 0) => ({
-  initial: { opacity: 0, y: 22 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 0.55, delay, ease: [0.23, 1, 0.32, 1] as const },
 });
 
 export default function HeroSection() {
@@ -21,41 +21,29 @@ export default function HeroSection() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
 
         :root {
           --cream: #f7f4ef;
           --ink: #0d1117;
           --ink-soft: #374151;
           --blue: #1a3bcc;
-          --blue-light: #dce7ff;
           --gold: #c9a84c;
-          --rule: rgba(13,17,23,0.10);
+          --rule: rgba(13,17,23,0.09);
         }
 
-        /* ── Noise overlay ── */
         .h-noise::after {
           content: '';
           position: absolute; inset: 0; pointer-events: none; z-index: 1;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-          opacity: 0.030;
+          opacity: 0.028;
         }
 
-        /* ── Diagonal rule behind headline ── */
-        .diag-rule {
-          position: absolute;
-          top: 0; right: 0; bottom: 0;
-          width: 1px;
-          background: var(--rule);
-        }
-
-        /* ── Photo frame border trick ── */
         .photo-wrap::before {
           content: '';
           position: absolute;
-          inset: -14px -10px -10px -14px;
-          border: 1px solid rgba(26,59,204,0.18);
+          inset: -12px -8px -8px -12px;
+          border: 1px solid rgba(26,59,204,0.15);
           border-radius: 20px;
           z-index: 0;
           pointer-events: none;
@@ -63,78 +51,60 @@ export default function HeroSection() {
         .photo-wrap::after {
           content: '';
           position: absolute;
-          inset: -28px -22px -22px -28px;
-          border: 1px dashed rgba(201,168,76,0.20);
+          inset: -24px -18px -18px -24px;
+          border: 1px dashed rgba(201,168,76,0.18);
           border-radius: 26px;
           z-index: 0;
           pointer-events: none;
         }
 
-        /* ── Buttons ── */
         .btn-primary {
           background: var(--blue);
           color: #fff;
           border: 1.5px solid var(--blue);
-          transition: background 0.22s, transform 0.22s, box-shadow 0.22s;
+          border-radius: 6px;
+          transition: background 0.18s, box-shadow 0.18s;
         }
         .btn-primary:hover {
           background: #0f2799;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 32px rgba(26,59,204,0.28);
+          box-shadow: 0 6px 20px rgba(26,59,204,0.28);
         }
-        .btn-outline {
+        .btn-ghost {
           background: transparent;
           color: var(--ink-soft);
-          border: 1.5px solid var(--rule);
-          transition: border-color 0.22s, color 0.22s, transform 0.22s;
+          border: none;
+          transition: color 0.18s;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
         }
-        .btn-outline:hover {
-          border-color: rgba(26,59,204,0.35);
-          color: var(--blue);
-          transform: translateY(-2px);
-        }
+        .btn-ghost:hover { color: var(--blue); }
+        .btn-ghost:hover .ghost-arrow { transform: translateX(3px); }
+        .ghost-arrow { transition: transform 0.18s; }
 
-        /* ── Scroll indicator ── */
         @keyframes scrollPulse {
-          0%, 100% { transform: scaleY(0); transform-origin: top; opacity: 0.6; }
+          0%, 100% { transform: scaleY(0); transform-origin: top; opacity: 0.5; }
           50%       { transform: scaleY(1); transform-origin: top; opacity: 1; }
         }
-        .scroll-line { animation: scrollPulse 2.4s ease-in-out infinite; }
+        .scroll-line { animation: scrollPulse 2.6s ease-in-out infinite; }
 
-        /* ── Highlight span ── */
-        .hl {
-          position: relative;
-          display: inline-block;
+        /* process grid */
+        .process-strip { display: flex; width: 100%; }
+        .process-col {
+          flex: 1;
+          padding-top: 14px;
+          border-top: 2px solid;
         }
-        .hl::after {
-          content: '';
-          position: absolute;
-          left: 0; bottom: 0.04em;
-          width: 100%; height: 0.18em;
-          background: linear-gradient(90deg, var(--gold) 0%, rgba(201,168,76,0.3) 100%);
-          border-radius: 2px;
-          z-index: -1;
-        }
+        .process-col + .process-col { padding-left: 20px; }
+        .process-col:not(:last-child) { padding-right: 20px; }
 
-        /* ── Badge pill ── */
-        .eyebrow-pill {
-          background: rgba(26,59,204,0.06);
-          border: 1px solid rgba(26,59,204,0.18);
-        }
-
-        /* ── Stat dividers ── */
-        .stat-block + .stat-block {
+        /* stat row */
+        .stat-divider + .stat-divider {
           padding-left: 2rem;
           border-left: 1px solid var(--rule);
         }
 
-        /* ── Trust badges ── */
-        .trust-item {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 12px; color: var(--ink-soft); font-weight: 500;
-        }
-
-        /* ── Gradient mesh blobs ── */
         .blob {
           position: absolute; border-radius: 50%;
           filter: blur(90px); pointer-events: none; z-index: 0;
@@ -144,279 +114,180 @@ export default function HeroSection() {
       <section
         ref={sectionRef}
         className="h-noise relative min-h-svh overflow-hidden flex flex-col"
-        style={{
-          background: "var(--cream)",
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-        }}
+        style={{ background: "var(--cream)", fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
-        {/* ── Subtle mesh blobs (static) ── */}
-        <div
-          className="blob"
-          style={{
-            width: 600,
-            height: 600,
-            background:
-              "radial-gradient(circle, rgba(26,59,204,0.06) 0%, transparent 70%)",
-            top: "-120px",
-            right: "-80px",
-          }}
-        />
-        <div
-          className="blob"
-          style={{
-            width: 400,
-            height: 400,
-            background:
-              "radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)",
-            bottom: "60px",
-            left: "-60px",
-          }}
-        />
+        {/* Background blobs */}
+        <div className="blob" style={{ width: 560, height: 560, background: "radial-gradient(circle, rgba(26,59,204,0.055) 0%, transparent 70%)", top: "-100px", right: "-60px" }} />
+        <div className="blob" style={{ width: 380, height: 380, background: "radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%)", bottom: "40px", left: "-50px" }} />
 
-        {/* ── Fine grid ── */}
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(13,17,23,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,17,23,0.03) 1px,transparent 1px)",
-            backgroundSize: "72px 72px",
-          }}
-        />
+        {/* Fine grid */}
+        <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundImage: "linear-gradient(rgba(13,17,23,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(13,17,23,0.025) 1px,transparent 1px)", backgroundSize: "72px 72px" }} />
 
-        {/* ── Main content ── */}
+        {/* Content */}
         <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 pt-[100px] pb-20 lg:pt-[118px] lg:pb-0 grid grid-cols-1 lg:grid-cols-[55%_45%] items-center gap-16 lg:gap-0">
-          {/* ════ LEFT ════ */}
+
+          {/* ── LEFT ── */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:pr-16">
 
-            {/* Headline */}
+            {/* Headline — 3-line typographic contrast */}
             <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.2,
-                ease: [0.23, 1, 0.32, 1] as const,
-              }}
-              className="mb-6"
-              style={{
-                fontSize: "clamp(40px, 5.5vw, 72px)",
-                lineHeight: 1.08,
-                letterSpacing: "-0.025em",
-                fontWeight: 300,
-                color: "#0f172a",
-              }}
+              {...FADE_UP(0.15)}
+              className="mb-5"
+              style={{ lineHeight: 1.04, letterSpacing: "-0.03em", color: "#0f172a" }}
             >
-              Crack your{" "}
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: "#1d4ed8",
-                  fontStyle: "italic",
-                }}
-              >
+              <span style={{ display: "block", fontSize: "clamp(36px, 4.8vw, 62px)", fontWeight: 300 }}>
+                Crack your
+              </span>
+              <span style={{ display: "block", fontSize: "clamp(44px, 6vw, 78px)", fontWeight: 800, color: "#1a3bcc", letterSpacing: "-0.035em" }}>
                 next job
               </span>
-              <br />
-              interview.
+              <span style={{ display: "block", fontSize: "clamp(36px, 4.8vw, 62px)", fontWeight: 300 }}>
+                interview.
+              </span>
             </motion.h1>
 
-            {/* Body */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35, ease: [0.23, 1, 0.32, 1] as const }}
-              className="mb-9 flex flex-wrap items-center gap-2 justify-center lg:justify-start"
+            {/* Tagline */}
+            <motion.p
+              {...FADE_UP(0.24)}
+              className="mb-9"
+              style={{ fontSize: "clamp(15px, 1.35vw, 17px)", color: "#64748b", lineHeight: 1.65, maxWidth: 380 }}
             >
-              {["Prepare", "Practice", "Get Placed"].map((word, i) => (
-                <span key={word} className="flex items-center gap-2">
-                  <span
-                    style={{
-                      fontSize: "clamp(13px, 1.2vw, 15px)",
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      textTransform: "uppercase",
-                      padding: "4px 14px",
-                      borderRadius: "100px",
-                      background: i === 2 ? "#1d4ed8" : "transparent",
-                      color: i === 2 ? "#fff" : "#1d4ed8",
-                      border: i === 2 ? "1.5px solid #1d4ed8" : "1.5px solid #93c5fd",
-                    }}
-                  >
-                    {word}
+              Real sessions. Expert feedback. A proven path from prep to placement — built around your goals.
+            </motion.p>
+
+            {/* Process strip — top-border grid, no card */}
+            <motion.div {...FADE_UP(0.32)} className="process-strip mb-9">
+              {[
+                { n: "01", label: "Prepare",    sub: "Resume & strategy", active: false },
+                { n: "02", label: "Practice",   sub: "Mock interviews",   active: false },
+                { n: "03", label: "Get Placed", sub: "Dream company",     active: true  },
+              ].map(({ n, label, sub, active }) => (
+                <div
+                  key={n}
+                  className="process-col"
+                  style={{ borderTopColor: active ? "#1a3bcc" : "rgba(13,17,23,0.11)" }}
+                >
+                  <span style={{
+                    display: "block", fontSize: "10px", fontWeight: 700,
+                    letterSpacing: "0.10em", color: active ? "#1a3bcc" : "#9ca3af",
+                    marginBottom: 6, fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {n}
                   </span>
-                  {i < 2 && (
-                    <span style={{ color: "#cbd5e1", fontSize: "18px", fontWeight: 300 }}>→</span>
-                  )}
-                </span>
+                  <span style={{
+                    display: "block", fontSize: "13px", fontWeight: 700,
+                    color: active ? "#1a3bcc" : "#0f172a", marginBottom: 3,
+                  }}>
+                    {label}
+                  </span>
+                  <span style={{ display: "block", fontSize: "11px", color: "#9ca3af", lineHeight: 1.4 }}>
+                    {sub}
+                  </span>
+                </div>
               ))}
             </motion.div>
 
             {/* CTAs */}
             <motion.div
-              {...FADE_UP(0.4)}
-              className="flex flex-wrap gap-3 items-center justify-center lg:justify-start mb-12"
+              {...FADE_UP(0.40)}
+              className="flex flex-wrap gap-4 items-center justify-center lg:justify-start mb-3"
             >
               <Link
                 href="/signup"
-                className="btn-primary inline-flex items-center gap-2 px-7 py-3.5 rounded-lg no-underline"
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                }}
+                className="btn-primary inline-flex items-center gap-2 px-7 py-3.5 no-underline"
+                style={{ fontSize: "14px", fontWeight: 600 }}
               >
                 Start your journey
                 <ArrowRight size={14} />
               </Link>
-
               <button
                 onClick={scrollToFeatures}
-                className="btn-outline inline-flex items-center gap-2 px-6 py-3.5 rounded-lg"
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                }}
+                className="btn-ghost"
+                style={{ fontSize: "14px", fontWeight: 500 }}
               >
                 Explore services
-                <ArrowRight size={14} />
+                <ArrowRight size={14} className="ghost-arrow" />
               </button>
             </motion.div>
 
             {/* Stats */}
             <motion.div
-              {...FADE_UP(0.5)}
-              className="flex gap-0 items-center"
-              style={{
-                borderTop: "1px solid var(--rule)",
-                paddingTop: "1.6rem",
-              }}
+              {...FADE_UP(0.52)}
+              className="flex gap-0 items-start"
+              style={{ borderTop: "1px solid var(--rule)", paddingTop: "1.4rem" }}
             >
-              {[
-                { num: "12,000+", label: "Students Coached" },
-                { num: "94%", label: "Success Rate" },
-              ].map(({ num, label }) => (
-                <div
-                  key={label}
-                  className="stat-block"
-                  style={{ paddingRight: "2rem" }}
-                >
-                  <p
-                    style={{
-                      fontSize: "clamp(24px, 2.8vw, 34px)",
-                      fontWeight: 600,
-                      color: "var(--ink)",
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {num}
+              <div className="stat-divider" style={{ paddingRight: "2rem" }}>
+                <p style={{ fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  5,000+
+                </p>
+                <p style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9ca3af", marginTop: 5 }}>
+                  Students Coached
+                </p>
+              </div>
+
+              <div className="stat-divider" style={{ paddingRight: "2rem" }}>
+                <p style={{ fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  94%
+                </p>
+                <p style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9ca3af", marginTop: 5 }}>
+                  Success Rate
+                </p>
+              </div>
+
+              <div className="stat-divider">
+                <div className="flex items-baseline gap-1.5">
+                  <p style={{ fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                    4.9
                   </p>
-                  <p
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      letterSpacing: "0.13em",
-                      textTransform: "uppercase",
-                      color: "#9ca3af",
-                      marginTop: "5px",
-                    }}
-                  >
-                    {label}
-                  </p>
+                  <Star size={12} style={{ color: "#ca8a04", fill: "#ca8a04" }} />
                 </div>
-              ))}
+                <p style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9ca3af", marginTop: 5 }}>
+                  Avg. Rating
+                </p>
+              </div>
             </motion.div>
           </div>
 
-          {/* ════ RIGHT — Photo ════ */}
+          {/* ── RIGHT — Photo ── */}
           <div className="flex items-center justify-center lg:justify-end pt-6 lg:pt-0">
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.7,
-                delay: 0.3,
-                ease: [0.22, 1, 0.36, 1] as const,
-              }}
+              transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
               className="photo-wrap relative w-full"
               style={{ maxWidth: "clamp(280px, 38vw, 480px)" }}
             >
-              {/* Image card */}
               <div
                 className="relative rounded-2xl overflow-hidden"
-                style={{
-                  boxShadow:
-                    "0 30px 70px -10px rgba(13,17,23,0.18), 0 4px 16px rgba(13,17,23,0.08)",
-                  border: "1px solid rgba(13,17,23,0.07)",
-                }}
+                style={{ boxShadow: "0 28px 60px -10px rgba(13,17,23,0.16), 0 4px 14px rgba(13,17,23,0.07)", border: "1px solid rgba(13,17,23,0.06)" }}
               >
-                {/* Aspect ratio box */}
                 <div className="relative" style={{ aspectRatio: "4/5" }}>
                   <img
                     src="/neel-aashish-seru.jpeg"
                     alt="Neel Aashish Seru — Interview & Career Mentor"
                     loading="lazy"
                     decoding="async"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      objectPosition: "top",
-                      display: "block",
-                    }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }}
                   />
 
-                  {/* Bottom gradient scrim */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        "linear-gradient(to top, rgba(10,14,26,0.72) 0%, rgba(10,14,26,0.15) 44%, transparent 68%)",
-                    }}
-                  />
+                  {/* Gradient scrim */}
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,14,26,0.70) 0%, rgba(10,14,26,0.12) 42%, transparent 66%)" }} />
 
-                  {/* Glass name card */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
-                      background: "rgba(255,255,255,0.10)",
-                      backdropFilter: "blur(18px)",
-                      WebkitBackdropFilter: "blur(18px)",
-                      border: "1px solid rgba(255,255,255,0.18)",
-                      borderRadius: 14,
-                      padding: "18px 22px",
-                    }}
-                  >
-                    <p
-                      style={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: 22,
-                        letterSpacing: "-0.01em",
-                        lineHeight: 1.1,
-                      }}
-                    >
+                  {/* Name card */}
+                  <div style={{
+                    position: "absolute", bottom: 20, left: 20, right: 20,
+                    background: "rgba(255,255,255,0.09)",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 13,
+                    padding: "15px 18px",
+                  }}>
+                    <p style={{ color: "#fff", fontWeight: 600, fontSize: 19, letterSpacing: "-0.01em", lineHeight: 1.1 }}>
                       Neel Aashish Seru
                     </p>
-                    <p
-                      style={{
-                        color: "#fff",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        marginTop: 5,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Interview Coach | Ex-IndiaMART & Tech Mahindra <br/>
-                       | 12+ Years Experience
+                    <p style={{ color: "rgba(255,255,255,0.62)", fontSize: 11, fontWeight: 500, marginTop: 4, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                      Interview Coach · Ex-IndiaMART & Tech Mahindra · 12+ Yrs
                     </p>
                   </div>
                 </div>
@@ -429,29 +300,13 @@ export default function HeroSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 1.2 }}
+          transition={{ duration: 0.5, delay: 1.1 }}
           className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
         >
-          <span
-            style={{
-              fontSize: "9px",
-              fontWeight: 700,
-              letterSpacing: "0.20em",
-              textTransform: "uppercase",
-              color: "#c4bfb5",
-            }}
-          >
+          <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.20em", textTransform: "uppercase", color: "#c4bfb5" }}>
             Scroll
           </span>
-          <div
-            className="scroll-line"
-            style={{
-              width: 1,
-              height: 38,
-              background:
-                "linear-gradient(to bottom, var(--blue), transparent)",
-            }}
-          />
+          <div className="scroll-line" style={{ width: 1, height: 36, background: "linear-gradient(to bottom, var(--blue), transparent)" }} />
         </motion.div>
         <div />
       </section>
