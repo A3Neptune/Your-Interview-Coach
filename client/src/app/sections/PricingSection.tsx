@@ -1,59 +1,59 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import SectionBadge from '@/components/SectionBadge';
-import ScrollReveal from '@/components/ScrollReveal';
-import { Check, ArrowRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import SectionBadge from "@/components/SectionBadge";
+import ScrollReveal from "@/components/ScrollReveal";
+import { Check, ArrowRight } from "lucide-react";
 
 export default function PricingSection() {
   const plans = [
     {
-      name: 'Starter',
-      price: 'Free',
-      description: 'Get started on your journey',
+      name: "Starter",
+      price: "Free",
+      description: "Get started on your journey",
       features: [
-        '1 mentor consultation/month',
-        'Career assessment test',
-        'Resource library access',
-        'Community forum',
-        'Email support',
+        "1 mentor consultation/month",
+        "Career assessment test",
+        "Resource library access",
+        "Community forum",
+        "Email support",
       ],
-      cta: 'Start Free',
+      cta: "Get Start",
       highlighted: false,
     },
     {
-      name: 'Pro',
-      price: '$99',
-      period: '/month',
-      description: 'Accelerate your growth',
+      name: "Pro",
+      price: "$99",
+      period: "/month",
+      description: "Accelerate your growth",
       features: [
-        '4 mentor consultations/month',
-        'Career roadmap creation',
-        'Resume optimization',
-        'Interview preparation',
-        'Priority support',
-        'Portfolio reviews',
-        'Exclusive webinars',
+        "4 mentor consultations/month",
+        "Career roadmap creation",
+        "Resume optimization",
+        "Interview preparation",
+        "Priority support",
+        "Portfolio reviews",
+        "Exclusive webinars",
       ],
-      cta: 'Get Started',
+      cta: "Get Started",
       highlighted: true,
     },
     {
-      name: 'Elite',
-      price: '$199',
-      period: '/month',
-      description: 'Premium career transformation',
+      name: "Elite",
+      price: "$199",
+      period: "/month",
+      description: "Premium career transformation",
       features: [
-        'Unlimited mentor access',
-        'Dedicated career coach',
-        'Job placement assistance',
-        'Salary negotiation prep',
-        '24/7 support',
-        'Priority networking events',
-        'Custom learning path',
-        'Lifetime access',
+        "Unlimited mentor access",
+        "Dedicated career coach",
+        "Job placement assistance",
+        "Salary negotiation prep",
+        "24/7 support",
+        "Priority networking events",
+        "Custom learning path",
+        "Lifetime access",
       ],
-      cta: 'Start Free Trial',
+      cta: "Start Free Trial",
       highlighted: false,
     },
   ];
@@ -62,9 +62,16 @@ export default function PricingSection() {
     <section className="py-32 px-4 md:px-6 section-contain">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20">
-          <SectionBadge text="Simple Pricing" icon={<Check className="w-4 h-4" />} />
-          <h2 className="text-5xl md:text-6xl font-bold mt-8 mb-6">Choose Your Path</h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">No hidden fees. Cancel anytime.</p>
+          <SectionBadge
+            text="Simple Pricing"
+            icon={<Check className="w-4 h-4" />}
+          />
+          <h2 className="text-5xl md:text-6xl font-bold mt-8 mb-6">
+            Choose Your Path
+          </h2>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            No hidden fees. Cancel anytime.
+          </p>
         </div>
 
         {/* Pricing Cards */}
@@ -75,8 +82,8 @@ export default function PricingSection() {
                 whileHover={{ y: -12 }}
                 className={`relative group rounded-2xl transition-all duration-300 ${
                   plan.highlighted
-                    ? 'bg-gradient-to-br from-blue-600/30 to-purple-600/20 border-2 border-blue-500/50 scale-105 md:scale-110'
-                    : 'bg-white/5 border border-white/10 hover:border-white/30'
+                    ? "bg-gradient-to-br from-blue-600/30 to-purple-600/20 border-2 border-blue-500/50 scale-105 md:scale-110"
+                    : "bg-white/5 border border-white/10 hover:border-white/30"
                 }`}
               >
                 {/* Badge */}
@@ -89,13 +96,17 @@ export default function PricingSection() {
                 <div className="p-8 md:p-10">
                   {/* Header */}
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <p className="text-gray-400 text-sm mb-6">{plan.description}</p>
+                  <p className="text-gray-400 text-sm mb-6">
+                    {plan.description}
+                  </p>
 
                   {/* Price */}
                   <div className="mb-8">
                     <div className="text-4xl md:text-5xl font-bold">
                       {plan.price}
-                      <span className="text-lg text-gray-400 font-normal">{plan.period}</span>
+                      <span className="text-lg text-gray-400 font-normal">
+                        {plan.period}
+                      </span>
                     </div>
                   </div>
 
@@ -105,8 +116,8 @@ export default function PricingSection() {
                     whileTap={{ scale: 0.95 }}
                     className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 mb-8 ${
                       plan.highlighted
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:shadow-blue-600/40'
-                        : 'border border-white/20 hover:bg-white/5'
+                        ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:shadow-blue-600/40"
+                        : "border border-white/20 hover:bg-white/5"
                     }`}
                   >
                     {plan.cta}
@@ -146,8 +157,19 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="text-center mt-20"
         >
-          <p className="text-gray-400 text-sm mb-4">Questions? Check our <span className="text-blue-400 cursor-pointer hover:underline">FAQ</span> or <span className="text-blue-400 cursor-pointer hover:underline">contact us</span></p>
-          <p className="text-xs text-gray-600">All plans include 14-day free trial. No credit card required.</p>
+          <p className="text-gray-400 text-sm mb-4">
+            Questions? Check our{" "}
+            <span className="text-blue-400 cursor-pointer hover:underline">
+              FAQ
+            </span>{" "}
+            or{" "}
+            <span className="text-blue-400 cursor-pointer hover:underline">
+              contact us
+            </span>
+          </p>
+          <p className="text-xs text-gray-600">
+            All plans include 14-day free trial. No credit card required.
+          </p>
         </motion.div>
       </div>
     </section>

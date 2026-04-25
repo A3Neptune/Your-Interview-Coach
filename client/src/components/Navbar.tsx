@@ -239,7 +239,7 @@
 //                   onClick={() => setIsMobileMenuOpen(false)}
 //                   className="block w-full px-4 py-3 text-center text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
 //                 >
-//                   Get started free
+//                   Get started
 //                 </Link>
 //               </>
 //             )}
@@ -529,7 +529,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white rounded-xl"
                   style={{ background: "#1d4ed8" }}
                 >
-                  Get started free <ArrowRight className="w-4 h-4" />
+                  Get started <ArrowRight className="w-4 h-4" />
                 </Link>
               </>
             )}

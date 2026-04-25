@@ -73,7 +73,7 @@ export default function HeroSectionPremium() {
                 className="group relative inline-flex items-center justify-center px-8 py-4 bg-white hover:bg-zinc-50 text-black font-semibold rounded-xl transition-all duration-300"
               >
                 <span className="flex items-center gap-2">
-                  Start Free Trial
+                  Get Start
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Link>

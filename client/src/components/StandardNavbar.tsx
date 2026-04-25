@@ -292,7 +292,7 @@ export default function StandardNavbar({
                       className="block px-4 py-2 rounded-lg text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Get started free
+                      Get started
                     </Link>
                   </>
                 )}

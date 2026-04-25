@@ -219,7 +219,7 @@ export default function CTASectionPremium() {
                       href="/signup"
                       className="cta-primary inline-flex items-center gap-2 px-7 py-3.5 text-white text-sm font-semibold rounded-xl no-underline"
                     >
-                      started free
+                      Get Started
                       <ArrowRight style={{ width: 15, height: 15 }} />
                     </Link>
                     <Link
