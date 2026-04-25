@@ -64,7 +64,7 @@ export default function ModernDashboardNavbar() {
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center group">
               <img
-                src="/yourinterviewcoach-logo1.jpeg"
+                src="/yic-logo-sm.png"
                 alt="YourInterviewCoach"
                 className="w-[60px] sm:w-[80px] md:w-[95px] h-auto group-hover:scale-[1.02] transition-transform duration-300"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}

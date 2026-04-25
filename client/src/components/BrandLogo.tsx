@@ -4,14 +4,14 @@ import Link from "next/link";
 interface BrandLogoProps {
   href?: string;
   size?: "sm" | "md" | "lg";
-  dark?: boolean;        // true = on dark background, wraps img in white pill
+  dark?: boolean; // true = on dark background, wraps img in white pill
   className?: string;
 }
 
 const sizes = {
-  sm: { w: 64,  h: 28,  cls: "h-7  w-auto" },
-  md: { w: 88,  h: 38,  cls: "h-9  w-auto" },
-  lg: { w: 110, h: 48,  cls: "h-12 w-auto" },
+  sm: { w: 64, h: 28, cls: "h-7  w-auto" },
+  md: { w: 88, h: 38, cls: "h-9  w-auto" },
+  lg: { w: 110, h: 48, cls: "h-12 w-auto" },
 };
 
 export default function BrandLogo({
@@ -24,7 +24,7 @@ export default function BrandLogo({
 
   const img = (
     <Image
-      src="/yourinterviewcoach-logo1.jpeg"
+      src="/yic-logo-sm.png"
       alt="YourInterviewCoach"
       width={s.w}
       height={s.h}

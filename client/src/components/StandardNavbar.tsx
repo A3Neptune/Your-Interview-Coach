@@ -81,7 +81,7 @@ export default function StandardNavbar({
               {/* Logo */}
               <Link href="/" className="flex items-center group">
                 <img
-                  src="/yourinterviewcoach-logo1.jpeg"
+                  src="/yic-logo-sm.png"
                   alt="YourInterviewCoach"
                   className={`w-[60px] sm:w-[80px] md:w-[95px] h-auto transition-all duration-500 group-hover:scale-[1.02] ${
                     isScrolled ? "opacity-95" : "opacity-100"
@@ -292,7 +292,7 @@ export default function StandardNavbar({
                       className="block px-4 py-2 rounded-lg text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Get started free
+                      Get started
                     </Link>
                   </>
                 )}

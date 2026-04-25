@@ -239,7 +239,7 @@
 //                   onClick={() => setIsMobileMenuOpen(false)}
 //                   className="block w-full px-4 py-3 text-center text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
 //                 >
-//                   Get started free
+//                   Get started
 //                 </Link>
 //               </>
 //             )}
@@ -278,6 +278,12 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
   const [isMobileMenuOpen, setMobileMenu] = useState(false);
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
+  const logoHref = isLoggedIn ? "/dashboard" : "/";
+
+  const handleLogoClick = () => {
+    setMobileMenu(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 40);
@@ -314,9 +320,14 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* ── LOGO ── */}
-            <Link href="/" className="flex items-center shrink-0">
+            <Link
+              href={logoHref}
+              onClick={handleLogoClick}
+              scroll
+              className="flex items-center shrink-0"
+            >
               <img
-                src="/yourinterviewcoach-logo1.jpeg"
+                src="/yic-logo-sm.png"
                 alt="YourInterviewCoach"
                 className="w-[60px] sm:w-[80px] md:w-[95px] h-auto"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.16))" }}
@@ -518,7 +529,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white rounded-xl"
                   style={{ background: "#1d4ed8" }}
                 >
-                  Get started free <ArrowRight className="w-4 h-4" />
+                  Get started <ArrowRight className="w-4 h-4" />
                 </Link>
               </>
             )}
