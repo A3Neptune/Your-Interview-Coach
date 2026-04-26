@@ -46,16 +46,40 @@ const DEFAULT_SERVICES = [
     access: 'Single',
   },
   {
-    id: 'gdGroupDiscussions',
-    name: 'GD Sessions',
-    price: 1200,
-    duration: '60 mins',
-    title: 'Skill Building',
-    value: 'Master group discussions',
-    points: ['Mock sessions', 'Live feedback', 'Peer support', 'Tracking included'],
-    level: 'Group',
-    support: 'Community',
-    access: 'Multiple',
+    id: 'gd-starter',
+    name: 'GD Starter (4 Members)',
+    price: 796,
+    duration: '60 min',
+    title: 'Small Group Discussion',
+    value: 'Perfect for focused discussions with your core team.',
+    points: ['4 Participants', 'Expert Feedback', 'WhatsApp Support', '1 Session'],
+    level: 'Starter',
+    support: 'WhatsApp',
+    access: 'Single',
+  },
+  {
+    id: 'gd-popular',
+    name: 'GD Popular (6 Members)',
+    price: 1014,
+    duration: '60 min',
+    title: 'Realistic Simulation',
+    value: 'Our most popular choice for realistic group simulations.',
+    points: ['6 Participants', 'Peer Review', 'Performance Report', '1 Session'],
+    level: 'Popular',
+    support: 'WhatsApp',
+    access: 'Single',
+  },
+  {
+    id: 'gd-value',
+    name: 'GD Value (10 Members)',
+    price: 990,
+    duration: '60 min',
+    title: 'Large Team Practice',
+    value: 'Maximum value for large teams practicing together.',
+    points: ['10 Participants', 'Live Moderation', 'Group Dynamics', 'Best Value'],
+    level: 'Value',
+    support: 'WhatsApp',
+    access: 'Single',
   },
 ];
 
@@ -124,11 +148,6 @@ const migrateServiceData = async (pricingSection) => {
     } else if (serviceNameLower.includes('resume') || serviceNameLower.includes('cv')) {
       if (service.id !== 'resumeAnalysis') {
         standardId = 'resumeAnalysis';
-        needsUpdate = true;
-      }
-    } else if (serviceNameLower.includes('gd') || serviceNameLower.includes('group discussion')) {
-      if (service.id !== 'gdGroupDiscussions') {
-        standardId = 'gdGroupDiscussions';
         needsUpdate = true;
       }
     }

@@ -124,8 +124,9 @@ export default function ServicesPage() {
   );
 
   // Build card data from API, falling back gracefully while loading
-  const dynamicServices = (pricingData?.services ?? []).map(
-    (svc: any, i: number) => {
+  const dynamicServices = (pricingData?.services ?? [])
+    .filter((svc: any) => !svc.id.toLowerCase().includes("gd"))
+    .map((svc: any, i: number) => {
       const ac = accentPalette[i % accentPalette.length];
       const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
       const dAmt = hasDsc
@@ -152,8 +153,64 @@ export default function ServicesPage() {
         highlights: svc.points ?? [],
         href: `/select-slot?serviceId=${svc.id}`,
       };
+    });
+
+  // Add the 3 new GD plans manually
+  const gdPlans = [
+    {
+      id: "gd-starter",
+      accent: "#2563eb",
+      accentLight: "rgba(37,99,235,0.08)",
+      accentBorder: "rgba(37,99,235,0.2)",
+      tagColor: "#2563eb",
+      title: "GD Starter (4 Members)",
+      tag: "Small Group",
+      price: "₹796",
+      originalPrice: null,
+      gst: Math.round(796 * 0.18),
+      discountLabel: "₹199/Member",
+      duration: "60 min",
+      desc: "Perfect for focused discussions with your core team.",
+      highlights: ["4 Participants", "Expert Feedback", "WhatsApp Support", "1 Session"],
+      href: "/gd-booking?plan=gd-starter",
     },
-  );
+    {
+      id: "gd-popular",
+      accent: "#7c3aed",
+      accentLight: "rgba(124,58,237,0.08)",
+      accentBorder: "rgba(124,58,237,0.2)",
+      tagColor: "#7c3aed",
+      title: "GD Popular (6 Members)",
+      tag: "Standard",
+      price: "₹1014",
+      originalPrice: null,
+      gst: Math.round(1014 * 0.18),
+      discountLabel: "₹169/Member",
+      duration: "60 min",
+      desc: "Our most popular choice for realistic group simulations.",
+      highlights: ["6 Participants", "Peer Review", "Performance Report", "1 Session"],
+      href: "/gd-booking?plan=gd-popular",
+    },
+    {
+      id: "gd-value",
+      accent: "#059669",
+      accentLight: "rgba(5,150,105,0.08)",
+      accentBorder: "rgba(5,150,105,0.2)",
+      tagColor: "#059669",
+      title: "GD Value (10 Members)",
+      tag: "Large Group",
+      price: "₹990",
+      originalPrice: null,
+      gst: Math.round(990 * 0.18),
+      discountLabel: "₹99/Member",
+      duration: "60 min",
+      desc: "Maximum value for large teams practicing together.",
+      highlights: ["10 Participants", "Live Moderation", "Group Dynamics", "Best Value"],
+      href: "/gd-booking?plan=gd-value",
+    },
+  ];
+
+  const allServices = [...dynamicServices, ...gdPlans];
 
   return (
     <main
@@ -362,7 +419,7 @@ export default function ServicesPage() {
       {/* ── CARDS GRID ── */}
       <section className="px-6 pb-20">
         <div className="max-w-6xl mx-auto grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          {dynamicServices.map((s: any, i: number) => (
+          {allServices.map((s: any, i: number) => (
             <FadeUp key={i} delay={i * 65}>
               <div
                 className="sv-card h-full rounded-[20px] overflow-hidden"

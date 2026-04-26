@@ -436,7 +436,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import {
   Loader2, CheckCircle, ArrowLeft, Shield, Clock,
-  Calendar, User, Tag, Zap, ChevronRight, Lock, Star,
+  Calendar, User, Tag, Zap, ChevronRight, Lock, Star, Users,
 } from 'lucide-react';
 
 declare global {
@@ -692,32 +692,52 @@ function CheckoutContent() {
     const token = localStorage.getItem('authToken');
     if (!token) { router.push('/login'); return; }
 
+    const isGdBooking = serviceId?.startsWith('gd-');
+
     try {
       setIsProcessing(true);
-      let mid = mentorId;
-      if (!mid) {
-        const r = await axios.get(`${API_URL}/bookings/mentors`, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
-        mid = r.data.mentors[0]?._id;
+
+      let bookingId;
+      let rzOrder;
+      let keyId;
+
+      if (isGdBooking) {
+        const membersData = localStorage.getItem('gd_members');
+        console.log('Retrieved gd_members:', membersData);
+        const members = JSON.parse(membersData || '[]');
+        
+        if (members.length === 0) {
+          toast.error('Team member details missing. Please go back to the GD form.');
+          setIsProcessing(false);
+          return;
+        }
+        const gdRes = await axios.post(
+          `${API_URL}/gd-bookings/book`,
+          { planType: serviceId, members, scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30` },
+          { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
+        );
+        bookingId = gdRes.data.booking._id;
+        rzOrder = gdRes.data.order;
+        keyId = gdRes.data.key;
+      } else {
+        let mid = mentorId;
+        if (!mid) {
+          const r = await axios.get(`${API_URL}/bookings/mentors`, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+          mid = r.data.mentors[0]?._id;
+        }
+        if (!mid) { toast.error('No mentor available'); setIsProcessing(false); return; }
+
+        const durationMinutes = selectedSlot.duration || 60;
+        const bookingRes = await axios.post(
+          `${API_URL}/bookings`,
+          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes },
+          { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
+        );
+        bookingId = bookingRes.data.booking._id;
+        const orderRes = await axios.post(`${API_URL}/bookings/${bookingId}/create-payment`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+        rzOrder = orderRes.data.order;
+        keyId = orderRes.data.keyId;
       }
-      if (!mid) { toast.error('No mentor available'); setIsProcessing(false); return; }
-
-      const durationMinutes = selectedSlot.duration || 60;
-      const bookingRes = await axios.post(
-        `${API_URL}/bookings`,
-        { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes },
-        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
-      );
-      const bookingId = bookingRes.data.booking._id;
-
-      await new Promise<void>((resolve) => {
-        if (window.Razorpay) return resolve();
-        const id = setInterval(() => { if (window.Razorpay) { clearInterval(id); resolve(); } }, 100);
-        setTimeout(() => { clearInterval(id); resolve(); }, 5000);
-      });
-      if (!window.Razorpay) { toast.error('Payment gateway failed to load'); setIsProcessing(false); return; }
-
-      const orderRes = await axios.post(`${API_URL}/bookings/${bookingId}/create-payment`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
-      const { order: rzOrder, keyId } = orderRes.data;
 
       const rz = new window.Razorpay({
         key: keyId,
@@ -729,14 +749,16 @@ function CheckoutContent() {
         handler: async (response: any) => {
           try {
             const tid = toast.loading('Verifying payment…');
-            const vr = await axios.post(
-              `${API_URL}/bookings/${bookingId}/verify-payment`,
-              { razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
-              { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
-            );
+            const verifyUrl = isGdBooking ? `${API_URL}/gd-bookings/verify-payment` : `${API_URL}/bookings/${bookingId}/verify-payment`;
+            const verifyPayload = isGdBooking 
+              ? { razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, bookingId }
+              : { razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature };
+            
+            const vr = await axios.post(verifyUrl, verifyPayload, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
             toast.dismiss(tid);
             if (vr.data.success) {
               setPaymentDone(true);
+              if (isGdBooking) localStorage.removeItem('gd_members');
               toast.success('Booking confirmed!');
               setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
             } else {
@@ -750,10 +772,12 @@ function CheckoutContent() {
         theme: { color: '#1a56db' },
         modal: {
           ondismiss: async () => {
-            try {
-              await axios.post(`${API_URL}/bookings/${bookingId}/release-payment-lock`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
-            } catch {}
-            toast.error('Payment cancelled. Slot released.');
+            if (!isGdBooking) {
+              try {
+                await axios.post(`${API_URL}/bookings/${bookingId}/release-payment-lock`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+              } catch {}
+            }
+            toast.error('Payment cancelled.');
             setIsProcessing(false);
           },
         },
@@ -774,7 +798,7 @@ function CheckoutContent() {
           <div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#1a56db,#3b82f6)', boxShadow: '0 12px 40px rgba(26,86,219,.3)' }}>
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
-          <h2 className="checkout-title text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h2>
+          <h2 className="checkout-title text-3xl font-bold text-slate-900 mb-2" style={{ fontFamily: "'Fraunces', serif" }}>Booking Confirmed!</h2>
           <p className="text-slate-500 text-sm">Redirecting to your bookings…</p>
         </div>
       </div>
@@ -789,7 +813,7 @@ function CheckoutContent() {
           <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
             <Zap className="w-7 h-7 text-slate-300" />
           </div>
-          <h2 className="checkout-title text-2xl font-black text-slate-900 mb-2">Info Incomplete</h2>
+          <h2 className="checkout-title text-2xl font-bold text-slate-900 mb-2" style={{ fontFamily: "'Fraunces', serif" }}>Info Incomplete</h2>
           <p className="text-slate-400 text-sm mb-6">Some booking details are missing. Please go back and try again.</p>
           <button onClick={() => router.back()} className="pay-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white">
             <ArrowLeft className="w-4 h-4" /> Go Back
@@ -800,7 +824,10 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen px-4 sm:px-8 py-10 bg-white" style={{ animation: 'fadeIn .4s ease' }}>
+    <div className="min-h-screen px-4 sm:px-8 py-10 bg-white" style={{ animation: 'fadeIn .4s ease', fontFamily: "'DM Sans', sans-serif" }}>
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap");
+      `}</style>
       <div className="max-w-5xl mx-auto">
 
         {/* Back */}
@@ -823,7 +850,7 @@ function CheckoutContent() {
               {/* Header */}
               <div className="mb-2">
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Order Summary</p>
-                <h1 className="checkout-title text-3xl font-black text-slate-900 leading-tight">{service!.name}</h1>
+                <h1 className="checkout-title text-3xl font-bold text-slate-900 leading-tight" style={{ fontFamily: "'Fraunces', serif" }}>{service!.name}</h1>
                 <p className="text-slate-400 text-sm mt-1">{service!.title}</p>
               </div>
 
@@ -849,6 +876,22 @@ function CheckoutContent() {
                   value={user!.fullName || user!.name}
                   sub={user!.email}
                 />
+
+                {serviceId?.startsWith('gd-') && (
+                  <div className="pt-5 border-t border-slate-50">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-blue-500" /> Team Members
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {JSON.parse(localStorage.getItem('gd_members') || '[]').map((m: any, i: number) => (
+                        <div key={i} className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100/50 flex flex-col gap-0.5">
+                          <p className="text-xs font-bold text-slate-700 truncate">{m.name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">{m.whatsapp}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {service!.value && (
                   <DetailRow
                     icon={<Star className="w-4 h-4" />}
@@ -897,7 +940,7 @@ function CheckoutContent() {
                 {/* Amount preview */}
                 <div className="rounded-2xl p-5 text-center" style={{ background: 'linear-gradient(135deg,#f0f5ff,#e8f0fe)' }}>
                   <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Amount Due</p>
-                  <p className="checkout-title text-5xl font-black text-slate-900">₹{totalAmount}</p>
+                  <p className="checkout-title text-5xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{totalAmount}</p>
                   <p className="text-slate-400 text-xs mt-1">Incl. 18% GST</p>
                 </div>
 
