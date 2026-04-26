@@ -103,7 +103,14 @@ export default function AnalysisResults({
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
 
   const atsScore = data["ATS Score"] ?? 92;
-  const breakdown = data.Breakdown || {};
+  const breakdown: NonNullable<AnalysisData["Breakdown"]> = data.Breakdown ?? {
+    structure: 0,
+    keywords: 0,
+    clarity: 0,
+    sections: 0,
+    relevance: 0,
+  };
+  const breakdownEntries = Object.entries(breakdown) as Array<[string, number]>;
   const explanation = data.Explanation || "";
   const sectionAvailability = data["Section Availability"] || {};
   const issues = data["Issues List"] || [];
@@ -125,7 +132,7 @@ export default function AnalysisResults({
         className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
-        Run Resume Screening Again span
+        Run Resume Screening Again
       </button>
 
       {/* Main Results Card */}
@@ -145,7 +152,7 @@ export default function AnalysisResults({
               Score Breakdown
             </h2>
             <div className="space-y-3">
-              {Object.entries(breakdown).map(([key, value]) => (
+              {breakdownEntries.map(([key, value]) => (
                 <div key={key}>
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-gray-700 capitalize">{key}</span>
