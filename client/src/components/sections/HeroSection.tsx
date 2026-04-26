@@ -135,10 +135,10 @@ export default function HeroSection() {
               className="mb-5"
               style={{ lineHeight: 1.04, letterSpacing: "-0.03em", color: "#0f172a" }}
             >
-              <span style={{ display: "block", fontSize: "clamp(36px, 4.8vw, 62px)", fontWeight: 300 }}>
+              <span style={{ display: "block", fontSize: "clamp(36px, 4.8vw, 62px)", fontWeight: 300, paddingBottom: "10px" }}>
                 Crack your
               </span>
-              <span style={{ display: "block", fontSize: "clamp(44px, 6vw, 78px)", fontWeight: 800, color: "#1a3bcc", letterSpacing: "-0.035em" }}>
+              <span style={{ display: "block", fontSize: "clamp(44px, 6vw, 78px)", fontWeight: 800, color: "#1a3bcc", letterSpacing: "-0.035em", paddingBottom: "10px" }}>
                 next job
               </span>
               <span style={{ display: "block", fontSize: "clamp(36px, 4.8vw, 62px)", fontWeight: 300 }}>
@@ -200,14 +200,13 @@ export default function HeroSection() {
                 Start your journey
                 <ArrowRight size={14} />
               </Link>
-              <button
-                onClick={scrollToFeatures}
-                className="btn-ghost"
-                style={{ fontSize: "14px", fontWeight: 500 }}
-              >
-                Explore services
-                <ArrowRight size={14} className="ghost-arrow" />
-              </button>
+             <Link
+  href="/services"
+  className="btn-ghost inline-flex items-center gap-3 text-[15px] font-medium hover:text-[var(--blue)] transition-colors"
+>
+  Explore services
+  <ArrowRight size={17} className="ghost-arrow" />
+</Link>
             </motion.div>
 
             {/* Stats */}
