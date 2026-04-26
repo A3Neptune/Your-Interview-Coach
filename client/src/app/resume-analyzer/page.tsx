@@ -36,6 +36,47 @@ interface AnalysisData {
   }>;
 }
 
+function parseAnalysisResponse(rawText: string): AnalysisData {
+  const trimmed = rawText.trim();
+
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value) as AnalysisData;
+    } catch {
+      return null;
+    }
+  };
+
+  // 1) Direct JSON response
+  const direct = tryParse(trimmed);
+  if (direct) return direct;
+
+  // 2) JSON wrapped in Markdown fences
+  const unfenced = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  const fromUnfenced = tryParse(unfenced);
+  if (fromUnfenced) return fromUnfenced;
+
+  // 3) Extract JSON from inside any fenced block
+  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fencedMatch?.[1]) {
+    const fromFenceBlock = tryParse(fencedMatch[1].trim());
+    if (fromFenceBlock) return fromFenceBlock;
+  }
+
+  // 4) Fallback: parse between first "{" and last "}"
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    const fromBraces = tryParse(trimmed.slice(firstBrace, lastBrace + 1));
+    if (fromBraces) return fromBraces;
+  }
+
+  throw new Error("Invalid analysis response format");
+}
+
 export default function ResumeAnalyzerPage() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,7 +100,8 @@ export default function ResumeAnalyzerPage() {
         throw new Error("Failed to analyze resume");
       }
 
-      const data = await response.json();
+      const rawText = await response.text();
+      const data = parseAnalysisResponse(rawText);
       setAnalysisData(data);
     } catch (error) {
       console.error("Error analyzing resume:", error);
