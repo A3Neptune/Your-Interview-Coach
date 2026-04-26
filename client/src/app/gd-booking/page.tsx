@@ -119,14 +119,24 @@ export default function GDBookingPage() {
   };
 
   const handleMemberChange = (idx: number, field: "name" | "whatsapp", value: string) => {
-    setMembers((prev) => prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m)));
+    if (field === "whatsapp") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length > 0 && !/^[6-9]/.test(digits)) return;
+      if (digits.length > 10) return;
+      setMembers((prev) => prev.map((m, i) => (i === idx ? { ...m, [field]: digits } : m)));
+    } else {
+      setMembers((prev) => prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m)));
+    }
   };
 
   const validateMembers = () => {
     for (let i = 0; i < members.length; i++) {
       if (!members[i].name.trim()) { toast.error(`Member ${i + 1}: Name is required`); return false; }
       const cleaned = members[i].whatsapp.replace(/[\s\-\+]/g, "");
-      if (!/^\d{10,13}$/.test(cleaned)) { toast.error(`Member ${i + 1}: Enter a valid WhatsApp number`); return false; }
+      if (!/^[6-9]\d{9}$/.test(cleaned)) { 
+        toast.error(`Member ${i + 1}: Enter a valid 10-digit number starting with 6-9`); 
+        return false; 
+      }
     }
     return true;
   };

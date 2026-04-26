@@ -60,10 +60,10 @@ export const createGDBooking = async (req, res) => {
       }
       // Basic phone validation (10 digits)
       const cleaned = m.whatsapp.replace(/[\s\-\+]/g, '');
-      if (!/^\d{10,13}$/.test(cleaned)) {
+      if (!/^[6-9]\d{9}$/.test(cleaned)) {
         return res
           .status(400)
-          .json({ error: `Member ${i + 1}: Invalid WhatsApp number` });
+          .json({ error: `Member ${i + 1}: Invalid 10-digit phone number starting with 6-9` });
       }
     }
 
