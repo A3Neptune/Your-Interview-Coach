@@ -641,6 +641,8 @@ function CheckoutContent() {
       ]);
       setUser(userRes.data.user);
       const svc = pricingRes.data.services.find((s: Service) => s.id === serviceId);
+      console.log('Checkout Service ID:', serviceId);
+      console.log('Checkout Available IDs:', pricingRes.data.services.map((s: any) => s.id));
       if (!svc) { toast.error('Service not found'); router.push('/'); return; }
       setService(svc);
       const mid = mentorRes.data.mentors[0]?._id;

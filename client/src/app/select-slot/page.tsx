@@ -189,6 +189,8 @@ function SelectSlotContent() {
       ]);
 
       if (pricingRes.status === "fulfilled") {
+        console.log('Service ID from URL:', serviceId);
+        console.log('Available services from API:', pricingRes.value.data.services?.map((s: any) => s.id));
         const selectedService = pricingRes.value.data.services.find(
           (s: any) => s.id === serviceId,
         );

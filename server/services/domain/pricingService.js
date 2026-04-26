@@ -129,6 +129,26 @@ const migrateServiceData = async (pricingSection) => {
     serviceDataMap[svc.id] = svc;
   });
 
+  // Robustly ensure tiered GD plans exist and old one is gone
+  const currentIds = pricingSection.services.map(s => s.id);
+  const gdTierIds = ['gd-starter', 'gd-popular', 'gd-value'];
+  
+  gdTierIds.forEach(id => {
+    if (!currentIds.includes(id)) {
+      const plan = DEFAULT_SERVICES.find(s => s.id === id);
+      if (plan) {
+        pricingSection.services.push(plan);
+        needsUpdate = true;
+      }
+    }
+  });
+
+  // Remove legacy ID if present
+  if (currentIds.includes('gdGroupDiscussions')) {
+    pricingSection.services = pricingSection.services.filter(s => s.id !== 'gdGroupDiscussions');
+    needsUpdate = true;
+  }
+
   pricingSection.services = pricingSection.services.map((service) => {
     const serviceNameLower = service.name.toLowerCase();
     let standardId = service.id;
@@ -369,7 +389,7 @@ const updateServiceDiscount = async (serviceId, discountData) => {
  * Get service by ID with calculated discount
  */
 const getServiceById = async (serviceId) => {
-  const pricingSection = await PricingSection.findOne({ isGlobal: true });
+  const pricingSection = await getPricingSection();
 
   if (!pricingSection) {
     throw new NotFoundError('Pricing section not found');
