@@ -266,6 +266,7 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
+  { name: "Resume Screening", href: "/resume-analyzer" },
   { name: "Contact", href: "/contact" },
 ];
 
