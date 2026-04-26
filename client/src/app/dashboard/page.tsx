@@ -505,9 +505,6 @@
 //   );
 // }
 
-
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -731,7 +728,7 @@ export default function DashboardPage() {
 
         const servicesRes = await axios.get(
           `${API_URL}/pricing-section/public`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setServices(servicesRes.data.services || []);
 
@@ -746,19 +743,17 @@ export default function DashboardPage() {
             .filter(
               (b) =>
                 b.status === "confirmed" &&
-                new Date(b.scheduledDate) > new Date()
+                new Date(b.scheduledDate) > new Date(),
             )
             .sort(
               (a, b) =>
                 new Date(a.scheduledDate).getTime() -
-                new Date(b.scheduledDate).getTime()
+                new Date(b.scheduledDate).getTime(),
             )
             .slice(0, 3);
 
           setUpcomingBookings(upcoming);
-          setCompletedCount(
-            all.filter((b) => b.status === "completed").length
-          );
+          setCompletedCount(all.filter((b) => b.status === "completed").length);
         } catch {
           // bookings not critical
         }
@@ -822,7 +817,10 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center space-y-2">
           <p className="text-red-500 text-sm">Redirecting to login…</p>
-          <Link href="/login" className="text-blue-600 hover:underline text-sm font-medium">
+          <Link
+            href="/login"
+            className="text-blue-600 hover:underline text-sm font-medium"
+          >
             Go to Login
           </Link>
         </div>
@@ -848,7 +846,6 @@ export default function DashboardPage() {
       `}</style>
 
       <div className="min-h-screen bg-slate-50">
-
         {/* ── Hero Banner ─────────────────────────────────────────────────── */}
         <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 overflow-hidden">
           {/* Decorative blobs */}
@@ -898,10 +895,8 @@ export default function DashboardPage() {
 
         {/* ── Main content ─────────────────────────────────────────────────── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
-
           {/* ── Stats Row ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up fade-up-1">
-
             {/* Profile card */}
             {isLoading ? (
               <ProfileCardSkeleton />
@@ -925,7 +920,9 @@ export default function DashboardPage() {
                     <p className="font-semibold text-slate-900 truncate text-sm">
                       {user.name}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <p className="text-xs text-slate-400 truncate">
+                      {user.email}
+                    </p>
                     <Link
                       href="/dashboard/profile"
                       className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-0.5 inline-block"
@@ -950,8 +947,12 @@ export default function DashboardPage() {
                     All time
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-slate-900">{completedCount}</p>
-                <p className="text-sm text-slate-500 mt-0.5">Sessions Completed</p>
+                <p className="text-3xl font-bold text-slate-900">
+                  {completedCount}
+                </p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Sessions Completed
+                </p>
               </div>
             )}
 
@@ -971,7 +972,9 @@ export default function DashboardPage() {
                 <p className="text-3xl font-bold text-slate-900">
                   {upcomingBookings.length}
                 </p>
-                <p className="text-sm text-slate-500 mt-0.5">Upcoming Sessions</p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Upcoming Sessions
+                </p>
               </div>
             )}
 
@@ -1060,7 +1063,7 @@ export default function DashboardPage() {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
-                              }
+                              },
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -1069,7 +1072,7 @@ export default function DashboardPage() {
                             </div>
                             {new Date(booking.scheduledDate).toLocaleTimeString(
                               "en-US",
-                              { hour: "2-digit", minute: "2-digit" }
+                              { hour: "2-digit", minute: "2-digit" },
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -1099,7 +1102,10 @@ export default function DashboardPage() {
           )}
 
           {/* ── Services Section ───────────────────────────────────────────── */}
-          <section id="services-section" className="scroll-mt-8 fade-up fade-up-3">
+          <section
+            id="services-section"
+            className="scroll-mt-8 fade-up fade-up-3"
+          >
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">
@@ -1125,9 +1131,7 @@ export default function DashboardPage() {
                 <p className="text-slate-500 text-sm font-medium">
                   No services available yet
                 </p>
-                <p className="text-slate-400 text-xs mt-1">
-                  Check back soon.
-                </p>
+                <p className="text-slate-400 text-xs mt-1">Check back soon.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -1137,7 +1141,7 @@ export default function DashboardPage() {
                     service.discount?.isActive &&
                     service.discount.type !== "none";
                   const discountedWithGst = Math.round(
-                    pricing.discounted * 1.18
+                    pricing.discounted * 1.18,
                   );
                   const originalWithGst = Math.round(pricing.original * 1.18);
                   const gstAmount = Math.round(pricing.discounted * 0.18);
@@ -1145,7 +1149,7 @@ export default function DashboardPage() {
 
                   return (
                     <div
-                      key={service.id}
+                      key={`${service.id}-${idx}`}
                       className="group flex flex-col sm:flex-row rounded-2xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300"
                     >
                       {/* Left dark panel */}
@@ -1257,7 +1261,8 @@ export default function DashboardPage() {
                               </div>
                               {hasDiscount && (
                                 <p className="text-[10px] text-emerald-600 font-medium text-right mt-0.5">
-                                  You save ₹{originalWithGst - discountedWithGst}
+                                  You save ₹
+                                  {originalWithGst - discountedWithGst}
                                 </p>
                               )}
                             </div>
@@ -1266,7 +1271,7 @@ export default function DashboardPage() {
                           <button
                             onClick={() =>
                               router.push(
-                                `/select-slot?serviceId=${service.id}`
+                                `/select-slot?serviceId=${service.id}`,
                               )
                             }
                             className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r ${p.ctaBg} text-white text-xs font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md`}

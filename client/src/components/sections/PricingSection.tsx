@@ -177,10 +177,11 @@ export default function PricingSection() {
                 },
               ];
               const ac = accents[idx % accents.length];
+              const cardKey = `${svc.id || "service"}-${idx}`;
 
               return (
                 <div
-                  key={svc.id}
+                  key={cardKey}
                   className="rounded-[20px] overflow-hidden flex flex-col"
                   style={{
                     background: "rgba(255,255,255,0.97)",

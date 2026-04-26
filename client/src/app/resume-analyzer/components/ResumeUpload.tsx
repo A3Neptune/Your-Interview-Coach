@@ -153,7 +153,7 @@ export default function ResumeUpload({
           ) : !isLoggedIn ? (
             "Login to start screening"
           ) : (
-            "Start Resume Screening"
+            "Check Your ATS Score Now"
           )}
         </button>
       </div>
@@ -191,12 +191,6 @@ export default function ResumeUpload({
               >
                 Sign In
               </Link>
-              <button
-                onClick={() => setShowLoginPrompt(false)}
-                className="block w-full py-3 px-4 border border-gray-300 text-slate-700 font-semibold rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all"
-              >
-                Continue as Guest
-              </button>
             </div>
 
             <p className="text-center text-gray-600 text-sm mt-4">

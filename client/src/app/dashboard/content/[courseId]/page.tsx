@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Clock, User, CheckCircle, ExternalLink, Play, Lock } from 'lucide-react';
-import { toast } from 'sonner';
-import { contentAPI } from '@/lib/api';
-import { getAuthToken, removeAuthToken } from '@/lib/api';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Clock,
+  User,
+  CheckCircle,
+  ExternalLink,
+  Play,
+  Lock,
+} from "lucide-react";
+import { toast } from "sonner";
+import { contentAPI } from "@/lib/api";
+import { getAuthToken, removeAuthToken } from "@/lib/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface Content {
   _id: string;
   title: string;
   description: string;
-  contentType: 'google-doc' | 'google-sheet' | 'video-link' | 'pdf' | 'other';
+  contentType: "google-doc" | "google-sheet" | "video-link" | "pdf" | "other";
   embedUrl?: string;
   videoUrl?: string;
   duration: number;
@@ -27,7 +35,7 @@ interface Course {
   shortDescription?: string;
   fullDescription?: string;
   description?: string;
-  contentType: 'free' | 'paid' | 'exclusive';
+  contentType: "free" | "paid" | "exclusive";
   category: string;
   difficulty?: string;
   price?: number;
@@ -72,31 +80,38 @@ export default function CourseDetailPage() {
   const [videoCache, setVideoCache] = useState<Map<string, string>>(new Map());
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
-  const [videoProgress, setVideoProgress] = useState<Map<string, number>>(new Map());
-  const [preloadedVideos, setPreloadedVideos] = useState<Set<string>>(new Set());
+  const [videoProgress, setVideoProgress] = useState<Map<string, number>>(
+    new Map(),
+  );
+  const [preloadedVideos, setPreloadedVideos] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         const token = getAuthToken();
         if (!token) {
-          router.push('/login');
+          router.push("/login");
           return;
         }
 
         setIsLoading(true);
 
         // Fetch from advanced courses API
-        const response = await fetch(`${API_URL}/advanced/courses/published/${courseId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
+        const response = await fetch(
+          `${API_URL}/advanced/courses/published/${courseId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Failed to fetch course');
+          throw new Error(data.error || "Failed to fetch course");
         }
 
         const courseData = data.data;
@@ -107,18 +122,22 @@ export default function CourseDetailPage() {
         if (courseData.modules && courseData.modules.length > 0) {
           courseData.modules.forEach((module: any, moduleIndex: number) => {
             if (module.resources && module.resources.length > 0) {
-              module.resources.forEach((resource: any, resourceIndex: number) => {
-                moduleContents.push({
-                  _id: `${module._id || moduleIndex}-${resource._id || resourceIndex}`,
-                  title: resource.title || resource.type,
-                  description: resource.description || module.description || '',
-                  contentType: resource.type === 'video' ? 'video-link' : 'other',
-                  embedUrl: resource.embedUrl || resource.url,
-                  videoUrl: resource.url,
-                  duration: resource.duration || 0,
-                  order: resource.order || resourceIndex,
-                });
-              });
+              module.resources.forEach(
+                (resource: any, resourceIndex: number) => {
+                  moduleContents.push({
+                    _id: `${module._id || moduleIndex}-${resource._id || resourceIndex}`,
+                    title: resource.title || resource.type,
+                    description:
+                      resource.description || module.description || "",
+                    contentType:
+                      resource.type === "video" ? "video-link" : "other",
+                    embedUrl: resource.embedUrl || resource.url,
+                    videoUrl: resource.url,
+                    duration: resource.duration || 0,
+                    order: resource.order || resourceIndex,
+                  });
+                },
+              );
             }
           });
         }
@@ -132,15 +151,15 @@ export default function CourseDetailPage() {
         // Check enrollment status
         await checkEnrollmentStatus();
       } catch (err: any) {
-        if (err.response?.status === 401 || err.message?.includes('token')) {
+        if (err.response?.status === 401 || err.message?.includes("token")) {
           removeAuthToken();
-          router.push('/login');
+          router.push("/login");
         } else if (err.response?.status === 403) {
-          toast.error('You need to purchase this course to access it');
-          router.push('/dashboard/content');
+          toast.error("You need to purchase this course to access it");
+          router.push("/dashboard/content");
         } else {
-          toast.error('Failed to load course');
-          router.push('/dashboard/content');
+          toast.error("Failed to load course");
+          router.push("/dashboard/content");
         }
       } finally {
         setIsLoading(false);
@@ -162,16 +181,22 @@ export default function CourseDetailPage() {
         setVideoError(null);
 
         // Cache video URL
-        setVideoCache(prev => new Map(prev).set(content._id, content.videoUrl!));
-        setPreloadedVideos(prev => new Set(prev).add(content._id));
+        setVideoCache((prev) =>
+          new Map(prev).set(content._id, content.videoUrl!),
+        );
+        setPreloadedVideos((prev) => new Set(prev).add(content._id));
 
         // Load progress from localStorage
-        const savedProgress = localStorage.getItem(`video_progress_${content._id}`);
+        const savedProgress = localStorage.getItem(
+          `video_progress_${content._id}`,
+        );
         if (savedProgress) {
-          setVideoProgress(prev => new Map(prev).set(content._id, parseFloat(savedProgress)));
+          setVideoProgress((prev) =>
+            new Map(prev).set(content._id, parseFloat(savedProgress)),
+          );
         }
       } catch (error) {
-        setVideoError('Failed to load video. Please try again.');
+        setVideoError("Failed to load video. Please try again.");
       } finally {
         setIsVideoLoading(false);
       }
@@ -180,7 +205,9 @@ export default function CourseDetailPage() {
     preloadVideo(selectedContent);
 
     // Preload next video
-    const currentIndex = contents.findIndex(c => c._id === selectedContent._id);
+    const currentIndex = contents.findIndex(
+      (c) => c._id === selectedContent._id,
+    );
     if (currentIndex >= 0 && currentIndex < contents.length - 1) {
       const nextContent = contents[currentIndex + 1];
       if (nextContent.videoUrl) {
@@ -191,7 +218,7 @@ export default function CourseDetailPage() {
 
   // Save video progress
   const handleVideoProgress = (contentId: string, progress: number) => {
-    setVideoProgress(prev => new Map(prev).set(contentId, progress));
+    setVideoProgress((prev) => new Map(prev).set(contentId, progress));
     localStorage.setItem(`video_progress_${contentId}`, progress.toString());
   };
 
@@ -200,7 +227,7 @@ export default function CourseDetailPage() {
       const token = getAuthToken();
       const response = await fetch(`${API_URL}/enrollments/${courseId}/check`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -208,15 +235,14 @@ export default function CourseDetailPage() {
       if (data.success) {
         setIsEnrolled(data.isEnrolled);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleEnroll = async () => {
     if (!course) return;
 
     // If paid, show modal asking for payment
-    if (course.contentType === 'paid' || course.contentType === 'exclusive') {
+    if (course.contentType === "paid" || course.contentType === "exclusive") {
       setShowEnrollModal(true);
       return;
     }
@@ -225,25 +251,28 @@ export default function CourseDetailPage() {
     try {
       setIsEnrolling(true);
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/enrollments/${courseId}/enroll`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_URL}/enrollments/${courseId}/enroll`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message || 'Enrolled successfully!');
+        toast.success(data.message || "Enrolled successfully!");
         setIsEnrolled(true);
         setShowEnrollModal(false);
       } else {
-        toast.error(data.error || 'Failed to enroll');
+        toast.error(data.error || "Failed to enroll");
       }
     } catch (error) {
-      toast.error('Failed to enroll in course');
+      toast.error("Failed to enroll in course");
     } finally {
       setIsEnrolling(false);
     }
@@ -254,16 +283,44 @@ export default function CourseDetailPage() {
     router.push(`/dashboard/checkout/${courseId}`);
   };
 
+  const getValidExternalUrl = (rawUrl?: string) => {
+    if (!rawUrl) return null;
+
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return null;
+
+    // Auto-fix common user-entered URL format.
+    const normalized = /^www\./i.test(trimmed) ? `https://${trimmed}` : trimmed;
+
+    // Only allow absolute http(s) URLs for embedded content.
+    if (!/^https?:\/\//i.test(normalized)) return null;
+
+    return normalized;
+  };
+
   const renderContent = () => {
     if (!selectedContent) return null;
 
     switch (selectedContent.contentType) {
-      case 'google-doc':
-      case 'google-sheet':
+      case "google-doc":
+      case "google-sheet":
+        const docUrl = getValidExternalUrl(selectedContent.embedUrl);
+        if (!docUrl) {
+          return (
+            <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 shadow-lg p-8 text-center">
+              <p className="text-amber-800 font-semibold">
+                Invalid lesson link
+              </p>
+              <p className="text-amber-700 text-sm mt-1">
+                This lesson does not have a valid external document URL.
+              </p>
+            </div>
+          );
+        }
         return (
           <div className="w-full h-full rounded-2xl overflow-hidden border-2 border-blue-200 shadow-lg">
             <iframe
-              src={selectedContent.embedUrl}
+              src={docUrl}
               className="w-full h-full"
               allow="fullscreen"
               title={selectedContent.title}
@@ -271,9 +328,24 @@ export default function CourseDetailPage() {
           </div>
         );
 
-      case 'video-link':
-        const cachedUrl = videoCache.get(selectedContent._id) || selectedContent.videoUrl;
+      case "video-link":
+        const cachedUrl =
+          videoCache.get(selectedContent._id) || selectedContent.videoUrl;
+        const videoUrl = getValidExternalUrl(cachedUrl);
         const progress = videoProgress.get(selectedContent._id) || 0;
+
+        if (!videoUrl) {
+          return (
+            <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 shadow-lg p-8 text-center">
+              <p className="text-amber-800 font-semibold">
+                Invalid lesson link
+              </p>
+              <p className="text-amber-700 text-sm mt-1">
+                This video lesson URL is missing or not a valid external link.
+              </p>
+            </div>
+          );
+        }
 
         return (
           <div className="relative w-full rounded-2xl overflow-hidden border-2 border-blue-300 aspect-video shadow-2xl">
@@ -289,7 +361,9 @@ export default function CourseDetailPage() {
             {videoError && (
               <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10 p-6">
                 <div className="text-center">
-                  <p className="text-red-600 font-semibold mb-2">{videoError}</p>
+                  <p className="text-red-600 font-semibold mb-2">
+                    {videoError}
+                  </p>
                   <button
                     onClick={() => {
                       setVideoError(null);
@@ -305,13 +379,13 @@ export default function CourseDetailPage() {
 
             <div className="relative w-full h-full bg-slate-900">
               <iframe
-                src={cachedUrl}
+                src={videoUrl}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 title={selectedContent.title}
                 onLoad={() => setIsVideoLoading(false)}
-                onError={() => setVideoError('Failed to load video')}
+                onError={() => setVideoError("Failed to load video")}
               />
 
               {/* Progress bar */}
@@ -327,17 +401,24 @@ export default function CourseDetailPage() {
           </div>
         );
 
-      case 'pdf':
+      case "pdf":
         return (
           <div className="w-full rounded-2xl overflow-hidden border-2 border-blue-200 shadow-lg">
-            <embed src={selectedContent.videoUrl} type="application/pdf" width="100%" height="600" />
+            <embed
+              src={selectedContent.videoUrl}
+              type="application/pdf"
+              width="100%"
+              height="600"
+            />
           </div>
         );
 
       default:
         return (
           <div className="rounded-2xl border-2 border-blue-200 bg-white shadow-lg p-8 text-center">
-            <p className="text-slate-600">Content type not supported for preview</p>
+            <p className="text-slate-600">
+              Content type not supported for preview
+            </p>
             {selectedContent.videoUrl && (
               <a
                 href={selectedContent.videoUrl}
@@ -366,7 +447,10 @@ export default function CourseDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-600 mb-4">Course not found</p>
-          <Link href="/dashboard/content" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link
+            href="/dashboard/content"
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
             Back to courses
           </Link>
         </div>
@@ -376,7 +460,6 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content Area */}
@@ -387,7 +470,9 @@ export default function CourseDetailPage() {
                 renderContent()
               ) : (
                 <div className="rounded-2xl border-2 border-blue-200 bg-white shadow-lg p-12 text-center aspect-video flex items-center justify-center">
-                  <p className="text-slate-600 font-medium">Select a lesson to begin</p>
+                  <p className="text-slate-600 font-medium">
+                    Select a lesson to begin
+                  </p>
                 </div>
               )}
             </div>
@@ -396,9 +481,13 @@ export default function CourseDetailPage() {
             {selectedContent && (
               <div className="rounded-2xl border-2 border-blue-200 bg-white shadow-lg p-8 space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">{selectedContent.title}</h2>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    {selectedContent.title}
+                  </h2>
                   {selectedContent.description && (
-                    <p className="text-slate-600 leading-relaxed">{selectedContent.description}</p>
+                    <p className="text-slate-600 leading-relaxed">
+                      {selectedContent.description}
+                    </p>
                   )}
                 </div>
 
@@ -417,11 +506,17 @@ export default function CourseDetailPage() {
             {/* Course Card */}
             <div className="rounded-2xl border-2 border-blue-200 bg-white shadow-lg p-6 space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-1">{course.title}</h3>
-                <p className="text-xs text-blue-600 capitalize font-semibold bg-blue-50 px-2 py-1 rounded-lg inline-block">{course.category.replace('-', ' ')}</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-1">
+                  {course.title}
+                </h3>
+                <p className="text-xs text-blue-600 capitalize font-semibold bg-blue-50 px-2 py-1 rounded-lg inline-block">
+                  {course.category.replace("-", " ")}
+                </p>
               </div>
 
-              <p className="text-sm text-slate-600 leading-relaxed">{course.description}</p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {course.description}
+              </p>
 
               {/* Enrollment Button */}
               {!isEnrolled && (
@@ -438,7 +533,8 @@ export default function CourseDetailPage() {
                       </>
                     ) : (
                       <>
-                        {course.contentType === 'paid' || course.contentType === 'exclusive' ? (
+                        {course.contentType === "paid" ||
+                        course.contentType === "exclusive" ? (
                           <>
                             <Lock size={18} />
                             Enroll Now - ₹{course.price}
@@ -453,9 +549,10 @@ export default function CourseDetailPage() {
                     )}
                   </button>
                   <p className="text-xs text-slate-500 text-center mt-2">
-                    {course.contentType === 'paid' || course.contentType === 'exclusive'
-                      ? 'You need to enroll to access this course'
-                      : 'Enroll to start learning'}
+                    {course.contentType === "paid" ||
+                    course.contentType === "exclusive"
+                      ? "You need to enroll to access this course"
+                      : "Enroll to start learning"}
                   </p>
                 </div>
               )}
@@ -464,28 +561,38 @@ export default function CourseDetailPage() {
                 <div className="pt-4 border-t border-blue-100">
                   <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-200">
                     <CheckCircle size={18} />
-                    <span className="text-sm font-semibold">You're enrolled in this course</span>
+                    <span className="text-sm font-semibold">
+                      You're enrolled in this course
+                    </span>
                   </div>
                 </div>
               )}
 
               {/* Mentor Info */}
               <div className="pt-4 border-t border-blue-100">
-                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-3">Instructor</p>
+                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-3">
+                  Instructor
+                </p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
                     {course.mentorId.name
-                      .split(' ')
+                      .split(" ")
                       .map((n) => n[0])
-                      .join('')
+                      .join("")
                       .toUpperCase()
                       .slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900">{course.mentorId.name}</p>
-                    <p className="text-xs text-slate-600">{course.mentorId.designation}</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {course.mentorId.name}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {course.mentorId.designation}
+                    </p>
                     {course.mentorId.company && (
-                      <p className="text-xs text-blue-600 font-medium">{course.mentorId.company}</p>
+                      <p className="text-xs text-blue-600 font-medium">
+                        {course.mentorId.company}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -493,56 +600,74 @@ export default function CourseDetailPage() {
             </div>
 
             {/* Enrollment Modal for Paid Courses */}
-            {showEnrollModal && course && (course.contentType === 'paid' || course.contentType === 'exclusive') && (
-              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-2xl w-full max-w-md border-2 border-blue-200 shadow-2xl p-6">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Enroll in Course</h3>
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-sm text-slate-600 font-medium mb-2">Course</p>
-                      <p className="font-bold text-slate-900">{course.title}</p>
-                    </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-sm text-slate-600 font-medium mb-2">Amount</p>
-                      <p className="text-3xl font-bold text-blue-600">₹{course.price}</p>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setShowEnrollModal(false)}
-                        className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-xl font-semibold transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handlePaymentAndEnroll}
-                        className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg"
-                      >
-                        Proceed to Payment
-                      </button>
+            {showEnrollModal &&
+              course &&
+              (course.contentType === "paid" ||
+                course.contentType === "exclusive") && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-2xl w-full max-w-md border-2 border-blue-200 shadow-2xl p-6">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                      Enroll in Course
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-sm text-slate-600 font-medium mb-2">
+                          Course
+                        </p>
+                        <p className="font-bold text-slate-900">
+                          {course.title}
+                        </p>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-sm text-slate-600 font-medium mb-2">
+                          Amount
+                        </p>
+                        <p className="text-3xl font-bold text-blue-600">
+                          ₹{course.price}
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setShowEnrollModal(false)}
+                          className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-xl font-semibold transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handlePaymentAndEnroll}
+                          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg"
+                        >
+                          Proceed to Payment
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Lessons List */}
             <div className="rounded-2xl border-2 border-blue-200 bg-white shadow-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-white">
-                <h4 className="font-bold text-slate-900">Lessons ({contents.length})</h4>
+                <h4 className="font-bold text-slate-900">
+                  Lessons ({contents.length})
+                </h4>
               </div>
 
               <div className="divide-y divide-blue-100 max-h-96 overflow-y-auto">
                 {contents.map((content, index) => {
                   const contentProgress = videoProgress.get(content._id) || 0;
                   const isCompleted = contentProgress >= 90;
-                  const isInProgress = contentProgress > 0 && contentProgress < 90;
+                  const isInProgress =
+                    contentProgress > 0 && contentProgress < 90;
 
                   return (
                     <button
                       key={content._id}
                       onClick={() => setSelectedContent(content)}
                       className={`w-full px-6 py-4 text-left transition-all hover:bg-blue-50 relative ${
-                        selectedContent?._id === content._id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
+                        selectedContent?._id === content._id
+                          ? "bg-blue-50 border-l-4 border-blue-600"
+                          : ""
                       }`}
                     >
                       {/* Progress indicator at bottom */}
@@ -567,7 +692,9 @@ export default function CourseDetailPage() {
                             </div>
                           ) : (
                             <div className="w-5 h-5 rounded-full border-2 border-slate-400 bg-white flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-slate-600">{index + 1}</span>
+                              <span className="text-[10px] font-bold text-slate-600">
+                                {index + 1}
+                              </span>
                             </div>
                           )}
                         </div>

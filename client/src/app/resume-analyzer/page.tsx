@@ -120,11 +120,7 @@ export default function ResumeAnalyzerPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header Section */}
             <div className="text-center mb-12">
-              <div className="flex justify-center mb-6">
-                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-2xl">
-                  <Upload className="w-10 h-10 text-white" />
-                </div>
-              </div>
+              <div className="flex justify-center mb-6"></div>
               <h1 className="text-4xl font-bold text-slate-900 mb-4">
                 Resume Screening
               </h1>

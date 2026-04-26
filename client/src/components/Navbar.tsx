@@ -266,7 +266,7 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
-  { name: "Resume Screening", href: "/resume-analyzer" },
+  { name: "Check Resume Score", href: "/resume-analyzer" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -339,6 +339,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
                 const active = pathname === link.href;
+                const hasFreeBadge = link.name === "Check Resume Score";
                 return (
                   <Link
                     key={link.name}
@@ -352,7 +353,14 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                         style={{ background: "rgba(29,78,216,0.08)" }}
                       />
                     )}
-                    <span className="relative">{link.name}</span>
+                    {hasFreeBadge && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-full bg-red-600 px-1.5 py-[2px] text-[9px] font-semibold leading-none text-white shadow-sm">
+                        Free
+                      </span>
+                    )}
+                    <span className="relative text-center whitespace-nowrap">
+                      {link.name}
+                    </span>
                     {active && (
                       <span
                         className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
@@ -452,6 +460,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
           <div className="p-2 pb-1">
             {navLinks.map((link, idx) => {
               const active = pathname === link.href;
+              const hasFreeBadge = link.name === "Check Resume Score";
               return (
                 <Link
                   key={link.name}
@@ -462,11 +471,18 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                     background: active ? "rgba(29,78,216,0.07)" : "transparent",
                   }}
                 >
-                  <span
-                    className="text-[15px] font-medium"
-                    style={{ color: active ? "#1d4ed8" : "#475569" }}
-                  >
-                    {link.name}
+                  <span className="flex flex-col items-start gap-0.5">
+                    {hasFreeBadge && (
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-red-600 px-2 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
+                        Free
+                      </span>
+                    )}
+                    <span
+                      className="text-[15px] font-medium whitespace-nowrap"
+                      style={{ color: active ? "#1d4ed8" : "#475569" }}
+                    >
+                      {link.name}
+                    </span>
                   </span>
                   <span
                     className="w-5 h-5 rounded-full flex items-center justify-center"

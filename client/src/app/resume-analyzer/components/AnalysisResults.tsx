@@ -141,9 +141,8 @@ export default function AnalysisResults({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="flex flex-col items-center justify-center">
             <ScoreCircle score={atsScore} />
-            <p className="text-center text-gray-300 mt-6 text-sm">
-              Your resume is <strong>ATS-friendly</strong> and ready for
-              screening
+            <p className="text-center text-blue-500 mt-6 text-sm">
+              Resume analyzed. Boost your score further—book an expert review.
             </p>
           </div>
 
