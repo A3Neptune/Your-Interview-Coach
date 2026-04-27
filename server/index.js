@@ -17,12 +17,12 @@ import mentorRatesRoutes from './routes/mentorRates.js';
 import jobsRoutes from './routes/jobs.js';
 import messagesRoutes from './routes/messages.js';
 import pricingSectionRoutes from './routes/pricingSection.js';
-import gdRoutes from './routes/groupDiscussions.js';
 import notificationRoutes from './routes/notifications.js';
 import launchBannerRoutes from './routes/launchBanner.js';
 import courseAdvancedRoutes from './routes/courseAdvanced.js';
 import uploadRoutes from './routes/upload.js';
 import enrollmentRoutes from './routes/enrollments.js';
+import gdBookingRoutes from './routes/gdBookings.js';
 
 const app = express();
 
@@ -55,12 +55,12 @@ app.use('/api/mentor-rates', mentorRatesRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/pricing-section', pricingSectionRoutes);
-app.use('/api/group-discussions', gdRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/launch-banner', launchBannerRoutes);
 app.use('/api/advanced', courseAdvancedRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/gd-bookings', gdBookingRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Career Coach LMS API' });

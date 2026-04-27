@@ -208,4 +208,14 @@ export const pricingAPI = {
   updateDiscount: (serviceId: string, data: any) => apiClient.put(`/pricing-section/admin/services/${serviceId}/discount`, data),
 };
 
+// GD Booking API
+export const gdBookingAPI = {
+  getPlans: () => apiClient.get('/gd-bookings/plans'),
+  createBooking: (data: any) => apiClient.post('/gd-bookings/book', data),
+  verifyPayment: (data: any) => apiClient.post('/gd-bookings/verify-payment', data),
+  getMyBookings: () => apiClient.get('/gd-bookings/my-bookings'),
+  adminGetAll: () => apiClient.get('/gd-bookings/admin/all'),
+  adminUpdate: (bookingId: string, data: any) => apiClient.put(`/gd-bookings/admin/${bookingId}`, data),
+};
+
 export default apiClient;

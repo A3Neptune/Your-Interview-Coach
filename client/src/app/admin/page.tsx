@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,9 +13,12 @@ import {
   Zap,
   Download,
   Calendar,
+  Phone,
+  Eye,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+import { authAPI, bookingAPI, gdBookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -48,14 +51,13 @@ type SessionFilter =
   | "resumeAnalysis"
   | "mockInterview"
   | "liveWebinar"
-  | "gdGroupDiscussions";
+  | "liveWebinar";
 
 const SESSION_FILTERS: Array<{ key: SessionFilter; label: string }> = [
   { key: "all", label: "All Sessions" },
   { key: "resumeAnalysis", label: "Resume Analysis" },
   { key: "mockInterview", label: "Mock Interview" },
   { key: "liveWebinar", label: "Live Webinar" },
-  { key: "gdGroupDiscussions", label: "GD Practice" },
 ];
 
 const getSessionCategory = (sessionType?: string): SessionFilter => {
@@ -77,8 +79,6 @@ const getSessionCategory = (sessionType?: string): SessionFilter => {
     return "mockInterview";
   if (["webinars", "liveWebinar", "live-webinar"].includes(value))
     return "liveWebinar";
-  if (["gdGroupDiscussions", "groupDiscussion", "gd-practice"].includes(value))
-    return "gdGroupDiscussions";
   return "all";
 };
 
@@ -88,7 +88,6 @@ const getSessionLabel = (sessionType?: string) => {
     resumeAnalysis: "Resume Analysis",
     mockInterview: "Mock Interview",
     liveWebinar: "Live Webinar",
-    gdGroupDiscussions: "GD Practice",
   };
   return type === "all" ? sessionType || "Other" : mapping[type];
 };
@@ -96,14 +95,30 @@ const getSessionLabel = (sessionType?: string) => {
 const csvCell = (value: unknown) =>
   `"${String(value ?? "").replace(/"/g, '""')}"`;
 
+interface GDBookingData {
+  _id: string;
+  planType: string;
+  memberCount: number;
+  pricePerMember: number;
+  totalAmount: number;
+  members: { name: string; whatsapp: string }[];
+  scheduledDate: string;
+  status: string;
+  paymentStatus: string;
+  userId?: { name?: string; email?: string; mobile?: string } | null;
+  createdAt: string;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [users, setUsers] = useState<UserData[]>([]);
   const [bookings, setBookings] = useState<BookingData[]>([]);
+  const [gdBookings, setGdBookings] = useState<GDBookingData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sessionFilter, setSessionFilter] = useState<SessionFilter>("all");
+  const [expandedGD, setExpandedGD] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -121,11 +136,12 @@ export default function AdminPage() {
         }
         setUser(response.data.user);
 
-        const [usersResponse, bookingsResponse] = await Promise.all([
+        const [usersResponse, bookingsResponse, gdBookingsResponse] = await Promise.all([
           fetch(`${API_URL}/auth/all-users`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           bookingAPI.getMentorBookings(),
+          gdBookingAPI.adminGetAll().catch(() => ({ data: { bookings: [] } })),
         ]);
 
         if (usersResponse.ok) {
@@ -134,6 +150,7 @@ export default function AdminPage() {
         }
 
         setBookings(bookingsResponse.data.bookings || []);
+        setGdBookings(gdBookingsResponse.data.bookings || []);
       } catch (err: any) {
         removeAuthToken();
         router.push("/login");
@@ -594,6 +611,122 @@ export default function AdminPage() {
                       className="px-6 py-8 text-center text-zinc-500"
                     >
                       No booking records found for this filter.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* GD Bookings Section */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md mt-8">
+          <div className="border-b border-white/10 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold mb-1">GD Session Bookings</h2>
+                <p className="text-zinc-400 text-sm">
+                  All group discussion bookings with team member details.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-400/20">
+                  {gdBookings.length} Bookings
+                </span>
+                <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/20">
+                  ₹{gdBookings.filter(b => b.paymentStatus === 'completed').reduce((s, b) => s + b.totalAmount, 0)} Revenue
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Booked By</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Plan</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Payment</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Members</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gdBookings.length > 0 ? (
+                  gdBookings.map((gd) => (
+                    <React.Fragment key={gd._id}>
+                      <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => setExpandedGD(expandedGD === gd._id ? null : gd._id)}>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{gd.userId?.name || 'Unknown'}</span>
+                            <span className="text-xs text-zinc-400">{gd.userId?.email || '-'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            gd.planType === '4-members' ? 'bg-blue-500/10 text-blue-300 border border-blue-400/20'
+                            : gd.planType === '6-members' ? 'bg-purple-500/10 text-purple-300 border border-purple-400/20'
+                            : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'
+                          }`}>
+                            {gd.memberCount} Members
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-300">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                            {new Date(gd.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            gd.paymentStatus === 'completed' ? 'bg-emerald-500/10 text-emerald-300'
+                            : gd.paymentStatus === 'failed' ? 'bg-red-500/10 text-red-300'
+                            : 'bg-amber-500/10 text-amber-300'
+                          }`}>{gd.paymentStatus}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            gd.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-300'
+                            : gd.status === 'completed' ? 'bg-blue-500/10 text-blue-300'
+                            : gd.status === 'cancelled' ? 'bg-red-500/10 text-red-300'
+                            : 'bg-amber-500/10 text-amber-300'
+                          }`}>{gd.status}</span>
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm font-medium">₹{gd.totalAmount}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button className="text-zinc-400 hover:text-white transition-colors">
+                            <ChevronDown className={`w-4 h-4 transition-transform ${expandedGD === gd._id ? 'rotate-180' : ''}`} />
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedGD === gd._id && (
+                        <tr key={`${gd._id}-details`}>
+                          <td colSpan={7} className="px-6 py-4 bg-white/[0.02]">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                              {gd.members.map((m, idx) => (
+                                <div key={idx} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-[10px] font-bold text-purple-300">{idx + 1}</div>
+                                    <span className="text-sm font-medium text-white truncate">{m.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs text-zinc-400">
+                                    <Phone className="w-3 h-3" />
+                                    {m.whatsapp}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
+                      No GD bookings yet.
                     </td>
                   </tr>
                 )}

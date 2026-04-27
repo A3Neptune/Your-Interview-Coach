@@ -189,6 +189,8 @@ function SelectSlotContent() {
       ]);
 
       if (pricingRes.status === "fulfilled") {
+        console.log('Service ID from URL:', serviceId);
+        console.log('Available services from API:', pricingRes.value.data.services?.map((s: any) => s.id));
         const selectedService = pricingRes.value.data.services.find(
           (s: any) => s.id === serviceId,
         );
@@ -496,7 +498,10 @@ function SelectSlotContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap");
+      `}</style>
       <div className="max-w-5xl mx-auto">
         {/* ── Back + Header ─────────────────────────────────────────────────── */}
         <motion.div className="mb-8" variants={CONTAINER_VARIANTS} initial="hidden" animate="visible">
@@ -520,7 +525,7 @@ function SelectSlotContent() {
                 <div className="p-2 bg-blue-100 rounded-xl">
                   <Calendar size={22} className="text-blue-600" />
                 </div>
-                <h1 className="text-3xl font-black text-slate-900">Book Your Session</h1>
+                <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Book Your Session</h1>
               </div>
               <p className="text-slate-500 text-sm ml-[52px]">
                 {!selectedDate
@@ -628,7 +633,7 @@ function SelectSlotContent() {
                     <div className="flex items-baseline justify-between">
                       <span className="text-slate-400 line-through text-xs">₹{service.price}</span>
                       <div className="text-right">
-                        <span className="text-xl font-black text-blue-600">
+                        <span className="text-xl font-bold text-blue-600" style={{ fontFamily: "'Fraunces', serif" }}>
                           ₹{Math.round(discountedPrice)}
                         </span>
                         <span className="text-slate-400 text-[11px] ml-1">/session</span>
