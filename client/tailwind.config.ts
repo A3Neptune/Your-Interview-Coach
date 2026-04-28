@@ -15,6 +15,8 @@ const config: Config = {
         body: ['Inter', 'system-ui', 'sans-serif'],
         // Accent font for numbers, stats, special elements
         accent: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        // Modern geometric sans-serif for UI
+        dm: ['DM Sans', 'system-ui', 'sans-serif'],
         // Legacy mappings for backwards compatibility
         mona: ['Poppins', 'system-ui', 'sans-serif'],
         sora: ['Inter', 'system-ui', 'sans-serif'],

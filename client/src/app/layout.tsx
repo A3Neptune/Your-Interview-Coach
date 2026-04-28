@@ -9,7 +9,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CareerCoach | Your Path to Professional Success",
+  title: "YourInterviewCoach | Your Path to Professional Success",
   description: "Connect with expert mentors, get personalized career roadmaps, and master the skills needed to land your dream job. Join 10,000+ successful professionals.",
   keywords: ["career coaching", "mentorship", "professional development", "career guidance", "job placement"],
   authors: [{ name: "CareerCoach" }],
@@ -53,6 +53,11 @@ export default function RootLayout({
         {/* Space Grotesk - Modern tech font for accents/numbers */}
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        {/* DM Sans - Geometric sans-serif for modern UI */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
