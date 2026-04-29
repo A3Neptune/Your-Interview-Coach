@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'sonner';
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/context/AuthContext';
+import FeedbackButton from '@/components/FeedbackButton';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <Toaster position="top-right" richColors />
         {children}
+        <FeedbackButton />
       </AuthProvider>
     </GoogleOAuthProvider>
   );

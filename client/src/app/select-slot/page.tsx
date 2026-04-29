@@ -104,15 +104,26 @@ function SelectSlotContent() {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
       const res = await axios.get(`${API_URL}/bookings/public/slots?date=${date}`);
       if (res.data.success) {
-        const slots = res.data.slots || [];
-        setAvailableSlots(slots);
+        let slots = res.data.slots || [];
         if (res.data.slotDuration) setSlotDuration(res.data.slotDuration);
+
+        // Filter out past slots if booking for today
+        if (date === todayStr) {
+          const now = new Date();
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          slots = slots.filter((slot: { start: string }) => {
+            const [h, m] = slot.start.split(":").map(Number);
+            const slotMinutes = h * 60 + m;
+            return slotMinutes > currentMinutes;
+          });
+        }
+
+        setAvailableSlots(slots);
         if (slots.length === 0) {
           setFullyBookedDates((prev) => new Set(prev).add(date));
-          // Auto-deselect so the calendar shows "Full" and the time panel closes
           setSelectedDate("");
           setSelectedTime("");
-          toast.info("That date is fully booked — please pick another.");
+          toast.info(date === todayStr ? "No slots available for the rest of today — please pick another date." : "That date is fully booked — please pick another.");
         }
       }
     } catch {
@@ -189,8 +200,6 @@ function SelectSlotContent() {
       ]);
 
       if (pricingRes.status === "fulfilled") {
-        console.log('Service ID from URL:', serviceId);
-        console.log('Available services from API:', pricingRes.value.data.services?.map((s: any) => s.id));
         const selectedService = pricingRes.value.data.services.find(
           (s: any) => s.id === serviceId,
         );
@@ -498,10 +507,7 @@ function SelectSlotContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap");
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4">
       <div className="max-w-5xl mx-auto">
         {/* ── Back + Header ─────────────────────────────────────────────────── */}
         <motion.div className="mb-8" variants={CONTAINER_VARIANTS} initial="hidden" animate="visible">
@@ -525,7 +531,7 @@ function SelectSlotContent() {
                 <div className="p-2 bg-blue-100 rounded-xl">
                   <Calendar size={22} className="text-blue-600" />
                 </div>
-                <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Book Your Session</h1>
+                <h1 className="text-3xl font-black text-slate-900">Book Your Session</h1>
               </div>
               <p className="text-slate-500 text-sm ml-[52px]">
                 {!selectedDate
@@ -633,7 +639,7 @@ function SelectSlotContent() {
                     <div className="flex items-baseline justify-between">
                       <span className="text-slate-400 line-through text-xs">₹{service.price}</span>
                       <div className="text-right">
-                        <span className="text-xl font-bold text-blue-600" style={{ fontFamily: "'Fraunces', serif" }}>
+                        <span className="text-xl font-black text-blue-600">
                           ₹{Math.round(discountedPrice)}
                         </span>
                         <span className="text-slate-400 text-[11px] ml-1">/session</span>

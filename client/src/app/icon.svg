@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="white" />
+  <g transform="translate(96, 96)">
+    <!-- Logo background circle -->
+    <circle cx="0" cy="0" r="75" fill="#1D4ED8" />
+    <!-- Tie shape -->
+    <polygon points="0,-20 -15,30 15,30" fill="white" />
+    <!-- Speech bubble corner -->
+    <circle cx="-55" cy="55" r="8" fill="#1D4ED8" />
+  </g>
+</svg>
