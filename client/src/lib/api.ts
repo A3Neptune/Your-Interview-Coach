@@ -31,7 +31,20 @@ apiClient.interceptors.response.use(
           await apiClient.post('/auth/refresh');
           return apiClient(originalRequest);
         } catch (refreshError) {
+          if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+              window.location.href = '/login';
+            }
+          }
           return Promise.reject(refreshError);
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+            window.location.href = '/login';
+          }
         }
       }
     }
