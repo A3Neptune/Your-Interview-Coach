@@ -48,14 +48,13 @@ export default function CreateCourseModal({ onClose, onSuccess }: any) {
     setIsUploading(true);
 
     try {
-      const token = getAuthToken();
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
       const response = await fetch(`${API_URL}/upload/image`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+        credentials: 'include',
         },
         body: uploadFormData,
       });
@@ -87,7 +86,6 @@ export default function CreateCourseModal({ onClose, onSuccess }: any) {
     setIsLoading(true);
 
     try {
-      const token = getAuthToken();
       const courseData = {
         ...formData,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
@@ -101,7 +99,7 @@ export default function CreateCourseModal({ onClose, onSuccess }: any) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+        credentials: 'include',
         },
         body: JSON.stringify(courseData),
       });

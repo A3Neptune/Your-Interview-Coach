@@ -7,6 +7,7 @@ import Link from 'next/link';
 import CreateCourseModal from '@/components/courses/CreateCourseModal';
 import CourseCard from '@/components/courses/CourseCard';
 import CourseList from '@/components/courses/CourseList';
+import apiClient from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -82,17 +83,9 @@ export default function AdvancedCoursesPage() {
 
   const handleDuplicate = async (courseId: string) => {
     try {
-      const token = getAuthToken();
-      const response = await fetch(`${API_URL}/advanced/courses/${courseId}/duplicate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.post(`/advanced/courses/${courseId}/duplicate`);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.data.success) {
         toast.success('Course duplicated successfully');
         fetchCourses();
       }
@@ -105,17 +98,9 @@ export default function AdvancedCoursesPage() {
     if (!confirm('Are you sure you want to delete this course?')) return;
 
     try {
-      const token = getAuthToken();
-      const response = await fetch(`${API_URL}/advanced/courses/${courseId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.delete(`/advanced/courses/${courseId}`);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.data.success) {
         toast.success('Course deleted successfully');
         fetchCourses();
       }

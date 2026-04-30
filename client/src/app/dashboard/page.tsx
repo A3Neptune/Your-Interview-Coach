@@ -172,9 +172,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) { router.push("/login"); return; }
-
         const response = await authAPI.getCurrentUser();
         const userData = response.data.user;
 
@@ -186,7 +183,7 @@ export default function DashboardPage() {
 
         const servicesRes = await axios.get(
           `${API_URL}/pricing-section/public`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          
         );
         const fetchedServices = servicesRes.data.services || [];
         
@@ -240,7 +237,6 @@ export default function DashboardPage() {
 
         try {
           const bookingsRes = await axios.get(`${API_URL}/bookings/student`, {
-            headers: { Authorization: `Bearer ${token}` },
             withCredentials: true,
           });
           const all: Booking[] = bookingsRes.data.bookings || [];

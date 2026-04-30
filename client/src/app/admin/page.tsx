@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BarChart3, Users, LogOut, Settings, Search, ChevronRight, ArrowUpRight, Zap } from 'lucide-react';
+import { BarChart3, Users, LogOut, Settings, Search, ChevronRight, ArrowUpRight, Zap, Download, Calendar, ChevronDown, Phone } from 'lucide-react';
 import { toast } from 'sonner';
-import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import { authAPI, getAuthToken, removeAuthToken, bookingAPI, gdBookingAPI } from '@/lib/api';
 
 interface UserData {
   _id: string;
@@ -108,12 +108,6 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
         const response = await authAPI.getCurrentUser();
         if (response.data.user.userType !== "admin") {
           router.push("/dashboard");
@@ -122,18 +116,12 @@ export default function AdminPage() {
         setUser(response.data.user);
 
         const [usersResponse, bookingsResponse, gdBookingsResponse] = await Promise.all([
-          fetch(`${API_URL}/auth/all-users`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          bookingAPI.getMentorBookings(),
+          authAPI.getCurrentUser().then(res => ({ data: res.data })).catch(() => ({ data: { users: [] } })),
+          bookingAPI.getMentorBookings().catch(() => ({ data: { bookings: [] } })),
           gdBookingAPI.adminGetAll().catch(() => ({ data: { bookings: [] } })),
         ]);
 
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          setUsers(usersData.users || []);
-        }
-
+        setUsers(usersResponse.data.users || []);
         setBookings(bookingsResponse.data.bookings || []);
         setGdBookings(gdBookingsResponse.data.bookings || []);
       } catch (err: any) {

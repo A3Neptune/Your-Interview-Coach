@@ -15,11 +15,10 @@ export default function CourseList({ course, onDuplicate, onDelete, onRefresh }:
   const handleTogglePublish = async () => {
     setIsTogglingPublish(true);
     try {
-      const token = getAuthToken();
       const response = await fetch(`${API_URL}/advanced/courses/${course._id}/toggle-publish`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+        credentials: 'include',
         },
       });
 

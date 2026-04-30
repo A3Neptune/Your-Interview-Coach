@@ -491,8 +491,8 @@
 
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, ChevronRight, Eye, Mic, Zap,
   FileText, TrendingUp, Users, Award,
@@ -502,7 +502,7 @@ import StandardFooter from "@/components/StandardFooter";
 
 /* ─── Intersection observer hook ─────────────────────────── */
 function useInView(threshold = 0.12) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
@@ -518,7 +518,7 @@ function useInView(threshold = 0.12) {
 }
 
 /* ─── Animated counter ───────────────────────────────────── */
-function useCounter(target, duration = 1600, active = false) {
+function useCounter(target: number, duration = 1600, active = false) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!active) return;
@@ -534,18 +534,18 @@ function useCounter(target, duration = 1600, active = false) {
   return count;
 }
 
-function Counter({ target, suffix = "" }) {
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const { ref, inView } = useInView(0.4);
   const n = useCounter(target, 1400, inView);
-  return <span ref={ref}>{n.toLocaleString()}{suffix}</span>;
+  return <span ref={ref as React.RefObject<HTMLSpanElement>}>{n.toLocaleString()}{suffix}</span>;
 }
 
 /* ─── Fade-in wrapper ────────────────────────────────────── */
-function Reveal({ children, delay = 0 }) {
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const { ref, inView } = useInView();
   return (
     <div
-      ref={ref}
+      ref={ref as React.RefObject<HTMLDivElement>}
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? "translateY(0)" : "translateY(24px)",
