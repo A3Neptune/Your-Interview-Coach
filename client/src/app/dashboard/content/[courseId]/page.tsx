@@ -189,9 +189,10 @@ export default function CourseDetailPage() {
 
   const checkEnrollmentStatus = async () => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${API_URL}/enrollments/${courseId}/check`, {
         headers: {
-        credentials: 'include',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -215,13 +216,12 @@ export default function CourseDetailPage() {
     // For free courses, enroll directly
     try {
       setIsEnrolling(true);
-      
+      const token = getAuthToken();
       const response = await fetch(`${API_URL}/enrollments/${courseId}/enroll`, {
         method: 'POST',
         headers: {
-          
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-        credentials: 'include',
         },
       });
 

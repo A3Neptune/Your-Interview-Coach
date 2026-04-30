@@ -94,11 +94,12 @@ export default function EditCoursePage() {
 
     try {
       setIsSaving(true);
+      const token = getAuthToken();
       const response = await fetch(`${API_URL}/advanced/courses/${courseId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-        credentials: 'include',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(course),
       });
@@ -150,13 +151,14 @@ export default function EditCoursePage() {
     setIsUploading(true);
 
     try {
+      const token = getAuthToken();
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
       const response = await fetch(`${API_URL}/upload/image`, {
         method: 'POST',
         headers: {
-        credentials: 'include',
+          'Authorization': `Bearer ${token}`,
         },
         body: uploadFormData,
       });
@@ -188,13 +190,14 @@ export default function EditCoursePage() {
     setUploadingVideo(true);
 
     try {
+      const token = getAuthToken();
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
       const response = await fetch(`${API_URL}/upload/course-video`, {
         method: 'POST',
         headers: {
-        credentials: 'include',
+          'Authorization': `Bearer ${token}`,
         },
         body: uploadFormData,
       });

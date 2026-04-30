@@ -215,26 +215,4 @@ export const pricingAPI = {
   updateDiscount: (serviceId: string, data: any) => apiClient.put(`/pricing-section/admin/services/${serviceId}/discount`, data),
 };
 
-// GD Booking API
-export const gdBookingAPI = {
-  // Get all bookings (admin)
-  adminGetAll: () => apiClient.get('/gd-bookings/admin'),
-
-  // Get user's GD bookings
-  getUserBookings: () => apiClient.get('/gd-bookings/user'),
-
-  // Create GD booking
-  createBooking: (data: any) => apiClient.post('/gd-bookings', data),
-
-  // Get GD booking details
-  getBooking: (bookingId: string) => apiClient.get(`/gd-bookings/${bookingId}`),
-
-  // Cancel GD booking
-  cancelBooking: (bookingId: string) => apiClient.put(`/gd-bookings/${bookingId}/cancel`, {}),
-
-  // Update GD booking status (admin)
-  updateStatus: (bookingId: string, data: any) => apiClient.put(`/gd-bookings/${bookingId}/status`, data),
-};
-
-export { API_URL };
 export default apiClient;
