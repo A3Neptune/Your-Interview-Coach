@@ -33,7 +33,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchUser();
+    // Add a small delay to allow cookies to be set after login redirect
+    const timer = setTimeout(() => {
+      fetchUser();
+    }, 100);
 
     // Listen for storage changes (for multi-tab sync)
     const handleStorageChange = () => {
@@ -41,7 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const fetchUser = async () => {
@@ -50,9 +56,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.data.user) {
         setUser(response.data.user);
         window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: response.data.user } }));
+      } else {
+        setUser(null);
+        window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch user:', err);
+      // On 401, just set user to null - let components handle redirect
       setUser(null);
       window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
     } finally {
