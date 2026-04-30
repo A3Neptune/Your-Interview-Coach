@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { contentAPI, paymentAPI, removeAuthToken } from '@/lib/api';
+import { contentAPI, paymentAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -45,11 +45,19 @@ export default function CheckoutPage() {
 
   const fetchCourse = async () => {
     try {
+      const token = getAuthToken();
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
       setIsLoading(true);
 
       // Fetch from advanced courses API
       const response = await fetch(`${API_URL}/advanced/courses/published/${courseId}`, {
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       const data = await response.json();

@@ -15,7 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
-import { authAPI } from "@/lib/api";
+import { authAPI, setAuthToken } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 function LoginForm() {
@@ -62,6 +62,7 @@ function LoginForm() {
         formData.email,
         formData.password,
       );
+      setAuthToken(response.data.token);
       await fetchUser();
       const userType = response.data.user?.userType;
       toast.success(
@@ -87,6 +88,7 @@ function LoginForm() {
         toast.success("Complete your profile");
         router.push("/signup");
       } else {
+        setAuthToken(response.data.token);
         await fetchUser();
         const userType = response.data.user?.userType;
         toast.success(

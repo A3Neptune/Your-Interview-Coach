@@ -494,319 +494,298 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight, ChevronRight, Eye, Mic, Zap,
-  FileText, TrendingUp, Users, Award,
+  ChevronRight, Sparkles, Target, MessageSquare,
+  BrainCircuit, ArrowRight, CheckCircle2, Users, Award, TrendingUp,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
 
-/* ─── Intersection observer hook ─────────────────────────── */
-function useInView(threshold = 0.12) {
-  const ref = useRef(null);
+/* ─── helpers ─────────────────────────────────────────── */
+function useInView(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
-      { threshold }
-    );
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setInView(true); obs.disconnect(); }
+    }, { threshold });
     obs.observe(el);
     return () => obs.disconnect();
   }, [threshold]);
   return { ref, inView };
 }
 
-/* ─── Animated counter ───────────────────────────────────── */
-function useCounter(target, duration = 1600, active = false) {
+function useCounter(target: number, duration = 1800, active = false) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!active) return;
-    let v = 0;
+    let start = 0;
     const step = Math.ceil(target / (duration / 16));
-    const id = setInterval(() => {
-      v = Math.min(v + step, target);
-      setCount(v);
-      if (v >= target) clearInterval(id);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(start);
     }, 16);
-    return () => clearInterval(id);
+    return () => clearInterval(timer);
   }, [active, target, duration]);
   return count;
 }
 
-function Counter({ target, suffix = "" }) {
-  const { ref, inView } = useInView(0.4);
-  const n = useCounter(target, 1400, inView);
-  return <span ref={ref}>{n.toLocaleString()}{suffix}</span>;
+function AnimCounter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const { ref, inView } = useInView(0.3);
+  const count = useCounter(target, 1600, inView);
+  return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
-/* ─── Fade-in wrapper ────────────────────────────────────── */
-function Reveal({ children, delay = 0 }) {
-  const { ref, inView } = useInView();
-  return (
-    <div
-      ref={ref}
-      style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.65s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 0.65s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* ─── Data ───────────────────────────────────────────────── */
-const PANEL_FILES = [
-  {
-    icon: Eye,
-    code: "F-01",
-    label: "Presence & Structure",
-    verdict: "Unstructured",
-    note: "Candidate jumped between points. No clear STAR framework. Panel lost the thread by minute three.",
-    fix: "Structure your answers",
-    colorClass: "text-[#1A3BCC]",
-    barClass: "bg-[#1A3BCC]",
-    iconBg: "bg-[#1A3BCC]/10",
-    borderHover: "hover:border-[#1A3BCC]/30",
-  },
-  {
-    icon: Mic,
-    code: "F-02",
-    label: "Composure Under Pressure",
-    verdict: "Nervous",
-    note: "Visible hesitation on the stress question. Filler words every 8 seconds. Good content lost in the delivery.",
-    fix: "Communicate with confidence",
-    colorClass: "text-violet-600",
-    barClass: "bg-violet-600",
-    iconBg: "bg-violet-600/10",
-    borderHover: "hover:border-violet-300",
-  },
-  {
-    icon: Zap,
-    code: "F-03",
-    label: "Adaptive Thinking",
-    verdict: "Rigid",
-    note: "When redirected with a curveball, candidate froze 4 seconds. Recovery was incomplete. Panel noted inflexibility.",
-    fix: "Think on your feet",
-    colorClass: "text-cyan-600",
-    barClass: "bg-cyan-600",
-    iconBg: "bg-cyan-600/10",
-    borderHover: "hover:border-cyan-300",
-  },
+const focusAreas = [
+  { icon: Target, title: "Structure your answers", desc: "Crisp, logical responses that stick in the panel's memory long after the interview ends.", num: "01", accent: "#1A3BCC", bg: "rgba(26,59,204,0.06)" },
+  { icon: MessageSquare, title: "Communicate with confidence", desc: "Turn nerves into clarity. Speak under pressure the way leaders do — measured, direct, compelling.", num: "02", accent: "#0891b2", bg: "rgba(8,145,178,0.06)" },
+  { icon: BrainCircuit, title: "Think on your feet", desc: "Handle curveballs without losing your thread. Structured thinking that works even when the question blindsides you.", num: "03", accent: "#7c3aed", bg: "rgba(124,58,237,0.06)" },
 ];
 
-const GAP_ITEMS = [
-  { candidate: "I answered all the questions.", panel: "The answers lacked a clear point." },
-  { candidate: "I was calm and professional.", panel: "Confidence appeared rehearsed, not real." },
-  { candidate: "I showed strong experience.", panel: "Experience wasn't connected to our problem." },
-  { candidate: "I think it went well.", panel: "We're moving on to the next candidate." },
+const differentiators = [
+  "Real corporate exposure from Tech Mahindra & IndiaMART",
+  "Worked directly alongside senior business leaders",
+  "Understands exactly what hiring panels look for",
+  "No scripted answers. No generic tips. No fluff.",
 ];
 
-const TICKER = [
-  "12+ Years Inside Hiring Panels", "✦",
-  "5,000+ Candidates Coached", "✦",
-  "94% Interview Success Rate", "✦",
-  "Tech Mahindra", "✦", "IndiaMART", "✦",
-  "Real Frameworks", "✦", "No Generic Scripts", "✦",
+const TICKER_ITEMS = [
+  "12+ Years Corporate Experience", "★", "5,000+ Candidates Trained", "★",
+  "94% Interview Success Rate", "★", "Tech Mahindra", "★", "IndiaMART", "★",
+  "Real Frameworks. Real Results.", "★",
 ];
 
-/* ─── Component ──────────────────────────────────────────── */
 export default function WhyMePage() {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <main className="font-[DM_Sans,sans-serif] bg-[#F8F7F3] min-h-screen overflow-x-hidden text-[#0F172A]">
+    <main style={{ fontFamily: "'DM Sans', sans-serif", background: "#F7F4FE", minHeight: "100vh", overflowX: "hidden" }}>
       <Navbar />
 
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400;1,9..40,700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,600&display=swap");
 
-        @keyframes tickerMove {
+        * { box-sizing: border-box; }
+
+        /* Ticker */
+        @keyframes ticker {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
         }
-        .ticker-inner { animation: tickerMove 30s linear infinite; }
-        .ticker-inner:hover { animation-play-state: paused; }
+        .ticker-track { animation: ticker 28s linear infinite; }
+        .ticker-track:hover { animation-play-state: paused; }
 
-        @keyframes fadeSlide {
-          from { opacity: 0; transform: translateY(18px); }
+        /* Fade up */
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(28px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .hero-word { animation: fadeSlide 0.75s cubic-bezier(0.22,1,0.36,1) both; }
+        .fade-up { animation: fadeUp 0.75s cubic-bezier(0.22,1,0.36,1) both; }
 
-        @keyframes scanline {
-          0%   { transform: translateY(-100%); opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
-          100% { transform: translateY(900%); opacity: 0; }
+        /* Hero word */
+        @keyframes wordIn {
+          from { opacity: 0; transform: translateY(40px) skewY(3deg); }
+          to   { opacity: 1; transform: translateY(0) skewY(0); }
         }
-        .scan { animation: scanline 3.5s ease-in-out infinite; }
+        .word-in { animation: wordIn 0.8s cubic-bezier(0.22,1,0.36,1) both; }
+
+        /* Orb drift */
+        @keyframes drift {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33%      { transform: translate(18px,-14px) scale(1.04); }
+          66%      { transform: translate(-12px, 10px) scale(0.97); }
+        }
+        .orb { animation: drift 14s ease-in-out infinite; }
+
+        /* Card hover */
+        .focus-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .focus-card:hover { transform: translateY(-6px); box-shadow: 0 24px 56px rgba(26,59,204,0.12); }
+
+        /* Marquee stripe */
+        .marquee-stripe { background: #1A3BCC; overflow: hidden; }
+
+        /* Diagonal cut */
+        .diagonal-top    { clip-path: polygon(0 5%, 100% 0%, 100% 100%, 0% 100%); }
+        .diagonal-bottom { clip-path: polygon(0 0%, 100% 0%, 100% 95%, 0 100%); }
+
+        /* Number outline */
+        .num-outline {
+          -webkit-text-stroke: 1.5px rgba(26,59,204,0.18);
+          color: transparent;
+          font-family: 'Fraunces', serif;
+          font-size: 80px;
+          font-weight: 700;
+          line-height: 1;
+          user-select: none;
+        }
+
+        /* Glowing dot */
+        @keyframes glowPulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(26,59,204,0.4); }
+          50%      { box-shadow: 0 0 0 10px rgba(26,59,204,0); }
+        }
+        .glow-dot { animation: glowPulse 2.4s ease-in-out infinite; }
+
+        /* Progress line */
+        @keyframes lineGrow {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+
+        /* Shimmer */
+        @keyframes shimmer {
+          from { background-position: -200% center; }
+          to   { background-position: 200% center; }
+        }
+        .shimmer-text {
+          background: linear-gradient(90deg, #1A3BCC 0%, #60a5fa 40%, #1A3BCC 80%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer 4s linear infinite;
+        }
+
+        /* CTA glow btn */
+        .glow-btn {
+          position: relative;
+          transition: transform 0.25s ease;
+        }
+        .glow-btn::after {
+          content: '';
+          position: absolute;
+          inset: -3px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #1A3BCC, #3b82f6);
+          z-index: -1;
+          opacity: 0;
+          filter: blur(10px);
+          transition: opacity 0.3s ease;
+        }
+        .glow-btn:hover { transform: translateY(-2px); }
+        .glow-btn:hover::after { opacity: 0.6; }
+
+        /* Split line */
+        .split-line {
+          width: 40px; height: 3px;
+          background: linear-gradient(90deg, #1A3BCC, #60a5fa);
+          border-radius: 99px;
+          margin-bottom: 16px;
+        }
       `}</style>
 
-      {/* ── HERO ───────────────────────────────────────────── */}
-      <section className="min-h-screen flex flex-col justify-center pt-[90px] pb-16 px-6 relative overflow-hidden">
-        {/* Dot grid */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: "radial-gradient(rgba(26,59,204,0.12) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-        {/* Corner accent */}
-        <div
-          className="absolute top-0 right-0 w-80 h-80 pointer-events-none"
-          style={{ background: "linear-gradient(225deg, rgba(26,59,204,0.08) 0%, transparent 60%)" }}
-        />
+      {/* ══════════════════════════════════════
+          HERO — editorial split layout
+      ══════════════════════════════════════ */}
+      <section
+        ref={heroRef}
+        style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden", paddingTop: 96 }}
+      >
+        {/* Ambient orbs */}
+        <div className="orb" style={{ position: "absolute", top: "8%", left: "6%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(26,59,204,0.09) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div className="orb" style={{ position: "absolute", bottom: "6%", right: "4%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)", animationDelay: "-6s", pointerEvents: "none" }} />
 
-        <div className="max-w-[1120px] mx-auto w-full relative z-10">
-          {/* Eyebrow pill */}
-          <div
-            className="hero-word inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#1A3BCC]/25 bg-[#1A3BCC]/5 mb-10"
-            style={{ animationDelay: "0ms" }}
-          >
-            <FileText className="w-3 h-3 text-[#1A3BCC]" />
-            <span className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.12em] uppercase">Panel's Perspective</span>
+        {/* Grid texture */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(26,59,204,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(26,59,204,0.04) 1px, transparent 1px)", backgroundSize: "56px 56px", pointerEvents: "none" }} />
+
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", width: "100%", position: "relative", zIndex: 1 }}>
+
+          {/* Eyebrow */}
+          <div className="fade-up" style={{ animationDelay: "0ms", display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99, background: "rgba(26,59,204,0.08)", border: "1px solid rgba(26,59,204,0.16)", marginBottom: 32 }}>
+            <Sparkles style={{ width: 12, height: 12, color: "#1A3BCC" }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#1A3BCC", letterSpacing: "0.1em", textTransform: "uppercase" }}>Why choose me?</span>
           </div>
 
-          {/* Two-column hero */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left */}
-            <div>
-              <div className="hero-word" style={{ animationDelay: "60ms" }}>
-                <p className="text-sm font-semibold text-slate-500 tracking-[0.04em] uppercase mb-3">
-                  What they write after you leave the room.
-                </p>
-              </div>
-
-              <div
-                className="hero-word"
-                style={{ animationDelay: "120ms" }}
-              >
-                <div className="text-[clamp(64px,10vw,110px)] font-black leading-none tracking-[-0.04em] text-[#0F172A] mb-6">
-                  <span className="block">Not</span>
-                  <span className="block text-[#1A3BCC]">selected</span>
-                  <span
-                    className="block font-light text-slate-400 italic tracking-[-0.02em]"
-                    style={{ fontSize: "clamp(48px,7vw,76px)" }}
-                  >
-                    to move forward.
-                  </span>
-                </div>
-              </div>
-
-              <div className="hero-word" style={{ animationDelay: "240ms" }}>
-                <p className="text-sm lg:text-base text-slate-600 leading-[1.8] max-w-[440px] mb-8">
-                  Most rejection emails look the same. But the notes inside that panel room are specific — and avoidable. I've been on both sides of that table for 12+ years.
-                </p>
-                <div className="flex gap-3 flex-wrap">
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-[10px] font-bold text-sm text-white bg-[#1A3BCC] no-underline transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(26,59,204,0.35)]"
-                  >
-                    Start preparing <ChevronRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/services"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-[10px] font-semibold text-sm text-[#1A3BCC] border border-[#1A3BCC]/25 no-underline bg-transparent hover:bg-[#1A3BCC]/5 transition-colors duration-200"
-                  >
-                    Explore services <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
+          {/* Giant editorial headline */}
+          <div style={{ marginBottom: 32 }}>
+            <div className="word-in" style={{ animationDelay: "60ms" }}>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(52px, 9vw, 110px)", fontWeight: 300, lineHeight: 0.95, color: "#0F172A", letterSpacing: "-0.03em", marginBottom: 4 }}>
+                I've been
+              </p>
             </div>
+            <div className="word-in" style={{ animationDelay: "140ms", display: "flex", alignItems: "flex-end", gap: 24, flexWrap: "wrap" }}>
+              <em style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(52px, 9vw, 110px)", fontWeight: 600, fontStyle: "italic", lineHeight: 0.95, letterSpacing: "-0.03em", color: "#1A3BCC" }}>inside</em>
+              <span style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(52px, 9vw, 110px)", fontWeight: 300, lineHeight: 0.95, color: "#0F172A", letterSpacing: "-0.03em" }}>the</span>
+            </div>
+            <div className="word-in" style={{ animationDelay: "220ms" }}>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(52px, 9vw, 110px)", fontWeight: 300, lineHeight: 0.95, color: "#0F172A", letterSpacing: "-0.03em" }}>
+                room you're<br />
+                <span style={{ fontWeight: 700, color: "#0F172A" }}>preparing for.</span>
+              </p>
+            </div>
+          </div>
 
-            {/* Right — panel notes mockup */}
-            <div className="hero-word relative" style={{ animationDelay: "320ms" }}>
-              <div className="bg-white border border-[#1A3BCC]/[0.12] rounded-2xl p-7 shadow-[0_2px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
-                {/* Scan line */}
-                <div className="scan absolute left-0 right-0 h-[2px] pointer-events-none z-10"
-                  style={{ background: "linear-gradient(90deg, transparent, rgba(26,59,204,0.3), transparent)" }}
-                />
-
-                {/* Header */}
-                <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#1A3BCC]/[0.08]">
-                  <div>
-                    <p className="text-[10px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-0.5">Panel Assessment</p>
-                    <p className="text-[13px] font-bold text-[#0F172A]">Candidate Review — Round 1</p>
-                  </div>
-                  <div className="px-2.5 py-1 rounded-md bg-red-600/[0.08] border border-red-600/[0.15]">
-                    <span className="text-[11px] font-bold text-red-600 tracking-[0.06em]">DECLINED</span>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                {[
-                  { field: "Structure", score: "2/5", note: "Answers lacked framework. Lost thread early." },
-                  { field: "Presence", score: "2/5", note: "Nervous delivery. High filler word count." },
-                  { field: "Adaptability", score: "1/5", note: "Froze on redirect. Recovery incomplete." },
-                  { field: "Fit signal", score: "3/5", note: "Background strong. Presentation weak." },
-                ].map((row, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-3 items-start py-3 ${i < 3 ? "border-b border-[#1A3BCC]/[0.06]" : ""}`}
-                  >
-                    <span className="text-[12px] font-bold text-[#1A3BCC] min-w-[90px]">{row.field}</span>
-                    <span className="text-[12px] font-extrabold text-red-600 min-w-[28px]">{row.score}</span>
-                    <span className="text-[12px] text-slate-500 leading-relaxed">{row.note}</span>
-                  </div>
-                ))}
-
-                {/* Final note */}
-                <div className="mt-4 p-3.5 rounded-[10px] bg-[#1A3BCC]/[0.04] border border-dashed border-[#1A3BCC]/[0.18]">
-                  <p className="text-[11px] font-bold text-[#1A3BCC] tracking-[0.06em] uppercase mb-1">Assessor note</p>
-                  <p className="text-[12px] text-slate-500 leading-relaxed">
-                    "Qualified on paper. Couldn't translate it in the room. Pass."
-                  </p>
-                </div>
-              </div>
-
-              {/* Floating tag */}
-              <div className="absolute -bottom-3.5 left-6 bg-[#1A3BCC] rounded-lg px-3.5 py-1.5 flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-white">This is what I fix.</span>
-              </div>
+          {/* Sub + CTAs in two-column layout */}
+          <div className="fade-up" style={{ animationDelay: "380ms", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center", marginTop: 48, flexWrap: "wrap" }}>
+            <p style={{ fontSize: 17, color: "#64748b", lineHeight: 1.75, maxWidth: 480 }}>
+              12+ years of real corporate experience across Tech Mahindra & IndiaMART. 5,000+ candidates trained. Most people don't fail because they're unqualified — they fail because they can't <em style={{ color: "#1A3BCC", fontStyle: "italic" }}>present</em> what they know.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
+              <Link
+                href="/signup"
+                className="glow-btn"
+                style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 28px", borderRadius: 14, fontWeight: 700, fontSize: 14, color: "#fff", background: "linear-gradient(135deg, #1A3BCC, #3B5EE8)", textDecoration: "none" }}
+              >
+                Start preparing <ChevronRight style={{ width: 16, height: 16 }} />
+              </Link>
+              <Link
+                href="/services"
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 14, fontWeight: 600, fontSize: 14, color: "#1A3BCC", border: "1.5px solid rgba(26,59,204,0.2)", textDecoration: "none", background: "transparent", transition: "background 0.2s" }}
+              >
+                Explore services <ArrowRight style={{ width: 14, height: 14 }} />
+              </Link>
             </div>
           </div>
         </div>
+
+        {/* Bottom fade */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, background: "linear-gradient(to bottom, transparent, #F7F4FE)", pointerEvents: "none" }} />
       </section>
 
-      {/* ── TICKER ─────────────────────────────────────────── */}
-      <div className="bg-[#1A3BCC] py-3.5 overflow-hidden">
-        <div className="flex whitespace-nowrap">
-          <div className="ticker-inner flex gap-9 pr-9">
-            {[...TICKER, ...TICKER].map((t, i) => (
-              <span
-                key={i}
-                className={`text-[12px] tracking-[0.06em] uppercase flex-shrink-0 ${t === "✦" ? "font-normal text-white/30" : "font-bold text-white/[0.88]"}`}
-              >
-                {t}
+      {/* ══════════════════════════════════════
+          MARQUEE TICKER STRIPE
+      ══════════════════════════════════════ */}
+      <div className="marquee-stripe" style={{ padding: "14px 0" }}>
+        <div style={{ display: "flex", overflow: "hidden", whiteSpace: "nowrap" }}>
+          <div className="ticker-track" style={{ display: "flex", gap: 40, paddingRight: 40 }}>
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+              <span key={i} style={{ fontSize: 13, fontWeight: 600, color: item === "★" ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.9)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>
+                {item}
               </span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── STATS ──────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-[1120px] mx-auto">
-          <div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-px rounded-2xl overflow-hidden border border-[#1A3BCC]/[0.08]"
-            style={{ background: "rgba(26,59,204,0.08)" }}
-          >
+      {/* ══════════════════════════════════════
+          STATS — oversized counter section
+      ══════════════════════════════════════ */}
+      <section style={{ padding: "100px 24px", background: "#fff" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
             {[
-              { n: 12, suf: "+", label: "Years inside corporate hiring", icon: Award, color: "text-[#1A3BCC]", bg: "bg-[#1A3BCC]/10" },
-              { n: 5000, suf: "+", label: "Candidates coached to offers", icon: Users, color: "text-violet-600", bg: "bg-violet-600/10" },
-              { n: 94, suf: "%", label: "Interview-to-offer rate", icon: TrendingUp, color: "text-cyan-600", bg: "bg-cyan-600/10" },
-            ].map((s, i) => {
-              const Icon = s.icon;
+              { label: "Years corporate experience", value: 12, suffix: "+", icon: Award, color: "#1A3BCC" },
+              { label: "Candidates trained", value: 5000, suffix: "+", icon: Users, color: "#7c3aed" },
+              { label: "Interview success rate", value: 94, suffix: "%", icon: TrendingUp, color: "#0891b2" },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
               return (
-                <div key={i} className="bg-white p-12 lg:p-[48px_36px]">
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${s.bg} mb-4`}>
-                    <Icon className={`w-3 h-3 ${s.color}`} />
-                    <span className={`text-[10px] font-extrabold ${s.color} uppercase tracking-[0.08em]`}>{s.label}</span>
+                <div key={i} style={{ padding: "56px 40px", borderRight: i < 2 ? "1px solid rgba(26,59,204,0.08)" : "none", textAlign: i === 1 ? "center" : i === 2 ? "right" : "left" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20, background: `${stat.color}12`, padding: "6px 14px", borderRadius: 99 }}>
+                    <Icon style={{ width: 14, height: 14, color: stat.color }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: stat.color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</span>
                   </div>
-                  <div className="text-[clamp(48px,7vw,80px)] font-black text-[#0F172A] leading-none tracking-[-0.04em]">
-                    <Counter target={s.n} suffix={s.suf} />
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(56px, 8vw, 96px)", fontWeight: 700, color: "#0F172A", lineHeight: 1, letterSpacing: "-0.04em" }}>
+                    <AnimCounter target={stat.value} suffix={stat.suffix} />
                   </div>
                 </div>
               );
@@ -815,250 +794,198 @@ export default function WhyMePage() {
         </div>
       </section>
 
-      {/* ── PANEL FILES ────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[#F8F7F3]">
-        <div className="max-w-[1120px] mx-auto">
-          <Reveal>
-            <p className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-2.5">Panel Assessment Files</p>
-            <div className="flex items-end justify-between mb-14 gap-6 flex-wrap">
-              <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-[#0F172A] leading-[1.1] tracking-[-0.03em] max-w-[520px]">
-                Three failure patterns.<br />
-                <span className="font-light text-slate-500 text-[clamp(22px,3vw,38px)] italic">Every single time.</span>
-              </h2>
-              <p className="text-sm text-slate-400 max-w-[280px] leading-[1.75]">
-                These aren't soft skills. They're the exact observations written in panel notes when a qualified candidate gets passed over.
-              </p>
-            </div>
-          </Reveal>
+      {/* ══════════════════════════════════════
+          FOCUS AREAS — numbered card grid
+      ══════════════════════════════════════ */}
+      <section style={{ padding: "100px 24px", background: "#F7F4FE", position: "relative" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {PANEL_FILES.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <Reveal key={i} delay={i * 90}>
-                  <div
-                    className={`bg-white border border-[#1A3BCC]/[0.09] rounded-2xl p-8 h-full relative overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ${f.borderHover} cursor-default`}
-                  >
-                    <div className="absolute top-5 right-5 text-[11px] font-extrabold text-[#1A3BCC]/20 tracking-[0.08em]">{f.code}</div>
-                    <div className={`w-9 h-[3px] ${f.barClass} rounded-full mb-6`} />
-                    <div className={`w-11 h-11 rounded-xl ${f.iconBg} flex items-center justify-center mb-5`}>
-                      <Icon className={`w-5 h-5 ${f.colorClass}`} />
-                    </div>
-                    <p className={`text-[10px] font-extrabold ${f.colorClass} tracking-[0.1em] uppercase mb-1.5`}>{f.label}</p>
-                    <h3 className="text-lg font-extrabold text-[#0F172A] tracking-[-0.02em] mb-3.5 leading-snug">
-                      Panel verdict: <span className="text-red-600 italic">"{f.verdict}"</span>
-                    </h3>
-                    <div className="p-3.5 rounded-[10px] bg-red-600/[0.04] border border-red-600/[0.12] mb-5">
-                      <p className="text-[12.5px] text-slate-500 leading-[1.65] italic">"{f.note}"</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full ${f.barClass} flex-shrink-0`} />
-                      <span className={`text-[12px] font-bold ${f.colorClass}`}>What I train: {f.fix}</span>
-                    </div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── THE GAP ────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[#0F172A] relative overflow-hidden">
-        <div
-          className="absolute -top-30 -right-20 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(26,59,204,0.2) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute -bottom-20 -left-15 w-[400px] h-[400px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)" }}
-        />
-
-        <div className="max-w-[1120px] mx-auto relative z-10">
-          <Reveal>
-            <p className="text-[11px] font-extrabold text-blue-400/70 tracking-[0.1em] uppercase mb-2.5">The Perception Gap</p>
-            <h2 className="text-[clamp(26px,3.5vw,44px)] font-extrabold text-white leading-[1.15] tracking-[-0.025em] mb-4 max-w-[600px]">
-              What you think happened.<br />
-              <span className="font-light text-white/45 italic">What they actually saw.</span>
-            </h2>
-            <p className="text-sm text-white/40 mb-14 leading-[1.7] max-w-[480px]">
-              This gap is the entire problem. It exists because no one has ever shown you the other side of the table.
-            </p>
-          </Reveal>
-
-          {/* Column headers */}
-          <div className="grid grid-cols-[1fr_48px_1fr] mb-2">
-            <div className="pl-4 pb-2.5">
-              <span className="hidden md:inline text-[10px] font-extrabold text-blue-400/60 tracking-[0.1em] uppercase">Your interpretation</span>
-            </div>
-            <div />
-            <div className="pl-4 pb-2.5">
-              <span className="hidden md:inline text-[10px] font-extrabold text-red-400/70 tracking-[0.1em] uppercase">Panel's interpretation</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            {GAP_ITEMS.map((g, i) => (
-              <Reveal key={i} delay={i * 60}>
-                <div className="group grid grid-cols-[1fr_48px_1fr] items-stretch">
-                  <div className="bg-[#1A3BCC]/[0.12] border border-[#1A3BCC]/20 rounded-l-xl p-4 lg:p-[18px_20px] group-hover:bg-[#1A3BCC]/[0.06] transition-colors duration-200">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">{g.candidate}</p>
-                  </div>
-                  <div className="flex items-center justify-center bg-white/[0.04] relative">
-                    <div className="absolute w-px inset-y-0 bg-white/[0.06]" />
-                    <span className="text-base text-white/15 font-black relative z-10">↔</span>
-                  </div>
-                  <div className="bg-red-600/[0.1] border border-red-600/20 rounded-r-xl p-4 lg:p-[18px_20px] group-hover:bg-red-600/[0.06] transition-colors duration-200">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">{g.panel}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          <Reveal delay={300}>
-            <div className="mt-14 p-7 lg:p-[28px_32px] rounded-2xl border border-white/[0.08] bg-white/[0.04] flex items-center gap-5 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <p className="text-lg font-bold text-white leading-relaxed tracking-[-0.01em]">
-                  I close this gap. That's the entire job.
-                </p>
-                <p className="text-[13px] text-white/40 mt-1 leading-relaxed">
-                  12 years of sitting in those rooms. I know exactly what they're writing.
-                </p>
-              </div>
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-[10px] font-bold text-[13px] text-[#1A3BCC] bg-white no-underline flex-shrink-0 hover:bg-slate-100 transition-colors duration-200"
-              >
-                Work with me <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── MY BACKGROUND ──────────────────────────────────── */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[5fr_4fr] gap-12 lg:gap-20 items-start">
-            {/* Left */}
+          {/* Section header */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 64, gap: 32, flexWrap: "wrap" }}>
             <div>
-              <Reveal>
-                <p className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-3">Why I know this</p>
-                <h2 className="text-[clamp(26px,3.5vw,44px)] font-extrabold text-[#0F172A] leading-[1.1] tracking-[-0.03em] mb-6">
-                  Not a trainer.<br />
-                  <span className="font-light text-slate-400 italic">A practitioner.</span>
-                </h2>
-                <p className="text-[15px] text-slate-500 leading-[1.85] mb-7 max-w-[520px]">
-                  I spent 12+ years inside companies like Tech Mahindra and IndiaMART — not as a coach, but as someone who sat in the rooms where offers were made and rejected. I've been in the debrief where the panel dissects every answer you gave.
-                </p>
-                <p className="text-[15px] text-slate-500 leading-[1.85] max-w-[520px]">
-                  That insider knowledge is what I bring to every session. You're not getting recycled frameworks — you're getting the actual lens the panel uses.
-                </p>
-                <div className="flex gap-2.5 mt-8 flex-wrap">
-                  {["Tech Mahindra", "IndiaMART"].map((co) => (
-                    <div
-                      key={co}
-                      className="px-4 py-2 rounded-lg border border-[#1A3BCC]/20 bg-[#1A3BCC]/[0.04] text-[13px] font-bold text-[#1A3BCC] tracking-[0.02em]"
-                    >
-                      {co}
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
+              <div className="split-line" />
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 600, color: "#0F172A", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 480 }}>
+                Three things that <em style={{ fontStyle: "italic", color: "#1A3BCC" }}>change</em> outcomes.
+              </h2>
             </div>
+            <p style={{ fontSize: 14, color: "#94a3b8", maxWidth: 300, lineHeight: 1.7 }}>
+              Not theory. Not scripts. Practical frameworks built from years inside hiring panels.
+            </p>
+          </div>
 
-            {/* Right */}
-            <Reveal delay={80}>
-              <div className="border-l-2 border-[#1A3BCC]/[0.12] pl-8 pt-2">
-                {[
-                  { num: "01", text: "Real corporate exposure from inside two major firms" },
-                  { num: "02", text: "Worked directly alongside senior business leaders" },
-                  { num: "03", text: "Knows exactly what hiring panels write in their notes" },
-                  { num: "04", text: "No scripted answers. No generic tips. No fluff." },
-                ].map((pt, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-4 py-5 ${i < 3 ? "border-b border-[#1A3BCC]/[0.06]" : ""}`}
-                  >
-                    <span className="text-[11px] font-extrabold text-[#1A3BCC]/35 tracking-[0.06em] min-w-[22px] pt-0.5">{pt.num}</span>
-                    <p className="text-sm font-medium text-[#0F172A] leading-[1.65]">{pt.text}</p>
+          {/* Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+            {focusAreas.map((v, i) => {
+              const Icon = v.icon;
+              const { ref, inView } = useInView();
+              return (
+                <div
+                  key={i}
+                  ref={ref}
+                  className="focus-card"
+                  style={{
+                    background: "#fff",
+                    border: "1px solid rgba(26,59,204,0.08)",
+                    borderRadius: 24,
+                    padding: "36px 32px",
+                    position: "relative",
+                    overflow: "hidden",
+                    opacity: inView ? 1 : 0,
+                    transform: inView ? "translateY(0)" : "translateY(32px)",
+                    transition: `opacity 0.65s ease ${i * 100}ms, transform 0.65s ease ${i * 100}ms`,
+                  }}
+                >
+                  {/* Outline number watermark */}
+                  <div className="num-outline" style={{ position: "absolute", top: -8, right: 16, opacity: 0.6 }}>{v.num}</div>
+
+                  {/* Top bar */}
+                  <div style={{ height: 3, width: 40, background: v.accent, borderRadius: 99, marginBottom: 28 }} />
+
+                  {/* Icon */}
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: v.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                    <Icon style={{ width: 22, height: 22, color: v.accent }} />
+                  </div>
+
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em", marginBottom: 10, lineHeight: 1.25 }}>{v.title}</h3>
+                  <p style={{ fontSize: 13.5, color: "#64748b", lineHeight: 1.7 }}>{v.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          BACKGROUND SECTION — dark split
+      ══════════════════════════════════════ */}
+      <section style={{ background: "#0F172A", padding: "100px 24px", position: "relative", overflow: "hidden" }}>
+        {/* Decorative blobs */}
+        <div style={{ position: "absolute", top: -100, left: -100, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(26,59,204,0.25) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -60, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+
+            {/* Left — headline */}
+            <div>
+              <div className="split-line" style={{ background: "linear-gradient(90deg, #60a5fa, #818cf8)" }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(96,165,250,0.8)", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 16 }}>
+                My Background
+              </span>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 24 }}>
+                Corporate experience,<br />
+                <em style={{ fontStyle: "italic", color: "#93c5fd" }}>not</em> classroom theory.
+              </h2>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8 }}>
+                Trained at Tech Mahindra and IndiaMART. Worked alongside senior business leaders for over a decade. I've seen what makes candidates shine — and what consistently makes them miss the mark.
+              </p>
+
+              {/* Mini logos / company strip */}
+              <div style={{ display: "flex", gap: 12, marginTop: 36 }}>
+                {["Tech Mahindra", "IndiaMART"].map((co) => (
+                  <div key={co} style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.02em" }}>
+                    {co}
                   </div>
                 ))}
               </div>
-            </Reveal>
+            </div>
+
+            {/* Right — differentiators as vertical checklist */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {differentiators.map((point, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 16,
+                    padding: "24px 0",
+                    borderBottom: i < differentiators.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  }}
+                >
+                  <div className="glow-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: "#60a5fa", flexShrink: 0, marginTop: 6 }} />
+                  <div>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(96,165,250,0.7)", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>
+                      0{i + 1}
+                    </span>
+                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.6, fontWeight: 500 }}>{point}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── PULL QUOTE ─────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-[#F8F7F3]">
-        <div className="max-w-[820px] mx-auto text-center">
-          <Reveal>
-            <div className="w-10 h-[3px] bg-[#1A3BCC] rounded-full mx-auto mb-8" />
-            <p className="text-[clamp(22px,4vw,40px)] font-bold text-[#0F172A] leading-[1.3] tracking-[-0.025em] mb-5">
-              "The gap between your ability and how it comes across in a room — that's what I close."
-            </p>
-            <p className="text-[13px] font-semibold text-slate-400 tracking-[0.04em] uppercase">
-              12+ years. 5,000+ coached. 94% success rate.
-            </p>
-          </Reveal>
+      {/* ══════════════════════════════════════
+          TRUTH SECTION — editorial pull quote
+      ══════════════════════════════════════ */}
+      <section style={{ padding: "120px 24px", background: "#fff", position: "relative", overflow: "hidden" }}>
+        {/* Large faint quote mark */}
+        <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", fontFamily: "'Fraunces', serif", fontSize: 320, color: "rgba(26,59,204,0.04)", lineHeight: 1, pointerEvents: "none", userSelect: "none", fontWeight: 700 }}>"</div>
+
+        <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 16px", borderRadius: 99, background: "rgba(26,59,204,0.06)", border: "1px solid rgba(26,59,204,0.12)", marginBottom: 36 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1A3BCC", display: "inline-block" }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#1A3BCC", textTransform: "uppercase", letterSpacing: "0.08em" }}>The hard truth</span>
+          </div>
+
+          <blockquote style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(26px, 4vw, 48px)", fontWeight: 400, lineHeight: 1.3, color: "#0F172A", letterSpacing: "-0.02em", marginBottom: 32 }}>
+            Most people don't fail because they're{" "}
+            <em style={{ fontStyle: "italic", color: "#94a3b8", textDecoration: "line-through" }}>unqualified.</em>
+            <br />They fail because they can't{" "}
+            <span className="shimmer-text" style={{ fontWeight: 700 }}>present what they know.</span>
+          </blockquote>
+
+          <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7 }}>
+            That gap between your ability and how it comes across in a room — that's exactly what I close.
+          </p>
         </div>
       </section>
 
-      {/* ── CTA ────────────────────────────────────────────── */}
-      <section className="pt-[72px] pb-28 px-6 bg-[#F8F7F3]">
-        <div className="max-w-[900px] mx-auto">
-          <Reveal>
-            <div className="rounded-[28px] p-12 lg:p-[72px_64px] bg-[#0F172A] relative overflow-hidden text-center">
-              {/* Grid texture */}
-              <div
-                className="absolute inset-0 rounded-[28px] pointer-events-none"
-                style={{
-                  backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                  backgroundSize: "36px 36px",
-                }}
-              />
-              {/* Blobs */}
-              <div
-                className="absolute -top-20 -left-20 w-[340px] h-[340px] rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(26,59,204,0.35) 0%, transparent 65%)" }}
-              />
-              <div
-                className="absolute -bottom-15 -right-15 w-[260px] h-[260px] rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 65%)" }}
-              />
+      {/* ══════════════════════════════════════
+          CTA — full bleed gradient with glow
+      ══════════════════════════════════════ */}
+      <section style={{ padding: "80px 24px 120px", background: "#F7F4FE" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ borderRadius: 32, padding: "72px 56px", background: "linear-gradient(135deg, #0F172A 0%, #1A3BCC 50%, #1e40af 100%)", position: "relative", overflow: "hidden", textAlign: "center" }}>
 
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] mb-7">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
-                  <span className="text-[11px] font-extrabold text-white/70 uppercase tracking-[0.1em]">Your move</span>
-                </div>
+            {/* Corner orbs */}
+            <div style={{ position: "absolute", top: -60, left: -60, width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(96,165,250,0.25) 0%, transparent 65%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -60, right: -60, width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-                <h2 className="text-[clamp(26px,5vw,52px)] font-extrabold text-white leading-[1.1] tracking-[-0.03em] mb-3.5">
-                  Your next offer starts here.
-                </h2>
-                <p className="text-[15px] text-white/45 leading-[1.7] max-w-[420px] mx-auto mb-11">
-                  Practical prep. Real techniques. No fluff.
-                </p>
+            {/* Grid on dark */}
+            <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "40px 40px", borderRadius: 32, pointerEvents: "none" }} />
 
-                <div className="flex items-center justify-center gap-3 flex-wrap">
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-extrabold text-sm text-[#0F172A] bg-white no-underline transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(26,59,204,0.35)]"
-                  >
-                    Get started <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/services"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white/80 border border-white/[0.18] no-underline hover:bg-white/[0.06] transition-colors duration-200"
-                  >
-                    View services
-                  </Link>
-                </div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", marginBottom: 28 }}>
+                <Sparkles style={{ width: 11, height: 11, color: "#93c5fd" }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ready to start?</span>
+              </div>
+
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(28px, 5vw, 56px)", fontWeight: 600, color: "#fff", lineHeight: 1.15, letterSpacing: "-0.025em", marginBottom: 16 }}>
+                Your next offer starts{" "}
+                <em style={{ fontStyle: "italic", color: "#93c5fd" }}>here.</em>
+              </h2>
+              <p style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", marginBottom: 44, lineHeight: 1.7, maxWidth: 440, margin: "0 auto 44px" }}>
+                Practical prep. Real techniques. No fluff.
+              </p>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
+                <Link
+                  href="/signup"
+                  className="glow-btn"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 32px", borderRadius: 14, fontWeight: 700, fontSize: 14, color: "#1A3BCC", background: "#fff", textDecoration: "none" }}
+                >
+                  Get started <ArrowRight style={{ width: 16, height: 16 }} />
+                </Link>
+                <Link
+                  href="/services"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 14, fontWeight: 600, fontSize: 14, color: "rgba(255,255,255,0.85)", border: "1.5px solid rgba(255,255,255,0.2)", textDecoration: "none" }}
+                >
+                  View services
+                </Link>
               </div>
             </div>
-          </Reveal>
+          </div>
         </div>
       </section>
 

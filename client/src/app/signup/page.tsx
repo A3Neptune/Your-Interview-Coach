@@ -4,7 +4,7 @@
 // import { useRouter } from 'next/navigation';
 // import Link from 'next/link';
 // import { toast } from 'sonner';
-// import { authAPI } from '@/lib/api';
+// import { authAPI, setAuthToken } from '@/lib/api';
 // import { useAuth } from '@/context/AuthContext';
 
 // export default function SignupPage() {
@@ -362,7 +362,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { toast } from 'sonner';
-import { authAPI } from '@/lib/api';
+import { authAPI, setAuthToken } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Check, Eye, EyeOff, GraduationCap, Briefcase, User, Mail, Phone, Lock, Building2, BadgeCheck, Clock, ChevronRight } from 'lucide-react';
 
@@ -464,6 +464,7 @@ export default function SignupPage() {
       if (userType === 'student') signupData.yearOfStudy = parseInt(formData.yearOfStudy);
       else { signupData.company = formData.company; signupData.designation = formData.designation; signupData.yearsOfExperience = parseInt(formData.yearsOfExperience); }
       const response = await authAPI.signup(signupData);
+      setAuthToken(response.data.token);
       await fetchUser();
       toast.success('Account created successfully!');
       sessionStorage.removeItem('googleData');

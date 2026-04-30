@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Users, TrendingUp, DollarSign, Award, Star, MessageSquare, Activity } from 'lucide-react';
+import { getAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -22,12 +23,14 @@ export default function CourseAnalyticsPage() {
 
   const fetchAnalytics = async () => {
     try {
+      const token = getAuthToken();
+
       const [analyticsRes, courseRes] = await Promise.all([
         fetch(`${API_URL}/advanced/courses/${courseId}/analytics-detailed`, {
-          credentials: 'include',
+          headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API_URL}/advanced/courses/${courseId}`, {
-          credentials: 'include',
+          headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 

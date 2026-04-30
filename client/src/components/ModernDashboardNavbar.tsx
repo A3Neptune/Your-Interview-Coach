@@ -16,8 +16,7 @@ import {
   Bell,
   Search,
 } from "lucide-react";
-import { removeAuthToken, authAPI } from "@/lib/api";
-import { toast } from "sonner";
+import { getAuthToken, removeAuthToken } from "@/lib/api";
 import NotificationBell from "./NotificationBell";
 
 export default function ModernDashboardNavbar() {
@@ -35,19 +34,11 @@ export default function ModernDashboardNavbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await authAPI.logout();
-    } catch (err) {
-      console.error('Backend logout error:', err);
-    }
-
+  const handleLogout = () => {
     removeAuthToken();
     localStorage.clear();
     sessionStorage.clear();
-
-    toast.success('Logged out successfully');
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const navLinks = [

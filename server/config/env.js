@@ -8,7 +8,6 @@ dotenv.config();
 const requiredEnvVars = [
   'MONGO_URI',
   'JWT_SECRET',
-  'JWT_REFRESH_SECRET',
   'RAZORPAY_KEY_ID',
   'RAZORPAY_KEY_SECRET',
 ];
@@ -26,13 +25,11 @@ console.log('  - RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID?.substring(0, 8)
 console.log('  - RAZORPAY_KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET?.substring(0, 8) + '...');
 console.log('  - MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Missing');
 console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Missing');
-console.log('  - JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET ? 'Set' : 'Missing');
 
 export default {
   port: process.env.PORT || 5000,
   mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
-  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   razorpay: {
     keyId: process.env.RAZORPAY_KEY_ID?.trim(),
     keySecret: process.env.RAZORPAY_KEY_SECRET?.trim(),

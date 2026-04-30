@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Play, Lock, BookOpen, Clock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { contentAPI } from '@/lib/api';
-import { removeAuthToken } from '@/lib/api';
+import { getAuthToken, removeAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -46,11 +46,19 @@ export default function ContentPage() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
+        const token = getAuthToken();
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
         setIsLoading(true);
 
         // Fetch all published courses from advanced courses API
         const response = await fetch(`${API_URL}/advanced/courses/published?limit=100`, {
-          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         });
 
         const data = await response.json();
@@ -88,8 +96,11 @@ export default function ContentPage() {
 
   const fetchEnrolledCourses = async () => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${API_URL}/enrollments/my-enrollments`, {
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       const data = await response.json();

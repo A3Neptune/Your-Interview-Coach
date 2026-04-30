@@ -23,7 +23,7 @@ import {
   Home,
 } from "lucide-react";
 import { toast } from 'sonner';
-import { authAPI, removeAuthToken } from "@/lib/api";
+import { authAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 import StandardFooter from "@/components/StandardFooter";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import NotificationBell from "@/components/NotificationBell";
@@ -101,6 +101,12 @@ export default function MentorDashboardLayout({
   useEffect(() => {
     const verifyAdmin = async () => {
       try {
+        const token = getAuthToken();
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+
         const response = await authAPI.getCurrentUser();
         const userData = response.data.user;
 

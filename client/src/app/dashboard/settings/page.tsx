@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, LogOut, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { authAPI, removeAuthToken } from '@/lib/api';
+import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface UserData {
   _id: string;
@@ -40,6 +40,12 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        const token = getAuthToken();
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
         const response = await authAPI.getCurrentUser();
         setUser(response.data.user);
 

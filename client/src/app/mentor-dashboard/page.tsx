@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3, BookOpen, Calendar, Users, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { authAPI, removeAuthToken } from '@/lib/api';
+import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface UserData {
   _id: string;
@@ -43,6 +43,12 @@ export default function MentorDashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        const token = getAuthToken();
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
         const response = await authAPI.getCurrentUser();
         const userData = response.data.user;
 
@@ -59,7 +65,7 @@ export default function MentorDashboard() {
         // Fetch bookings
         try {
           const bookingsResponse = await fetch(`${API_URL}/bookings/mentor`, {
-            credentials: 'include',
+            headers: { 'Authorization': `Bearer ${token}` },
           });
           if (bookingsResponse.ok) {
             const data = await bookingsResponse.json();
@@ -100,7 +106,7 @@ export default function MentorDashboard() {
         // Fetch total users count (students + professionals)
         try {
           const usersResponse = await fetch(`${API_URL}/auth/all-users`, {
-            credentials: 'include',
+            headers: { 'Authorization': `Bearer ${token}` },
           });
           if (usersResponse.ok) {
             const usersData = await usersResponse.json();
@@ -120,7 +126,7 @@ export default function MentorDashboard() {
         // Fetch courses count
         try {
           const coursesResponse = await fetch(`${API_URL}/advanced/courses`, {
-            credentials: 'include',
+            headers: { 'Authorization': `Bearer ${token}` },
           });
           if (coursesResponse.ok) {
             const coursesData = await coursesResponse.json();

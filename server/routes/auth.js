@@ -11,13 +11,12 @@ router.post('/signup', authController.signup);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/verify-reset-token', authController.verifyResetToken);
 router.post('/reset-password', authController.resetPassword);
-router.post('/refresh', authController.refreshToken);
 
 // Authenticated routes
 router.get('/me', verifyToken, authController.getCurrentUser);
 router.put('/profile', verifyToken, verifyUser, authController.updateProfile);
 router.post('/verify', verifyToken, authController.verifyToken);
-router.post('/logout', authController.logout);
+router.post('/logout', verifyToken, authController.logout);
 router.put('/update-mentor-settings', verifyToken, authController.updateMentorSettings);
 
 // Admin routes

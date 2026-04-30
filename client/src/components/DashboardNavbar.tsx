@@ -14,7 +14,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { removeAuthToken } from "@/lib/api";
+import { getAuthToken, removeAuthToken } from "@/lib/api";
 import NotificationBell from "./NotificationBell";
 
 export default function DashboardNavbar() {

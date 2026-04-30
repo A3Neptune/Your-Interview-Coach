@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 
 export const verifyToken = (req, res, next) => {
   try {
-    const token = req.cookies?.accessToken;
-
+    const token = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
+    
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
@@ -12,12 +12,6 @@ export const verifyToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        error: 'Token expired',
-        code: 'TOKEN_EXPIRED'
-      });
-    }
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -53,7 +47,7 @@ export const verifyMentor = (req, res, next) => {
 
 export const authenticate = (req, res, next) => {
   try {
-    const token = req.cookies?.accessToken;
+    const token = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
 
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
@@ -61,11 +55,13 @@ export const authenticate = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    req.token = token; // Store token for audit logging
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({
         error: 'Token expired',
+        expiredAt: err.expiredAt,
         code: 'TOKEN_EXPIRED'
       });
     }
