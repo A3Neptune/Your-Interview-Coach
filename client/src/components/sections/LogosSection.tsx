@@ -71,10 +71,6 @@ const companies = [
     name: "Goldman Sachs",
     logo: "https://upload.wikimedia.org/wikipedia/commons/6/61/Goldman_Sachs.svg",
   },
-  {
-    name: "JP Morgan",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/JP_Morgan_Logo_2008.svg",
-  },
 ];
 
 /* split into two rows */
