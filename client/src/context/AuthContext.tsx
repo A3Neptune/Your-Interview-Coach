@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI, getAuthToken } from '@/lib/api';
+import { authAPI } from '@/lib/api';
 
 interface User {
   _id: string;
@@ -46,25 +46,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        setIsLoading(false);
-        setUser(null);
-        // Dispatch event for auth state change
-        window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
-        return;
-      }
-
       const response = await authAPI.getCurrentUser();
       if (response.data.user) {
         setUser(response.data.user);
-        // Dispatch event for auth state change
         window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: response.data.user } }));
       }
     } catch (err) {
       console.error('Failed to fetch user:', err);
       setUser(null);
-      // Dispatch event for auth state change
       window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
     } finally {
       setIsLoading(false);

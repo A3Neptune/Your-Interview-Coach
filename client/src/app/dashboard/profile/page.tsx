@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Phone, Briefcase, Book, Award, Edit3 } from 'lucide-react';
-import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import { authAPI, removeAuthToken } from '@/lib/api';
 
 interface UserData {
   _id: string;
@@ -29,12 +29,6 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
         const response = await authAPI.getCurrentUser();
         setUser(response.data.user);
       } catch (err: any) {

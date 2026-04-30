@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { MoreVertical, Edit2, Copy, Trash2, Eye, EyeOff, Users, Clock, DollarSign, TrendingUp, Star, BarChart3, MessageSquare } from 'lucide-react';
-import { getAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -15,12 +14,9 @@ export default function CourseCard({ course, onDuplicate, onDelete, onRefresh }:
   const handleTogglePublish = async () => {
     setIsTogglingPublish(true);
     try {
-      const token = getAuthToken();
       const response = await fetch(`${API_URL}/advanced/courses/${course._id}/toggle-publish`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       const data = await response.json();

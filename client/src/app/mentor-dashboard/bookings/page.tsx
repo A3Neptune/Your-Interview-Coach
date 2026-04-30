@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User } from "lucide-react";
 import { toast } from 'sonner';
-import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+import { authAPI, bookingAPI, removeAuthToken } from "@/lib/api";
 
 interface BookingStudent {
   name: string;
@@ -58,8 +58,6 @@ export default function MentorBookingsPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) { router.push("/login"); return; }
         const res = await authAPI.getCurrentUser();
         if (res.data.user.userType !== "admin") { router.push("/dashboard"); return; }
         const bookingRes = await bookingAPI.getMentorBookings();

@@ -7,15 +7,8 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Add token to requests
-apiClient.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  // Disable caching for GET requests to ensure fresh data
+// Refresh access token if expired
+apiClient.interceptors.request.use(async (config) => {
   if (config.method === 'get') {
     config.headers['Cache-Control'] = 'no-cache';
     config.params = config.params || {};
@@ -27,14 +20,31 @@ apiClient.interceptors.request.use((config) => {
 // Handle response errors
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        // Don't redirect if already on login or signup pages
-        const currentPath = window.location.pathname;
-        if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
-          localStorage.removeItem('authToken');
-          window.location.href = '/';
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (error.response?.data?.code === 'TOKEN_EXPIRED') {
+        try {
+          await apiClient.post('/auth/refresh');
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+              window.location.href = '/login';
+            }
+          }
+          return Promise.reject(refreshError);
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+            window.location.href = '/login';
+          }
         }
       }
     }
@@ -93,22 +103,19 @@ export const authAPI = {
     apiClient.put('/auth/update-mentor-settings', data),
 };
 
-export const setAuthToken = (token: string) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('authToken', token);
-  }
+export const setAuthToken = () => {
+  // Token is now stored in HttpOnly cookie automatically
+  // This function is kept for backwards compatibility but does nothing
 };
 
 export const removeAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('authToken');
-  }
+  // Logout endpoint clears cookies
+  // This function is kept for backwards compatibility but does nothing
 };
 
 export const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
-  }
+  // HttpOnly cookies cannot be accessed from JavaScript
+  // Return null to indicate no token available in JS
   return null;
 };
 
@@ -206,16 +213,6 @@ export const pricingAPI = {
   updateService: (serviceId: string, data: any) => apiClient.put(`/pricing-section/admin/services/${serviceId}`, data),
   deleteService: (serviceId: string) => apiClient.delete(`/pricing-section/admin/services/${serviceId}`),
   updateDiscount: (serviceId: string, data: any) => apiClient.put(`/pricing-section/admin/services/${serviceId}/discount`, data),
-};
-
-// GD Booking API
-export const gdBookingAPI = {
-  getPlans: () => apiClient.get('/gd-bookings/plans'),
-  createBooking: (data: any) => apiClient.post('/gd-bookings/book', data),
-  verifyPayment: (data: any) => apiClient.post('/gd-bookings/verify-payment', data),
-  getMyBookings: () => apiClient.get('/gd-bookings/my-bookings'),
-  adminGetAll: () => apiClient.get('/gd-bookings/admin/all'),
-  adminUpdate: (bookingId: string, data: any) => apiClient.put(`/gd-bookings/admin/${bookingId}`, data),
 };
 
 export default apiClient;

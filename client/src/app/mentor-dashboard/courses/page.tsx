@@ -7,7 +7,6 @@ import Link from 'next/link';
 import CreateCourseModal from '@/components/courses/CreateCourseModal';
 import CourseCard from '@/components/courses/CourseCard';
 import CourseList from '@/components/courses/CourseList';
-import { getAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -38,7 +37,6 @@ export default function AdvancedCoursesPage() {
   const fetchCourses = async () => {
     try {
       setIsLoading(true);
-      const token = getAuthToken();
 
       const queryParams = new URLSearchParams();
       if (filters.category !== 'all') queryParams.append('category', filters.category);
@@ -49,9 +47,7 @@ export default function AdvancedCoursesPage() {
       queryParams.append('sortBy', sortBy);
 
       const response = await fetch(`${API_URL}/advanced/courses?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       const data = await response.json();

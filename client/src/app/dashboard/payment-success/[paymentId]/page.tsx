@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Download, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { paymentAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import { paymentAPI, removeAuthToken } from '@/lib/api';
 
 interface Payment {
   _id: string;
@@ -32,12 +32,6 @@ export default function PaymentSuccessPage() {
 
   const fetchPayment = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
       setIsLoading(true);
       const response = await paymentAPI.getPayment(paymentId);
       setPayment(response.data.payment);

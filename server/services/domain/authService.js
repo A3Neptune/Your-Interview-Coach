@@ -85,10 +85,16 @@ const loginWithEmail = async (email, password, req = null) => {
   user.lastLogin = new Date();
   await user.save();
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { id: user._id, userType: user.userType },
     process.env.JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: '15m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
   );
 
   // Only send email notification for new devices/locations
@@ -114,7 +120,7 @@ const loginWithEmail = async (email, password, req = null) => {
     console.log(`✅ Known device login for ${user.email} - no email sent`);
   }
 
-  return { token, user };
+  return { accessToken, refreshToken, user };
 };
 
 /**
@@ -154,13 +160,19 @@ const loginWithGoogle = async (googleToken) => {
     await user.save();
   }
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { id: user._id, userType: user.userType },
     process.env.JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: '15m' }
   );
 
-  return { token, user };
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  return { accessToken, refreshToken, user };
 };
 
 /**
@@ -200,10 +212,16 @@ const signup = async (userData) => {
 
   await user.save();
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { id: user._id, userType: user.userType },
     process.env.JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: '15m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
   );
 
   // Send welcome email (non-blocking)
@@ -213,7 +231,7 @@ const signup = async (userData) => {
     welcomeEmailTemplate(user.name)
   ).catch(err => console.error('Failed to send welcome email:', err));
 
-  return { token, user };
+  return { accessToken, refreshToken, user };
 };
 
 /**
@@ -407,6 +425,37 @@ const updateUserStatus = async (userId, isActive) => {
 };
 
 /**
+ * Refresh access token
+ */
+const refreshAccessToken = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new UnauthorizedError('No refresh token provided');
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    const newAccessToken = jwt.sign(
+      { id: user._id, userType: user.userType },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    return { accessToken: newAccessToken, user };
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw new UnauthorizedError('Refresh token expired');
+    }
+    throw new UnauthorizedError('Invalid refresh token');
+  }
+};
+
+/**
  * Create user (admin)
  */
 const createUser = async (userData) => {
@@ -448,6 +497,7 @@ export {
   deleteUser,
   updateUserStatus,
   createUser,
+  refreshAccessToken,
 };
 export default {
   loginWithEmail,
@@ -464,4 +514,5 @@ export default {
   deleteUser,
   updateUserStatus,
   createUser,
+  refreshAccessToken,
 };

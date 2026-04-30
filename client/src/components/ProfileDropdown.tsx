@@ -42,7 +42,7 @@ export default function ProfileDropdown() {
     try {
       setIsLoading(true);
 
-      // Call backend logout
+      // Call backend logout (clears cookies on server)
       try {
         await authAPI.logout();
       } catch (err) {
@@ -51,22 +51,16 @@ export default function ProfileDropdown() {
       }
 
       // Clear all auth data
-      removeAuthToken(); // Delete from cookies
-      logout(); // Clear from context (sets user to null)
-
-      // Clear localStorage and sessionStorage
+      removeAuthToken();
+      logout();
       localStorage.clear();
       sessionStorage.clear();
 
       toast.success('Logged out successfully');
       setIsOpen(false);
 
-      // Force full page reload after 1 second
-      // This ensures complete state reset on the home page
-      // Using reload with cache bypass to force fresh fetch
-      setTimeout(() => {
-        window.location.href = '/?t=' + Date.now(); // Add timestamp to bust cache
-      }, 1000);
+      // Immediately reload to clear any cached auth state
+      window.location.href = '/login';
     } catch (err: any) {
       console.error('Logout error:', err);
       const errorMsg = err.response?.data?.error || 'Logout failed';

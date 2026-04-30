@@ -5,7 +5,22 @@ export const emailLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const result = await authService.loginWithEmail(email, password, req);
-    res.json({ success: true, token: result.token, user: result.user });
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({ success: true, user: result.user });
   } catch (error) {
     console.error('Email login error:', error);
     handleControllerError(res, error);
@@ -16,7 +31,22 @@ export const googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
     const result = await authService.loginWithGoogle(token);
-    res.json({ success: true, token: result.token, user: result.user });
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({ success: true, user: result.user });
   } catch (error) {
     console.error('Google login error:', error);
     handleControllerError(res, error);
@@ -27,7 +57,22 @@ export const signup = async (req, res) => {
   try {
     const userData = req.body;
     const result = await authService.signup(userData);
-    res.status(201).json({ success: true, token: result.token, user: result.user });
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(201).json({ success: true, user: result.user });
   } catch (error) {
     console.error('Sign up error:', error);
     handleControllerError(res, error);
@@ -62,7 +107,36 @@ export const verifyToken = (req, res) => {
 };
 
 export const logout = (req, res) => {
+  res.clearCookie('accessToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
   res.json({ success: true, message: 'Logged out successfully' });
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    const result = await authService.refreshAccessToken(refreshToken);
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.json({ success: true, user: result.user });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    handleControllerError(res, error);
+  }
 };
 
 export const forgotPassword = async (req, res) => {
@@ -189,4 +263,5 @@ export default {
   deleteUser,
   updateUserStatus,
   createUser,
+  refreshToken,
 };

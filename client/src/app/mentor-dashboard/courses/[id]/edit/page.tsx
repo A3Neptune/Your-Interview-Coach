@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Loader2, Upload, X, Plus, Trash2, Video, FileText, Link as LinkIcon, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { getAuthToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -72,11 +71,8 @@ export default function EditCoursePage() {
   const fetchCourse = async () => {
     try {
       setIsLoading(true);
-      const token = getAuthToken();
       const response = await fetch(`${API_URL}/advanced/courses/${courseId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       const data = await response.json();

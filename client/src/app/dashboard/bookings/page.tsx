@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { bookingAPI } from '@/lib/api';
-import { getAuthToken, removeAuthToken } from '@/lib/api';
+import { bookingAPI, removeAuthToken } from '@/lib/api';
 
 interface Booking {
   _id: string;
@@ -36,12 +35,6 @@ export default function BookingsPage() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
         setIsLoading(true);
         const response = await bookingAPI.getStudentBookings();
         setBookings(response.data.bookings || []);
