@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { BarChart3, Users, LogOut, Settings, Search, ChevronRight, ArrowUpRight, Zap } from 'lucide-react';
-import { toast } from 'sonner';
-import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  BarChart3,
+  Users,
+  LogOut,
+  Search,
+  ChevronRight,
+  ArrowUpRight,
+  Zap,
+  Download,
+  Calendar,
+  Phone,
+  Eye,
+  ChevronDown,
+} from "lucide-react";
+import { toast } from "sonner";
+import { authAPI, bookingAPI, gdBookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface UserData {
   _id: string;
@@ -110,7 +125,7 @@ export default function AdminPage() {
       try {
         const token = getAuthToken();
         if (!token) {
-          router.push('/login');
+          router.push("/login");
           return;
         }
 
