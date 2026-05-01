@@ -215,22 +215,10 @@ const faqs = [
     category: "Getting Started",
   },
   {
-    question: "Can I switch mentors?",
-    answer:
-      "Yes, you can request a mentor change at any time. We understand finding the right fit is important, and our team will help you find a better match at no extra cost.",
-    category: "Mentorship",
-  },
-  {
     question: "What happens in a mentorship session?",
     answer:
       "Sessions are 45–60 minutes and tailored to your needs — career guidance, resume reviews, mock interviews, skill development, or industry insights. You set the agenda.",
     category: "Mentorship",
-  },
-  {
-    question: "Is there a free trial?",
-    answer:
-      "Yes! Start with our free plan to access community forums and group sessions. Pro plan also offers a 14-day free trial for 1-on-1 mentorship.",
-    category: "Pricing",
   },
   {
     question: "What if I'm not satisfied?",

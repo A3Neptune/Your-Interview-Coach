@@ -94,19 +94,15 @@ const accentPalette = [
 const faqs = [
   {
     q: "How do I book a session?",
-    a: "Click 'Book Now' on any service, pick a time slot that works for you, and confirm. You'll get a calendar invite and Zoom link instantly.",
+    a: "Click 'Book Now' on any service, pick a time slot that works for you, and confirm. Once payment is done the session details will be visible on your dashboard.",
   },
   {
     q: "Can I reschedule?",
-    a: "Yes — up to 12 hours before your session. Just use the link in your confirmation email.",
+    a: "Yes — up to 2 hours before your session by informing us on our email - neel.yourinterviewcoach@gmail.com.",
   },
   {
     q: "What if I'm not satisfied?",
     a: "We offer a full refund if you feel the session didn't add value. No questions asked.",
-  },
-  {
-    q: "Which roles do you cover?",
-    a: "SWE, PM, Design, Finance, Consulting, Marketing and more. Tell us your target role when booking and we'll tailor everything.",
   },
 ];
 

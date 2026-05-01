@@ -26,8 +26,7 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
 }
 
 const contactInfo = [
-  { icon: Mail, label: 'Email us', value: 'hello@yourinterviewcoach.com', sub: 'We reply within 2 hours', accent: '#2563eb', href: 'mailto:hello@yourinterviewcoach.com' },
-  { icon: Phone, label: 'Call us', value: '+91 98765 43210', sub: 'Mon–Sat, 9 AM–7 PM IST', accent: '#0891b2', href: 'tel:+919876543210' },
+  { icon: Mail, label: 'Email us', value: 'neel.yourinterviewcoach@gmail.com', sub: 'We reply within 2 hours', accent: '#2563eb', href: 'mailto:hello@yourinterviewcoach.com' },
   { icon: Calendar, label: 'Book a call', value: 'Free 15-min discovery', sub: 'No commitment needed', accent: '#7c3aed', href: '/select-slot' },
   { icon: MapPin, label: 'Based in', value: 'Bengaluru, India', sub: 'Serving clients worldwide', accent: '#059669', href: '#' },
 ];

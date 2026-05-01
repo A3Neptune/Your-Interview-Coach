@@ -114,7 +114,7 @@ function UserBookingsContent() {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
       await axios.put(
-        `${API_URL}/bookings/${bookingId}`,
+        `${API_URL}/bookings/${bookingId}/notes`,
         { studentNotes: notes },
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -293,6 +293,28 @@ export const releasePaymentLock = async (req, res) => {
   }
 };
 
+/**
+ * Update student notes on a booking
+ * PUT /api/bookings/:bookingId/notes
+ */
+export const updateBookingNotes = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { studentNotes } = req.body;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (booking.studentId.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorised' });
+    }
+    booking.studentNotes = studentNotes ?? '';
+    await booking.save();
+    res.json({ success: true, booking });
+  } catch (error) {
+    console.error('Error updating booking notes:', error);
+    handleControllerError(res, error);
+  }
+};
+
 export default {
   getPublicAvailability,
   getAvailableMentors,
@@ -310,4 +332,5 @@ export default {
   createPaymentOrder,
   verifyPayment,
   releasePaymentLock,
+  updateBookingNotes,
 };

@@ -28,6 +28,7 @@ router.put('/:bookingId/cancel', verifyToken, bookingController.cancelBooking);
 router.put('/:bookingId/confirm', verifyToken, bookingController.confirmBooking);
 router.put('/:bookingId/status', verifyToken, bookingController.updateBookingStatus);
 router.put('/:bookingId/feedback', verifyToken, bookingController.addBookingFeedback);
+router.put('/:bookingId/notes', verifyToken, verifyUser, bookingController.updateBookingNotes);
 
 // Payment routes
 router.post('/:bookingId/create-payment', verifyToken, verifyUser, bookingController.createPaymentOrder);
