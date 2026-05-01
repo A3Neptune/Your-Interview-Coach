@@ -26,6 +26,8 @@ export default function SettingsPage() {
       endHour: 18,
       slotDuration: 60,
       bufferMinutes: 0,
+      webinarMaxParticipants: 70,
+      webinarSlots: [] as { date: string; time: string; maxParticipants: number }[],
       daysOff: [] as number[],
       blockedDates: [] as string[],
       dateOverrides: [] as { date: string; startHour: number; endHour: number }[],
@@ -37,6 +39,7 @@ export default function SettingsPage() {
   const [originalSettings, setOriginalSettings] = useState<any>({});
   const [blockDateInput, setBlockDateInput] = useState('');
   const [overrideForm, setOverrideForm] = useState({ date: '', startHour: 9, endHour: 18 });
+  const [webinarSlotForm, setWebinarSlotForm] = useState({ date: '', time: '', maxParticipants: 70 });
 
   useEffect(() => {
     fetchSettings();
@@ -80,6 +83,8 @@ export default function SettingsPage() {
             endHour: userData.availabilitySettings?.endHour ?? 18,
             slotDuration: userData.availabilitySettings?.slotDuration ?? 60,
             bufferMinutes: userData.availabilitySettings?.bufferMinutes ?? 0,
+            webinarMaxParticipants: userData.availabilitySettings?.webinarMaxParticipants || 70,
+            webinarSlots: userData.availabilitySettings?.webinarSlots || [],
             daysOff: userData.availabilitySettings?.daysOff ?? [],
             blockedDates: userData.availabilitySettings?.blockedDates ?? [],
             dateOverrides: userData.availabilitySettings?.dateOverrides ?? [],
@@ -326,6 +331,23 @@ export default function SettingsPage() {
               {[0, 5, 10, 15, 30].map(b => <option key={b} value={b}>{b === 0 ? 'None' : `${b} mins`}</option>)}
             </select>
           </div>
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Webinar Max Seats</label>
+            <input
+              type="number"
+              min={1}
+              value={settings.availabilitySettings.webinarMaxParticipants ?? 70}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarMaxParticipants: isNaN(v) ? 70 : v } });
+              }}
+              onBlur={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (isNaN(v) || v < 1) setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarMaxParticipants: 1 } });
+              }}
+              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-green-500 focus:outline-none transition"
+            />
+          </div>
         </div>
 
         {/* Days off */}
@@ -428,6 +450,70 @@ export default function SettingsPage() {
                     <span className="text-white font-semibold w-24 shrink-0">{new Date(o.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     <span className="text-blue-400 flex-1">{fmt(o.startHour)} – {fmt(o.endHour)}</span>
                     <button type="button" onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, dateOverrides: settings.availabilitySettings.dateOverrides.filter(x => x.date !== o.date) } })} className="text-zinc-600 hover:text-red-400 transition text-base leading-none">×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-zinc-800 my-6" />
+
+        {/* Webinar Schedule */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Webinar Schedule</label>
+          <p className="text-zinc-600 text-xs mb-3">Add specific dates and times for webinar sessions. Users booking webinars will only see these slots.</p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="date"
+              value={webinarSlotForm.date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={e => setWebinarSlotForm(f => ({ ...f, date: e.target.value }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition flex-1 min-w-[130px]"
+            />
+            <input
+              type="time"
+              value={webinarSlotForm.time}
+              onChange={e => setWebinarSlotForm(f => ({ ...f, time: e.target.value }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition w-[120px]"
+            />
+            <input
+              type="number"
+              min={1}
+              placeholder="Max seats"
+              value={webinarSlotForm.maxParticipants}
+              onChange={e => setWebinarSlotForm(f => ({ ...f, maxParticipants: parseInt(e.target.value, 10) || 70 }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition w-[110px]"
+            />
+            <button type="button"
+              onClick={() => {
+                if (!webinarSlotForm.date || !webinarSlotForm.time) { toast.error('Pick a date and time'); return; }
+                if (new Date(webinarSlotForm.date + 'T' + webinarSlotForm.time) < new Date()) { toast.error('Slot is in the past'); return; }
+                if ((settings.availabilitySettings.webinarSlots || []).find(s => s.date === webinarSlotForm.date && s.time === webinarSlotForm.time)) { toast.error('Slot already exists'); return; }
+                const updated = [...(settings.availabilitySettings.webinarSlots || []), { ...webinarSlotForm }].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+                setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarSlots: updated } });
+                setWebinarSlotForm({ date: '', time: '', maxParticipants: 70 });
+              }}
+              className="px-4 py-2.5 rounded-lg bg-blue-600/20 border border-blue-500/60 text-blue-400 text-sm font-semibold hover:bg-blue-600/30 transition whitespace-nowrap"
+            >+ Add Slot</button>
+          </div>
+          {(settings.availabilitySettings.webinarSlots || []).length > 0 && (
+            <div className="space-y-1.5 mt-3">
+              {settings.availabilitySettings.webinarSlots.map((s, i) => {
+                const [hh, mm] = s.time.split(':').map(Number);
+                const period = hh >= 12 ? 'PM' : 'AM';
+                const displayH = hh > 12 ? hh - 12 : hh === 0 ? 12 : hh;
+                const timeLabel = `${displayH}:${String(mm).padStart(2, '0')} ${period}`;
+                return (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700 text-sm">
+                    <span className="text-white font-semibold w-28 shrink-0">{new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                    <span className="text-blue-400 w-20 shrink-0">{timeLabel}</span>
+                    <span className="text-zinc-400 flex-1">max {s.maxParticipants} seats</span>
+                    <button type="button"
+                      onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarSlots: settings.availabilitySettings.webinarSlots.filter((_, j) => j !== i) } })}
+                      className="text-zinc-600 hover:text-red-400 transition text-base leading-none"
+                    >×</button>
                   </div>
                 );
               })}

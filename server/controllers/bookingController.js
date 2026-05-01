@@ -58,11 +58,11 @@ export const getMentorAvailability = async (req, res) => {
  */
 export const getAvailableSlots = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, serviceId } = req.query;
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ success: false, message: 'Provide date as YYYY-MM-DD' });
     }
-    const result = await bookingService.getAvailableSlots(date);
+    const result = await bookingService.getAvailableSlots(date, serviceId);
     res.json({ success: true, ...result });
   } catch (error) {
     console.error('Error fetching slots:', error);
@@ -294,6 +294,20 @@ export const releasePaymentLock = async (req, res) => {
 };
 
 /**
+ * Get webinar schedule (public)
+ * GET /api/bookings/public/webinar-schedule
+ */
+export const getWebinarSchedule = async (req, res) => {
+  try {
+    const data = await bookingService.getWebinarSchedule();
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Error fetching webinar schedule:', error);
+    handleControllerError(res, error);
+  }
+};
+
+/**
  * Update student notes on a booking
  * PUT /api/bookings/:bookingId/notes
  */
@@ -320,6 +334,7 @@ export default {
   getAvailableMentors,
   getMentorAvailability,
   getAvailableSlots,
+  getWebinarSchedule,
   createBooking,
   getMentorBookings,
   getMentorStudentsList,

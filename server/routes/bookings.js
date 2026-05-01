@@ -11,6 +11,7 @@ const bookingRateLimiter = createRateLimiter(10, 60 * 1000);
 // Public routes
 router.get('/public/availability', bookingController.getPublicAvailability);
 router.get('/public/slots', bookingController.getAvailableSlots);
+router.get('/public/webinar-schedule', bookingController.getWebinarSchedule);
 
 // Student routes
 router.get('/mentors', verifyToken, verifyUser, bookingController.getAvailableMentors);

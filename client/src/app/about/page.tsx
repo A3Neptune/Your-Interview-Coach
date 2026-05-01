@@ -212,14 +212,6 @@ export default function WhyMePage() {
           {/* Two-column */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 xl:gap-16 items-center">
 
-            {/* Left — text */}
-            <div className="order-2 lg:order-1">
-              <div className="hero-word" style={{ animationDelay: "60ms" }}>
-                <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-[0.04em] uppercase mb-3">
-                  12+ years. Both sides of the table.
-                </p>
-              </div>
-
               <div className="hero-word" style={{ animationDelay: "120ms" }}>
                 <div
                   className="font-black leading-none tracking-[-0.04em] text-[#0F172A] mb-5 sm:mb-6"

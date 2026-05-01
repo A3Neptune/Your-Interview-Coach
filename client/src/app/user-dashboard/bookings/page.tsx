@@ -315,7 +315,10 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
                   {booking.status === 'confirmed' && (() => {
                     const joinable = canJoinNow(booking.scheduledDate, booking.duration, now);
                     const countdown = getJoinCountdown(booking.scheduledDate, now);
-                    const sessionLink = booking.meetingLink || `https://meet.jit.si/yic-session-${booking._id}`;
+                    const jitsiRoom = booking.sessionType === 'webinars'
+                      ? `yic-webinar-${booking.mentorId?._id || booking.mentorId}-${new Date(booking.scheduledDate).getTime()}`
+                      : `yic-session-${booking._id}`;
+                    const sessionLink = booking.meetingLink || `https://meet.jit.si/${jitsiRoom}`;
                     const endTime = new Date(new Date(booking.scheduledDate).getTime() + booking.duration * 60000);
                     const expired = now > endTime.getTime();
 

@@ -71,13 +71,18 @@ function SelectSlotContent() {
   const [service, setService] = useState<any>(null);
   const [mentor, setMentor] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [availableSlots, setAvailableSlots] = useState<{ start: string; end: string }[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<{ start: string; end: string; bookedCount?: number; maxParticipants?: number; spotsLeft?: number }[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotDuration, setSlotDuration] = useState<number>(60);
   const [daysOff, setDaysOff] = useState<number[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [fullyBookedDates, setFullyBookedDates] = useState<Set<string>>(new Set());
   const [calendarReady, setCalendarReady] = useState(false);
+  const [webinarSchedule, setWebinarSchedule] = useState<{
+    slotDuration: number;
+    slots: Array<{ date: string; start: string; end: string; bookedCount: number; maxParticipants: number; spotsLeft: number }>;
+  } | null>(null);
+  const [webinarLoading, setWebinarLoading] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -87,12 +92,12 @@ function SelectSlotContent() {
   const serviceId = searchParams.get("serviceId");
 
   useEffect(() => {
-    if (selectedDate && timeSelectionRef.current) {
+    if (selectedDate && timeSelectionRef.current && serviceId !== 'webinars') {
       setTimeout(() => {
         timeSelectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 350);
     }
-    if (selectedDate) {
+    if (selectedDate && serviceId !== 'webinars') {
       setAvailableSlots([]);
       setSlotsLoading(true);
       fetchSlotsForDate(selectedDate);
@@ -102,7 +107,7 @@ function SelectSlotContent() {
   const fetchSlotsForDate = async (date: string) => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-      const res = await axios.get(`${API_URL}/bookings/public/slots?date=${date}`);
+      const res = await axios.get(`${API_URL}/bookings/public/slots?date=${date}${serviceId ? `&serviceId=${serviceId}` : ''}`);
       if (res.data.success) {
         let slots = res.data.slots || [];
         if (res.data.slotDuration) setSlotDuration(res.data.slotDuration);
@@ -230,6 +235,23 @@ function SelectSlotContent() {
 
       setIsLoading(false);
 
+      if (serviceId === 'webinars') {
+        setWebinarLoading(true);
+        try {
+          const wsRes = await axios.get(`${API_URL}/bookings/public/webinar-schedule`);
+          if (wsRes.data.success) {
+            setWebinarSchedule({ slotDuration: wsRes.data.slotDuration || 60, slots: wsRes.data.slots || [] });
+            if (wsRes.data.slotDuration) setSlotDuration(wsRes.data.slotDuration);
+          }
+        } catch (_e) {
+          // non-fatal
+        } finally {
+          setWebinarLoading(false);
+        }
+        setCalendarReady(true);
+        return;
+      }
+
       // Pre-fetch slot counts for the current month so fully-booked dates show
       // their status without requiring the user to click first.
       const resolvedDaysOff =
@@ -338,7 +360,7 @@ function SelectSlotContent() {
     return availableSlots.map((s) => {
       const [sh, sm] = s.start.split(":").map(Number);
       const [eh, em] = s.end.split(":").map(Number);
-      return { start: s.start, end: s.end, display: `${fmt(sh, sm)} – ${fmt(eh, em)}` };
+      return { start: s.start, end: s.end, display: `${fmt(sh, sm)} – ${fmt(eh, em)}`, bookedCount: s.bookedCount, maxParticipants: s.maxParticipants, spotsLeft: s.spotsLeft };
     });
   }, [availableSlots]);
 
@@ -534,11 +556,15 @@ function SelectSlotContent() {
                 <h1 className="text-3xl font-black text-slate-900">Book Your Session</h1>
               </div>
               <p className="text-slate-500 text-sm ml-[52px]">
-                {!selectedDate
-                  ? "Step 1 of 2 — Pick a date that works for you"
-                  : !selectedTime
-                    ? "Step 2 of 2 — Now choose a time slot"
-                    : "✅ All set! Review your selection and proceed to payment"}
+                {serviceId === 'webinars'
+                  ? (!selectedDate
+                      ? "Pick a live webinar session below to book your spot"
+                      : "✅ All set! Review your selection and proceed to payment")
+                  : !selectedDate
+                    ? "Step 1 of 2 — Pick a date that works for you"
+                    : !selectedTime
+                      ? "Step 2 of 2 — Now choose a time slot"
+                      : "✅ All set! Review your selection and proceed to payment"}
               </p>
             </div>
 
@@ -773,7 +799,137 @@ function SelectSlotContent() {
 
           {/* ── Right: Calendar + Slots ────────────────────────────────────── */}
           <div className="space-y-6">
-            {/* ── Calendar Card ─────────────────────────────────────────────── */}
+            {/* ── Webinar Schedule Card (live webinar service only) ─────────── */}
+            {serviceId === 'webinars' && (
+              <motion.div
+                className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
+                variants={ITEM_VARIANTS}
+              >
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Calendar size={16} className="text-blue-500" />
+                    Live Webinar Sessions
+                  </h3>
+                  {selectedDate && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => { setSelectedDate(""); setSelectedTime(""); setAvailableSlots([]); }}
+                      className="text-[11px] text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-1 transition"
+                    >
+                      Clear <span className="text-slate-300">×</span>
+                    </motion.button>
+                  )}
+                </div>
+                <div className="p-5">
+                  {webinarLoading ? (
+                    <div className="flex flex-col items-center justify-center py-14 gap-3">
+                      <Loader2 className="w-7 h-7 animate-spin text-blue-400" />
+                      <p className="text-sm text-slate-500 font-medium">Loading webinar sessions…</p>
+                    </div>
+                  ) : !webinarSchedule || webinarSchedule.slots.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+                      <div className="text-4xl mb-1">📅</div>
+                      <p className="text-base font-bold text-slate-800">No upcoming webinars</p>
+                      <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                        No live sessions are scheduled yet. Check back soon!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-7">
+                      {Object.entries(
+                        webinarSchedule.slots.reduce((acc: Record<string, typeof webinarSchedule.slots>, slot) => {
+                          const key = slot.date.substring(0, 7);
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(slot);
+                          return acc;
+                        }, {})
+                      ).map(([monthKey, monthSlots], monthIdx) => {
+                        const [yr, mo] = monthKey.split('-').map(Number);
+                        const monthLabel = new Date(yr, mo - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                        return (
+                          <motion.div
+                            key={monthKey}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: monthIdx * 0.08 }}
+                          >
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{monthLabel}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {monthSlots.map((slot, slotIdx) => {
+                                const isSelected = selectedDate === slot.date && selectedTime === slot.start;
+                                const spotsLow = slot.spotsLeft <= 5;
+                                const dateLabel = new Date(`${slot.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                const fmt12 = (t: string) => {
+                                  const [h, mn] = t.split(':').map(Number);
+                                  const p = h >= 12 ? 'PM' : 'AM';
+                                  const dh = h > 12 ? h - 12 : h === 0 ? 12 : h;
+                                  return mn === 0 ? `${dh} ${p}` : `${dh}:${String(mn).padStart(2, '0')} ${p}`;
+                                };
+                                return (
+                                  <motion.button
+                                    key={`${slot.date}-${slot.start}`}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedDate(""); setSelectedTime(""); setAvailableSlots([]);
+                                      } else {
+                                        setSelectedDate(slot.date);
+                                        setSelectedTime(slot.start);
+                                        setAvailableSlots([{ start: slot.start, end: slot.end, bookedCount: slot.bookedCount, maxParticipants: slot.maxParticipants, spotsLeft: slot.spotsLeft }]);
+                                      }
+                                    }}
+                                    className={`w-full rounded-xl p-4 text-left transition-all border-2 ${
+                                      isSelected
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
+                                        : "bg-white text-slate-800 border-slate-100 hover:border-blue-200 hover:bg-blue-50"
+                                    }`}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: monthIdx * 0.06 + slotIdx * 0.04 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.97 }}
+                                  >
+                                    <p className={`text-sm font-bold mb-0.5 ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                      {dateLabel}
+                                    </p>
+                                    <p className={`text-xs mb-2 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
+                                      {fmt12(slot.start)} – {fmt12(slot.end)}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                        isSelected
+                                          ? "bg-blue-500 text-white"
+                                          : spotsLow
+                                            ? "bg-amber-50 text-amber-600 border border-amber-200"
+                                            : "bg-green-50 text-green-600 border border-green-100"
+                                      }`}>
+                                        {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left
+                                      </span>
+                                      {isSelected && (
+                                        <motion.span
+                                          initial={{ opacity: 0, scale: 0 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          className="ml-auto text-[11px] text-blue-100 font-medium flex items-center gap-1"
+                                        >
+                                          <Check size={11} strokeWidth={3} /> Selected
+                                        </motion.span>
+                                      )}
+                                    </div>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Calendar Card (non-webinar services) ─────────────────────── */}
+            {serviceId !== 'webinars' && <>
             <motion.div
               className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
               variants={ITEM_VARIANTS}
@@ -995,6 +1151,10 @@ function SelectSlotContent() {
                               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                                 {group.times.map((time, idx) => {
                                   const isSelected = selectedTime === time;
+                                  const slotMeta = timeSlots.find((s) => s.start === time);
+                                  const isWebinarSlot = serviceId === 'webinars' && slotMeta?.maxParticipants !== undefined;
+                                  const spotsLeft = slotMeta?.spotsLeft ?? 0;
+                                  const spotsLow = isWebinarSlot && spotsLeft <= 5;
                                   return (
                                     <motion.button
                                       key={time}
@@ -1023,6 +1183,10 @@ function SelectSlotContent() {
                                         >
                                           Selected ✓
                                         </motion.span>
+                                      ) : isWebinarSlot ? (
+                                        <span className={`text-[10px] font-semibold ${spotsLow ? "text-amber-500" : isSelected ? "text-blue-200" : "text-green-600"}`}>
+                                          {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
+                                        </span>
                                       ) : (
                                         <span className="text-[10px] text-slate-400 font-normal">
                                           {slotDuration} min
@@ -1049,6 +1213,7 @@ function SelectSlotContent() {
                 </motion.div>
               )}
             </AnimatePresence>
+            </>}
 
             {/* ── Action Bar ────────────────────────────────────────────────── */}
             <motion.div

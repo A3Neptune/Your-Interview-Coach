@@ -31,7 +31,14 @@ interface Booking {
   refundedAt?: string;
 }
 
-const getJitsiLink = (bookingId: string) => `https://meet.jit.si/yic-session-${bookingId}`;
+const getJitsiLink = (booking: { _id: string; sessionType?: string; mentorId?: any; scheduledDate?: string }) => {
+  if (booking.sessionType === 'webinars') {
+    const mentorId = typeof booking.mentorId === 'object' ? booking.mentorId?._id : booking.mentorId;
+    const ts = booking.scheduledDate ? new Date(booking.scheduledDate).getTime() : '';
+    return `https://meet.jit.si/yic-webinar-${mentorId}-${ts}`;
+  }
+  return `https://meet.jit.si/yic-session-${booking._id}`;
+};
 
 const SESSION_LABELS: Record<string, string> = {
   oneMentorship: "1:1 Mentorship",
@@ -174,7 +181,7 @@ export default function MentorBookingsPage() {
           <div className="space-y-3">
             {filtered.map(booking => {
               const date = new Date(booking.scheduledDate);
-              const sessionLink = booking.meetingLink || getJitsiLink(booking._id);
+              const sessionLink = booking.meetingLink || getJitsiLink(booking);
               const isUpcoming = booking.status === "confirmed" && date.getTime() + booking.duration * 60000 > nowMs;
               const isRealRefund = booking.refundId && !booking.refundId.startsWith("manual_") && !booking.refundId.startsWith("not_applicable");
 

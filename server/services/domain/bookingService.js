@@ -90,9 +90,70 @@ const getMentorAvailability = async (mentorId) => {
  * Get available slots for a specific date
  * Returns only future slots that don't conflict with existing bookings
  */
-const getAvailableSlots = async (dateStr) => {
+const getAvailableSlots = async (dateStr, serviceId) => {
   const mentor = await User.findOne({ userType: 'admin', isActive: true });
   if (!mentor) throw new NotFoundError('Mentor not found');
+  const isWebinar = serviceId === 'webinars';
+
+  // ── Webinar-specific slots path ──────────────────────────────────────────
+  if (isWebinar) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return { mentorId: mentor._id, slotDuration: 60, slots: [] };
+
+    const settings     = mentor.availabilitySettings || {};
+    const slotDuration = Math.max(1, settings.slotDuration ?? 60);
+    const webinarSlots = (settings.webinarSlots || []).filter(s => s.date === dateStr);
+    if (!webinarSlots.length) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+    const now = new Date();
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const pad = (n) => String(n).padStart(2, '0');
+    const makeIST = (y, mo, d, h, m) =>
+      new Date(`${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(m)}:00+05:30`);
+
+    // Fetch active webinar bookings for this date to compute occupancy
+    const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
+    const dayStart = makeIST(year, month, day, 0, 0);
+    const dayEnd   = makeIST(year, month, day, 23, 59);
+    const existingBookings = await Booking.find({
+      mentorId: mentor._id,
+      sessionType: 'webinars',
+      scheduledDate: { $gte: dayStart, $lte: dayEnd },
+      $or: [
+        { status: 'confirmed' },
+        { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+      ],
+    }).select('scheduledDate duration').lean();
+
+    const slots = [];
+    for (const ws of webinarSlots) {
+      const [hh, mm] = ws.time.split(':').map(Number);
+      const slotStart = makeIST(year, month, day, hh, mm);
+      const slotEnd   = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
+
+      if (slotEnd <= now) continue; // past
+
+      const maxParticipants = ws.maxParticipants || settings.webinarMaxParticipants || 70;
+      const bookedCount = existingBookings.filter(b => {
+        const bStart = new Date(b.scheduledDate);
+        const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+        return slotStart < bEnd && slotEnd > bStart;
+      }).length;
+
+      if (bookedCount >= maxParticipants) continue; // full
+
+      const endTotalMins = hh * 60 + mm + slotDuration;
+      slots.push({
+        start: `${pad(hh)}:${pad(mm)}`,
+        end:   `${pad(Math.floor(endTotalMins / 60) % 24)}:${pad(endTotalMins % 60)}`,
+        bookedCount,
+        maxParticipants,
+        spotsLeft: maxParticipants - bookedCount,
+      });
+    }
+
+    return { mentorId: mentor._id, slotDuration, slots };
+  }
+  // ── End webinar path ─────────────────────────────────────────────────────
 
   const settings      = mentor.availabilitySettings || {};
   let   startHour     = settings.startHour    ?? 9;
@@ -153,8 +214,9 @@ const getAvailableSlots = async (dateStr) => {
       { status: 'confirmed' },
       { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
     ],
-  }).select('scheduledDate duration').lean();
+  }).select('scheduledDate duration sessionType').lean();
 
+  const webinarMax = settings.webinarMaxParticipants ?? 70;
   const now          = new Date();
   const endBoundary  = makeIST(year, month, day, endHour, 0);
   const increment    = (slotDuration + bufferMinutes) / 60;
@@ -174,22 +236,44 @@ const getAvailableSlots = async (dateStr) => {
     // Skip past slots (for today)
     if (slotEnd <= now) continue;
 
-    // Skip conflicting slots
-    const hasConflict = existingBookings.some(b => {
-      const bStart = new Date(b.scheduledDate);
-      const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
-      return slotStart < bEnd && slotEnd > bStart;
-    });
+    // Compute end time in IST by offsetting from start IST values
+    const endTotalMins = hh * 60 + mm + slotDuration;
+    const endHH = Math.floor(endTotalMins / 60) % 24;
+    const endMM = endTotalMins % 60;
 
-    if (!hasConflict) {
-      // Compute end time in IST by offsetting from start IST values
-      const endTotalMins = hh * 60 + mm + slotDuration;
-      const endHH = Math.floor(endTotalMins / 60) % 24;
-      const endMM = endTotalMins % 60;
-      slots.push({
-        start: `${pad(hh)}:${pad(mm)}`,
-        end:   `${pad(endHH)}:${pad(endMM)}`,
+    if (isWebinar) {
+      // For webinars: count how many webinar bookings exist at this exact slot
+      const bookedCount = existingBookings.filter(b => {
+        if (b.sessionType !== 'webinars') return false;
+        const bStart = new Date(b.scheduledDate);
+        const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+        return slotStart < bEnd && slotEnd > bStart;
+      }).length;
+
+      // Only include slot if there is still capacity
+      if (bookedCount < webinarMax) {
+        slots.push({
+          start: `${pad(hh)}:${pad(mm)}`,
+          end:   `${pad(endHH)}:${pad(endMM)}`,
+          bookedCount,
+          maxParticipants: webinarMax,
+          spotsLeft: webinarMax - bookedCount,
+        });
+      }
+    } else {
+      // For 1:1 sessions: skip if any overlapping booking exists
+      const hasConflict = existingBookings.some(b => {
+        const bStart = new Date(b.scheduledDate);
+        const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+        return slotStart < bEnd && slotEnd > bStart;
       });
+
+      if (!hasConflict) {
+        slots.push({
+          start: `${pad(hh)}:${pad(mm)}`,
+          end:   `${pad(endHH)}:${pad(endMM)}`,
+        });
+      }
     }
   }
 
@@ -224,7 +308,7 @@ const calculateBookingAmount = async (sessionType) => {
 /**
  * Check for booking conflicts
  */
-const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
+const checkBookingConflict = async (mentorId, scheduledDate, duration, sessionType) => {
   const newStart = new Date(scheduledDate);
   const newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
 
@@ -236,22 +320,31 @@ const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
       { status: 'confirmed' },
       { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
     ],
-  }).select('scheduledDate duration').lean();
+  }).select('scheduledDate duration sessionType').lean();
 
-  // Check each booking for actual overlap
+  if (sessionType === 'webinars') {
+    // For webinars: count overlapping webinar bookings and check against capacity
+    const mentor = await User.findById(mentorId).select('availabilitySettings').lean();
+    const webinarMax = mentor?.availabilitySettings?.webinarMaxParticipants ?? 70;
+    const webinarCount = existingBookings.filter(b => {
+      if (b.sessionType !== 'webinars') return false;
+      const bStart = new Date(b.scheduledDate);
+      const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+      return newStart < bEnd && newEnd > bStart;
+    }).length;
+    return { isFull: webinarCount >= webinarMax, count: webinarCount, max: webinarMax };
+  }
+
+  // For 1:1 sessions: boolean conflict check
   for (const booking of existingBookings) {
     const existingStart = new Date(booking.scheduledDate);
     const existingEnd = new Date(existingStart.getTime() + booking.duration * 60 * 1000);
-
-    // Two slots overlap if:
-    // - New slot starts before existing slot ends AND
-    // - New slot ends after existing slot starts
     if (newStart < existingEnd && newEnd > existingStart) {
-      return true; // Conflict found
+      return { isFull: true };
     }
   }
 
-  return false; // No conflicts
+  return { isFull: false };
 };
 
 /**
@@ -259,6 +352,27 @@ const checkBookingConflict = async (mentorId, scheduledDate, duration) => {
  * Checks: not past, within 30-day window, working day, duration match,
  * start-time boundary alignment, and session doesn't overrun end hour.
  */
+
+/**
+ * Validate that a webinar booking matches a scheduled webinar slot.
+ */
+const validateWebinarSlot = (mentor, scheduledDate) => {
+  if (new Date(scheduledDate) < new Date()) {
+    throw new ValidationError('Cannot book a slot in the past');
+  }
+  const webinarSlots = mentor.availabilitySettings?.webinarSlots || [];
+  const d = new Date(scheduledDate);
+  // Convert UTC to IST for date/time comparison
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const ist = new Date(d.getTime() + istOffset);
+  const dateStr = ist.toISOString().slice(0, 10); // YYYY-MM-DD
+  const hh = String(ist.getUTCHours()).padStart(2, '0');
+  const mm = String(ist.getUTCMinutes()).padStart(2, '0');
+  const timeStr = `${hh}:${mm}`;
+  const exists = webinarSlots.some(s => s.date === dateStr && s.time === timeStr);
+  if (!exists) throw new ValidationError('This webinar slot is not available');
+};
+
 const validateSlotBooking = (mentor, scheduledDate, duration) => {
   const settings      = mentor.availabilitySettings || {};
   let   startHour     = settings.startHour    ?? 9;
@@ -363,24 +477,29 @@ const createBooking = async (bookingData, req) => {
     throw new NotFoundError('Mentor not found or inactive');
   }
 
-  // Validate slot legitimacy (boundary, working hours, alignment, 30-day window)
-  validateSlotBooking(mentor, scheduledDate, duration);
+  // Validate slot legitimacy
+  if (sessionType === 'webinars') {
+    validateWebinarSlot(mentor, scheduledDate);
+  } else {
+    validateSlotBooking(mentor, scheduledDate, duration);
+  }
 
   // Calculate server-side amount
   const serverCalculatedAmount = await calculateBookingAmount(sessionType);
 
   // Check conflicts with existing bookings
-  const hasConflict = await checkBookingConflict(mentorId, scheduledDate, duration);
-  if (hasConflict) {
+  const conflict = await checkBookingConflict(mentorId, scheduledDate, duration, sessionType);
+  if (conflict.isFull) {
+    const reason = sessionType === 'webinars' ? 'Webinar is full' : 'Time slot not available';
     await AuditLogService.logBookingAction(
       req,
       'BOOKING_CREATED',
       userId,
       { sessionType, mentorId, serverCalculatedAmount },
       'FAILURE',
-      'Time slot not available'
+      reason
     );
-    throw new ConflictError('Time slot not available');
+    throw new ConflictError(reason);
   }
 
   // Calculate amount with GST (18%)
@@ -411,11 +530,11 @@ const createBooking = async (bookingData, req) => {
   try {
     await booking.save();
   } catch (err) {
-    // DB-level race condition: another booking for the exact same slot was saved first
-    if (err.code === 11000) {
+    // DB-level race condition: for 1:1 sessions another booking for the exact same slot was saved first
+    if (err.code === 11000 && sessionType !== 'webinars') {
       throw new ConflictError('This slot was just taken. Please select a different time.');
     }
-    throw err;
+    if (err.code !== 11000) throw err;
   }
 
   await AuditLogService.logBookingAction(
@@ -698,6 +817,76 @@ export {
   updateBookingStatus,
   addBookingFeedback,
 };
+/**
+ * Return all upcoming webinar slots with live capacity counts.
+ * GET /api/bookings/public/webinar-schedule
+ */
+const getWebinarSchedule = async () => {
+  const mentor = await User.findOne({ userType: 'admin', isActive: true });
+  if (!mentor) throw new NotFoundError('Mentor not found');
+
+  const settings    = mentor.availabilitySettings || {};
+  const slotDuration = Math.max(1, settings.slotDuration ?? 60);
+  const allSlots    = settings.webinarSlots || [];
+  const now         = new Date();
+
+  // Filter to upcoming slots only
+  const upcoming = allSlots.filter(ws => {
+    const [hh, mm] = ws.time.split(':').map(Number);
+    const pad = n => String(n).padStart(2, '0');
+    const slotStart = new Date(`${ws.date}T${pad(hh)}:${pad(mm)}:00+05:30`);
+    return slotStart > now;
+  });
+
+  if (!upcoming.length) return { mentorId: mentor._id, slotDuration, slots: [] };
+
+  // Batch-fetch all relevant bookings in one query
+  const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
+  const firstDate = upcoming[0].date;
+  const lastDate  = upcoming[upcoming.length - 1].date;
+  const pad = n => String(n).padStart(2, '0');
+  const makeIST = (dateStr, hh, mm) =>
+    new Date(`${dateStr}T${pad(hh)}:${pad(mm)}:00+05:30`);
+
+  const existingBookings = await Booking.find({
+    mentorId: mentor._id,
+    sessionType: 'webinars',
+    scheduledDate: {
+      $gte: makeIST(firstDate, 0, 0),
+      $lte: makeIST(lastDate, 23, 59),
+    },
+    $or: [
+      { status: 'confirmed' },
+      { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+    ],
+  }).select('scheduledDate duration').lean();
+
+  const slots = upcoming.map(ws => {
+    const [hh, mm] = ws.time.split(':').map(Number);
+    const slotStart = makeIST(ws.date, hh, mm);
+    const slotEnd   = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
+    const maxParticipants = ws.maxParticipants || settings.webinarMaxParticipants || 70;
+
+    const bookedCount = existingBookings.filter(b => {
+      const bStart = new Date(b.scheduledDate);
+      const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+      return slotStart < bEnd && slotEnd > bStart;
+    }).length;
+
+    return {
+      date: ws.date,
+      start: `${pad(hh)}:${pad(mm)}`,
+      end:   `${pad(Math.floor((hh * 60 + mm + slotDuration) / 60) % 24)}:${pad((hh * 60 + mm + slotDuration) % 60)}`,
+      bookedCount,
+      maxParticipants,
+      spotsLeft: maxParticipants - bookedCount,
+      isFull: bookedCount >= maxParticipants,
+    };
+  }).filter(s => !s.isFull);
+
+  return { mentorId: mentor._id, slotDuration, slots };
+};
+
 export default {
   getPublicAvailability,
   getAvailableMentors,
@@ -714,4 +903,5 @@ export default {
   confirmBooking,
   updateBookingStatus,
   addBookingFeedback,
+  getWebinarSchedule,
 };

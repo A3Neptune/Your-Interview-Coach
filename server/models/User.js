@@ -97,12 +97,21 @@ const userSchema = new mongoose.Schema(
       default: 15,
     },
     availabilitySettings: {
-      startHour:     { type: Number, default: 9 },
-      endHour:       { type: Number, default: 18 },
-      slotDuration:  { type: Number, default: 60 },
-      bufferMinutes: { type: Number, default: 0 },
-      daysOff:       { type: [Number], default: [] },  // 0=Sun … 6=Sat
-      blockedDates:  { type: [String], default: [] },  // ["YYYY-MM-DD"]
+      startHour:               { type: Number, default: 9 },
+      endHour:                 { type: Number, default: 18 },
+      slotDuration:            { type: Number, default: 60 },
+      bufferMinutes:           { type: Number, default: 0 },
+      daysOff:                 { type: [Number], default: [] },  // 0=Sun … 6=Sat
+      blockedDates:            { type: [String], default: [] },  // ["YYYY-MM-DD"]
+      webinarMaxParticipants:  { type: Number, default: 70, min: 1 },
+      webinarSlots: {
+        type: [{
+          date:            String,
+          time:            String,
+          maxParticipants: { type: Number, default: 70 },
+        }],
+        default: [],
+      },
       dateOverrides: {
         type: [{
           date:      String,
