@@ -24,6 +24,7 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   amount: number;
+  sessionType?: string;
   meetingLink?: string;
   mentorId: {
     _id: string;
