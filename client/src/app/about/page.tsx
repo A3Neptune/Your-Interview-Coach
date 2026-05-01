@@ -279,7 +279,6 @@ export default function WhyMePage() {
             </div>
 
           </div>
-        </div>
       </section>
 
       {/* ── TICKER ─────────────────────────────────────────── */}
