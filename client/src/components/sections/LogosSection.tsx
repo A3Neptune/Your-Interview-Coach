@@ -232,7 +232,7 @@ export default function LogosSection() {
                   textTransform: "uppercase",
                 }}
               >
-                Our mentees are working at top global companies.
+                From Potential To Placement
               </span>
             </div>
             <h2
