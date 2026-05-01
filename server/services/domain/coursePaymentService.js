@@ -97,9 +97,8 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
   const amountInPaise = Math.round(totalAmount * 100); // Razorpay expects amount in paise
 
   // Razorpay minimum is 100 paise (₹1)
-  if (amountInPaise < 100) {
-    throw new ValidationError('Course price must result in at least ₹1 total amount');
-  }
+  // If the amount is less than ₹1, round up to minimum
+  const finalAmountInPaise = Math.max(100, amountInPaise);
 
   if (paymentMethod === 'razorpay') {
     // Get Razorpay instance (lazy initialization)
@@ -110,7 +109,7 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
     const receiptId = `rcpt_${Date.now()}_${courseId.toString().substring(0, 10)}`;
 
     const options = {
-      amount: amountInPaise,
+      amount: finalAmountInPaise, // Minimum ₹1 (100 paise)
       currency: 'INR',
       receipt: receiptId, // Max 40 characters
       payment_capture: 1,
@@ -122,6 +121,8 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
         baseAmount: baseAmount,
         gstAmount: gstAmount,
         totalAmount: totalAmount,
+        originalAmount: amountInPaise,
+        adjustedAmount: finalAmountInPaise,
       },
     };
 
@@ -330,12 +331,11 @@ const createServiceOrder = async (userId, amount, currency, serviceId, serviceNa
   const amountInPaise = Math.round(amount * 100); // Amount in paise
 
   // Razorpay minimum is 100 paise (₹1)
-  if (amountInPaise < 100) {
-    throw new Error('Payment amount must be at least ₹1');
-  }
+  // If amount is less than ₹1, round up to minimum
+  const finalAmountInPaise = Math.max(100, amountInPaise);
 
   const options = {
-    amount: amountInPaise,
+    amount: finalAmountInPaise, // Minimum ₹1 (100 paise)
     currency: currency || 'INR',
     receipt: `receipt_service_${userId}_${Date.now()}`,
     payment_capture: 1,

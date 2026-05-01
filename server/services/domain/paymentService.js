@@ -91,18 +91,19 @@ const createPaymentOrder = async (bookingId, req) => {
   const amountInPaise = Math.round(booking.amount * 100);
 
   // Razorpay minimum is 100 paise (₹1)
-  if (amountInPaise < 100) {
-    throw new ValidationError('Booking amount must be at least ₹1');
-  }
+  // Round up to ensure minimum of ₹1 if amount is between 0 and ₹1
+  const finalAmountInPaise = Math.max(100, amountInPaise);
 
   const options = {
-    amount: amountInPaise, // Convert to paise
+    amount: finalAmountInPaise, // Convert to paise, minimum ₹1
     currency: 'INR',
     receipt: receiptId, // Max 40 characters
     notes: {
       bookingId: booking._id.toString(),
       studentId: booking.studentId.toString(),
       mentorId: booking.mentorId.toString(),
+      originalAmount: amountInPaise,
+      adjustedAmount: finalAmountInPaise,
     },
   };
 
