@@ -83,8 +83,20 @@ const createPaymentOrder = async (bookingId, req) => {
   // Receipt must be <= 40 chars, so use timestamp + short ID
   const receiptId = `bkg_${Date.now()}_${booking._id.toString().substring(0, 8)}`;
 
+  // Validate amount
+  if (!booking.amount || booking.amount <= 0) {
+    throw new ValidationError('Invalid booking amount. Must be greater than 0');
+  }
+
+  const amountInPaise = Math.round(booking.amount * 100);
+
+  // Razorpay minimum is 100 paise (₹1)
+  if (amountInPaise < 100) {
+    throw new ValidationError('Booking amount must be at least ₹1');
+  }
+
   const options = {
-    amount: Math.round(booking.amount * 100), // Convert to paise
+    amount: amountInPaise, // Convert to paise
     currency: 'INR',
     receipt: receiptId, // Max 40 characters
     notes: {

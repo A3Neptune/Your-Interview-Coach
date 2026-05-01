@@ -86,9 +86,20 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
 
   // Calculate amount with GST (18%)
   const baseAmount = course.price;
+
+  // Validate amount
+  if (!baseAmount || baseAmount <= 0) {
+    throw new ValidationError('Invalid course price. Must be greater than 0');
+  }
+
   const gstAmount = baseAmount * 0.18;
   const totalAmount = baseAmount + gstAmount;
   const amountInPaise = Math.round(totalAmount * 100); // Razorpay expects amount in paise
+
+  // Razorpay minimum is 100 paise (₹1)
+  if (amountInPaise < 100) {
+    throw new ValidationError('Course price must result in at least ₹1 total amount');
+  }
 
   if (paymentMethod === 'razorpay') {
     // Get Razorpay instance (lazy initialization)
@@ -311,8 +322,20 @@ const createServiceOrder = async (userId, amount, currency, serviceId, serviceNa
   // Get Razorpay instance (lazy initialization)
   const razorpay = getRazorpayInstance();
 
+  // Validate amount
+  if (!amount || amount <= 0) {
+    throw new Error('Invalid payment amount. Must be greater than 0');
+  }
+
+  const amountInPaise = Math.round(amount * 100); // Amount in paise
+
+  // Razorpay minimum is 100 paise (₹1)
+  if (amountInPaise < 100) {
+    throw new Error('Payment amount must be at least ₹1');
+  }
+
   const options = {
-    amount: amount * 100, // Amount in paise
+    amount: amountInPaise,
     currency: currency || 'INR',
     receipt: `receipt_service_${userId}_${Date.now()}`,
     payment_capture: 1,
