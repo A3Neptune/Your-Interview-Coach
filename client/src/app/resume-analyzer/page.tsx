@@ -198,7 +198,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import {
   FileText, ScanSearch, Zap, TrendingUp, CheckCircle2,
-  ArrowRight, ChevronRight, Shield, Target, BarChart3,
+  ArrowRight, Shield, Target, BarChart3,
   CalendarDays, AlertTriangle, Sparkles, Lock,
 } from "lucide-react";
 
@@ -421,17 +421,6 @@ const HOW_STEPS = [
   },
 ];
 
-const CHECK_ITEMS = [
-  { label: "ATS compatibility score", icon: Target },
-  { label: "Keyword density & relevance", icon: ScanSearch },
-  { label: "Section completeness", icon: CheckCircle2 },
-  { label: "Clarity & readability", icon: FileText },
-  { label: "Structure & formatting", icon: BarChart3 },
-  { label: "10+ improvement suggestions", icon: TrendingUp },
-  { label: "Interview question prep", icon: Zap },
-  { label: "Resume summary audit", icon: Shield },
-];
-
 const TICKER = [
   "ATS Score Analysis", "✦", "Keyword Matching", "✦",
   "Section Audit", "✦", "Instant Results", "✦",
@@ -492,29 +481,12 @@ export default function ResumeAnalyzerPage() {
         }
         .hero-in { animation: fadeSlide 0.75s cubic-bezier(0.22,1,0.36,1) both; }
 
-        @keyframes floatDot {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        .float-a { animation: floatDot 4s ease-in-out infinite; }
-
-        @keyframes pulsering {
-          0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(26,59,204,0.3); }
-          70%  { transform: scale(1);    box-shadow: 0 0 0 14px rgba(26,59,204,0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(26,59,204,0); }
-        }
-        .pulse-ring { animation: pulsering 2.5s infinite; }
-
         @keyframes bannerIn {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .banner-in { animation: bannerIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
 
-        @keyframes shimmer {
-          from { background-position: -200% 0; }
-          to   { background-position: 200% 0; }
-        }
         .upload-card {
           transition: border-color 0.2s, box-shadow 0.2s;
         }
@@ -538,8 +510,10 @@ export default function ResumeAnalyzerPage() {
         </main>
       ) : (
         <>
-          {/* ── HERO + UPLOAD (combined at the top) ────────────── */}
-          <section className="pt-[90px] pb-0 px-6 relative overflow-hidden bg-[#F8F7F3]">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 1 — UPLOAD HERO (full-width, centred)
+          ══════════════════════════════════════════════════════ */}
+          <section className="pt-[100px] pb-16 px-6 relative overflow-hidden bg-[#F8F7F3]">
             {/* Dot grid */}
             <div
               className="absolute inset-0 pointer-events-none"
@@ -557,164 +531,61 @@ export default function ResumeAnalyzerPage() {
               style={{ background: "radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)" }}
             />
 
-            <div className="max-w-[1120px] mx-auto w-full relative z-10">
+            <div className="max-w-[760px] mx-auto w-full relative z-10 text-center">
 
-              {/* ── Eyebrow ───────────────────────────────────── */}
-              <div
-                className="hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#1A3BCC]/25 bg-[#1A3BCC]/5 mb-8"
-                style={{ animationDelay: "0ms" }}
-              >
-                <ScanSearch className="w-3 h-3 text-[#1A3BCC]" />
-                <span className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.12em] uppercase">
-                  AI-Powered Resume Screening
-                </span>
-              </div>
-
-              {/* ── Two-column: headline left, upload right ────── */}
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-12 lg:gap-20 items-start pb-16">
-
-                {/* LEFT — headline copy */}
-                <div>
-                  <div className="hero-in" style={{ animationDelay: "60ms" }}>
-                    <p className="text-sm font-semibold text-slate-500 tracking-[0.04em] uppercase mb-3">
-                      What the ATS sees before any human does.
-                    </p>
+              {/* ── Upload card — centred, prominent ── */}
+              <div className="hero-in" style={{ animationDelay: "200ms" }}>
+                <div
+                  className="upload-card bg-white border border-[#1A3BCC]/[0.13] rounded-2xl overflow-hidden text-left"
+                  style={{ boxShadow: "0 8px 48px rgba(26,59,204,0.09), 0 1px 4px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="p-8">
+                    <ResumeUpload onAnalysis={handleAnalysis} loading={loading} isLoggedIn={isLoggedIn} />
                   </div>
 
-                  <div className="hero-in" style={{ animationDelay: "120ms" }}>
-                    <div className="text-[clamp(52px,8vw,96px)] font-black leading-none tracking-[-0.04em] text-[#0F172A] mb-6">
-                      <span className="block">Know</span>
-                      <span className="block text-[#1A3BCC]">your score</span>
-                      <span
-                        className="block font-light text-slate-400 italic tracking-[-0.02em]"
-                        style={{ fontSize: "clamp(36px,5.5vw,62px)" }}
-                      >
-                        before they do.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="hero-in" style={{ animationDelay: "200ms" }}>
-                    <p className="text-[15px] text-slate-600 leading-[1.8] max-w-[420px] mb-8">
-                      Upload your resume and get a detailed ATS compatibility score, keyword analysis, section audit, and 10+ specific improvements — in seconds.
-                    </p>
-
-                    {/* Trust badges */}
-                    <div className="flex flex-wrap gap-4 mb-8">
-                      {[
-                        { icon: Shield, text: "Secure upload" },
-                        { icon: Zap,    text: "Results in ~10s" },
-                        { icon: Lock,   text: "No account needed" },
-                      ].map(({ icon: Icon, text }, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Icon className="w-3.5 h-3.5 text-[#1A3BCC]/50" />
-                          <span className="text-[13px] font-medium text-slate-500">{text}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mini score preview pills */}
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: "ATS Score", color: "bg-[#1A3BCC]/10 text-[#1A3BCC] border-[#1A3BCC]/20" },
-                        { label: "Keywords",  color: "bg-violet-500/10 text-violet-600 border-violet-500/20" },
-                        { label: "Structure", color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" },
-                        { label: "Sections",  color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-                      ].map(({ label, color }, i) => (
-                        <span key={i} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold tracking-[0.05em] ${color}`}>
-                          <CheckCircle2 className="w-3 h-3" />
-                          {label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stat strip */}
+                  {/* Bottom trust strip */}
                   <div
-                    className="hero-in flex gap-6 pt-6 mt-6 flex-wrap"
-                    style={{
-                      animationDelay: "300ms",
-                      borderTop: "1px solid rgba(26,59,204,0.1)",
-                    }}
+                    className="px-8 py-4 flex items-center justify-between flex-wrap gap-3"
+                    style={{ borderTop: "1px solid rgba(26,59,204,0.07)", background: "rgba(26,59,204,0.02)" }}
                   >
                     {[
-                      { val: "92+", label: "Avg score after fixes" },
-                      { val: "10+", label: "Improvements per scan" },
-                      { val: "10s", label: "Time to results" },
-                    ].map(({ val, label }, i) => (
-                      <div key={i}>
-                        <p className="text-[clamp(22px,2.8vw,30px)] font-black text-[#0F172A] leading-none tracking-[-0.04em]">{val}</p>
-                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mt-1.5">{label}</p>
+                      { icon: Shield,       label: "Encrypted & secure" },
+                      { icon: Zap,          label: "Results in ~10 seconds" },
+                      { icon: Lock,         label: "No account needed" },
+                      { icon: CheckCircle2, label: "Completely free" },
+                    ].map(({ icon: Icon, label }, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <Icon className="w-3 h-3 text-[#1A3BCC]/50" />
+                        <span className="text-[11px] font-semibold text-slate-400">{label}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* RIGHT — Upload card (the star of the show) */}
-                <div className="hero-in" style={{ animationDelay: "260ms" }}>
-                  {/* Upload label */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#1A3BCC] animate-pulse" />
-                      <span className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase">
-                        Upload &amp; Analyze
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-medium text-slate-400">PDF or DOCX</span>
-                  </div>
-
-                  {/* Upload component wrapper */}
-                  <div
-                    className="upload-card bg-white border border-[#1A3BCC]/[0.12] rounded-2xl overflow-hidden"
-                    style={{ boxShadow: "0 4px 40px rgba(26,59,204,0.07), 0 1px 4px rgba(0,0,0,0.04)" }}
-                  >
-                    <div className="p-6">
-                      <ResumeUpload onAnalysis={handleAnalysis} loading={loading} isLoggedIn={isLoggedIn} />
-                    </div>
-
-                    {/* Bottom trust strip inside card */}
-                    <div
-                      className="px-6 py-3.5 flex items-center justify-between flex-wrap gap-3"
-                      style={{ borderTop: "1px solid rgba(26,59,204,0.07)", background: "rgba(26,59,204,0.02)" }}
-                    >
-                      {[
-                        { icon: Shield,       label: "Encrypted" },
-                        { icon: Zap,          label: "~10s results" },
-                        { icon: CheckCircle2, label: "Free to use" },
-                      ].map(({ icon: Icon, label }, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
-                          <Icon className="w-3 h-3 text-[#1A3BCC]/50" />
-                          <span className="text-[11px] font-semibold text-slate-400">{label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* What you'll get below the card */}
-                  <div className="mt-4 p-4 rounded-xl bg-[#0F172A]/[0.03] border border-[#1A3BCC]/[0.08]">
-                    <p className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-3">What you'll get</p>
-                    <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-                      {[
-                        "ATS compatibility score",
-                        "Keyword density audit",
-                        "Section completeness",
-                        "10+ specific fixes",
-                        "Clarity & structure score",
-                        "Interview question prep",
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3 h-3 text-[#1A3BCC] flex-shrink-0" />
-                          <span className="text-[12px] text-slate-500 font-medium">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </div>
+
+              {/* What you'll get — pill row */}
+              <div className="hero-in flex flex-wrap gap-2 justify-center mt-7" style={{ animationDelay: "280ms" }}>
+                {[
+                  { label: "ATS Score",        color: "bg-[#1A3BCC]/10 text-[#1A3BCC] border-[#1A3BCC]/20" },
+                  { label: "Keyword Audit",    color: "bg-violet-500/10 text-violet-600 border-violet-500/20" },
+                  { label: "Section Check",    color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" },
+                  { label: "Clarity Score",    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+                  { label: "10+ Fix Ideas",    color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+                  { label: "Interview Prep",   color: "bg-rose-500/10 text-rose-600 border-rose-500/20" },
+                ].map(({ label, color }, i) => (
+                  <span key={i} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold tracking-[0.04em] ${color}`}>
+                    <CheckCircle2 className="w-3 h-3" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+
             </div>
           </section>
 
-          {/* ── TICKER ─────────────────────────────────────────── */}
+          {/* ══════════════════════════════════════════════════════
+              TICKER
+          ══════════════════════════════════════════════════════ */}
           <div className="bg-[#1A3BCC] py-3.5 overflow-hidden">
             <div className="flex whitespace-nowrap">
               <div className="ticker-scroll flex gap-9 pr-9">
@@ -730,7 +601,9 @@ export default function ResumeAnalyzerPage() {
             </div>
           </div>
 
-          {/* ── STATS ──────────────────────────────────────────── */}
+          {/* ══════════════════════════════════════════════════════
+              SECTION 2 — STATS
+          ══════════════════════════════════════════════════════ */}
           <section className="py-20 px-6 bg-white">
             <div className="max-w-[1120px] mx-auto">
               <div
@@ -759,7 +632,9 @@ export default function ResumeAnalyzerPage() {
             </div>
           </section>
 
-          {/* ── HOW IT WORKS ───────────────────────────────────── */}
+          {/* ══════════════════════════════════════════════════════
+              SECTION 3 — HOW IT WORKS
+          ══════════════════════════════════════════════════════ */}
           <section id="how" className="py-24 px-6 bg-[#F8F7F3]">
             <div className="max-w-[1120px] mx-auto">
               <Reveal>
@@ -795,7 +670,9 @@ export default function ResumeAnalyzerPage() {
             </div>
           </section>
 
-          {/* ── CTA ────────────────────────────────────────────── */}
+          {/* ══════════════════════════════════════════════════════
+              SECTION 4 — CTA
+          ══════════════════════════════════════════════════════ */}
           <section className="pt-[72px] pb-28 px-6 bg-[#F8F7F3]">
             <div className="max-w-[900px] mx-auto">
               <Reveal>
