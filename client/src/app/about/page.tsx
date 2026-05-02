@@ -212,6 +212,14 @@ export default function WhyMePage() {
           {/* Two-column */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 xl:gap-16 items-center">
 
+            {/* Left — text */}
+            <div className="order-2 lg:order-1">
+              <div className="hero-word" style={{ animationDelay: "60ms" }}>
+                <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-[0.04em] uppercase mb-3">
+                  12+ years. Both sides of the table.
+                </p>
+              </div>
+
               <div className="hero-word" style={{ animationDelay: "120ms" }}>
                 <div
                   className="font-black leading-none tracking-[-0.04em] text-[#0F172A] mb-5 sm:mb-6"
@@ -279,6 +287,7 @@ export default function WhyMePage() {
             </div>
 
           </div>
+        </div>
       </section>
 
       {/* ── TICKER ─────────────────────────────────────────── */}
@@ -381,19 +390,19 @@ export default function WhyMePage() {
         {/* Grid texture */}
         <div className="absolute inset-0 pointer-events-none" style={GRID_TEXTURE} />
         {/* Glow blobs */}
-        {/* <div
+        <div
           className="absolute -top-32 -right-20 w-[480px] h-[480px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(26,59,204,0.22) 0%, transparent 70%)" }}
         />
         <div
           className="absolute -bottom-24 -left-16 w-[380px] h-[380px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 70%)" }}
-        /> */}
+        />
 
         <div className="max-w-[1120px] mx-auto relative z-10">
           <Reveal>
             <div className="text-center mb-10 sm:mb-14">
-              <p className="text-[11px] font-extrabold text-blue-400/60 tracking-[0.1em] uppercase mb-3">
+              <p className="text-[18px] font-extrabold text-blue-400/60 tracking-[0.1em] uppercase mb-3">
                 The Perception Gap
               </p>
               <h2
@@ -488,7 +497,7 @@ export default function WhyMePage() {
           {/* Centered heading */}
           <Reveal>
             <div className="text-center mb-12 sm:mb-16">
-              <p className="text-[11px] font-extrabold text-blue-400/50 tracking-[0.14em] uppercase mb-4">
+              <p className="text-[20px] font-extrabold text-blue-400/50 tracking-[0.14em] uppercase mb-4">
                 Why Me?
               </p>
               <h2

@@ -16,36 +16,36 @@ const companies = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
   },
   {
-    name: "Meta",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg",
+    name: "Accenture",
+    logo: "https://e7.pngegg.com/pngimages/916/300/png-clipart-accenture-new-logo-icons-logos-emojis-iconic-brands-thumbnail.png",
   },
   {
     name: "Apple",
     logo: "https://www.apple.com/ac/structured-data/images/knowledge_graph_logo.png",
   },
   {
-    name: "Netflix",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
+    name: "Infosys",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Infosys_logo.svg/500px-Infosys_logo.svg.png",
   },
   {
-    name: "Spotify",
-    logo: "https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png",
+    name: "Servicenow",
+    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSmQV0IWOvYZIMUVDOWIyS4HwGEf4lhCYyuA&s",
   },
   {
     name: "Uber",
     logo: "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png",
   },
   {
-    name: "Airbnb",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg",
+    name: "TCS",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Tata_Consultancy_Services_old_logo.svg/1280px-Tata_Consultancy_Services_old_logo.svg.png",
   },
   {
     name: "LinkedIn",
     logo: "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
   },
   {
-    name: "Salesforce",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg",
+    name: "Samsung",
+    logo: "https://www.shutterstock.com/image-vector/samsung-company-logo-south-korean-260nw-2394493913.jpg",
   },
   {
     name: "Adobe",
@@ -60,12 +60,12 @@ const companies = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg",
   },
   {
-    name: "Tesla",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Tesla_Motors.svg",
+    name: "Sprinklr",
+    logo: "https://www.vhv.rs/dpng/d/407-4073972_new-logo-sprinkler-social-media-hd-png-download.png",
   },
   {
-    name: "Nvidia",
-    logo: "https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg",
+    name: "Makemytrip",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/6/61/Makemytrip_logo.svg",
   },
   {
     name: "Goldman Sachs",
