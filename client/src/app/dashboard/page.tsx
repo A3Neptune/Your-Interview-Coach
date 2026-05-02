@@ -509,7 +509,7 @@ export default function DashboardPage() {
                           </div>
                           
                           <button
-                            onClick={() => router.push(service.isNewGd ? `/gd-booking?plan=${service.id}` : `/select-slot?serviceId=${service.id}`)}
+                            onClick={() => router.push(`/select-slot?serviceId=${service.id}`)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${p.cta} text-white text-xs font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95`}
                           >
                             BOOK NOW

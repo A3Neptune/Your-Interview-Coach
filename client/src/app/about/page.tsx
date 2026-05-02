@@ -206,7 +206,7 @@ export default function WhyMePage() {
             style={{ animationDelay: "0ms" }}
           >
             <FileText className="w-3 h-3 text-[#1A3BCC]" />
-            <span className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.12em] uppercase">Meet Neel</span>
+            <span className="text-[14px] font-extrabold text-[#1A3BCC] tracking-[0.12em] uppercase">Why Neel</span>
           </div>
 
           {/* Two-column */}
@@ -344,7 +344,7 @@ export default function WhyMePage() {
       <section className="py-20 sm:py-24 px-4 sm:px-6 bg-[#F8F7F3]">
         <div className="max-w-[1120px] mx-auto">
           <Reveal>
-            <p className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-6">
+            <p className="text-[18px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-6 text-center">
               My Observations and Methodology
             </p>
           </Reveal>

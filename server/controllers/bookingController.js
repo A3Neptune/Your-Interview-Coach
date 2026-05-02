@@ -169,18 +169,17 @@ export const cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
     const { reason } = req.body;
-    const userId = String(req.user.id || req.user._id);
     const userType = req.user.userType;
 
-    // Verify ownership — only the student or admin (mentor) can cancel
+    // Only mentors (admin) can cancel bookings
+    if (userType !== 'admin') {
+      throw new ForbiddenError('Only mentors can cancel bookings');
+    }
+
     const booking = await Booking.findById(bookingId);
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
-    const isStudent = String(booking.studentId) === userId;
-    const isMentor = userType === 'admin';
-    if (!isStudent && !isMentor) throw new ForbiddenError('You are not authorised to cancel this booking');
 
-    const cancelledBy = isMentor ? 'mentor' : 'student';
-    const result = await bookingService.cancelBooking(bookingId, cancelledBy, reason, req);
+    const result = await bookingService.cancelBooking(bookingId, 'mentor', reason, req);
     res.json({ success: true, booking: result.booking });
   } catch (error) {
     console.error('Error cancelling booking:', error);

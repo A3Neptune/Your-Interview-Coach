@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   Info,
   AlertCircle,
+  Users,
+  Radio,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -80,7 +82,7 @@ function SelectSlotContent() {
   const [calendarReady, setCalendarReady] = useState(false);
   const [webinarSchedule, setWebinarSchedule] = useState<{
     slotDuration: number;
-    slots: Array<{ date: string; start: string; end: string; bookedCount: number; maxParticipants: number; spotsLeft: number }>;
+    slots: Array<{ date: string; start: string; end: string; topic: string; bookedCount: number; maxParticipants: number; spotsLeft: number }>;
   } | null>(null);
   const [webinarLoading, setWebinarLoading] = useState(false);
 
@@ -645,12 +647,32 @@ function SelectSlotContent() {
           <motion.div variants={ITEM_VARIANTS}>
             <div className="sticky top-6 space-y-4">
               {/* Service Card */}
-              <div className="bg-white border border-blue-100 rounded-2xl p-5 shadow-sm">
-                <p className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold mb-3">
-                  Booking for
-                </p>
+              <div className={`bg-white rounded-2xl p-5 shadow-sm ${serviceId === 'webinars' ? 'border border-blue-200' : 'border border-blue-100'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">
+                    Booking for
+                  </p>
+                  {serviceId === 'webinars' && (
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-500 text-[10px] font-bold uppercase tracking-wide">
+                      <Radio size={9} className="animate-pulse" />
+                      Live
+                    </span>
+                  )}
+                </div>
                 <h2 className="text-base font-bold text-slate-900 mb-0.5">{service.name}</h2>
-                <p className="text-slate-500 text-xs mb-4">{service.title}</p>
+                <p className={`text-slate-500 text-xs ${serviceId === 'webinars' ? 'mb-3' : 'mb-4'}`}>{service.title}</p>
+                {serviceId === 'webinars' && (
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-medium">
+                      <Users size={11} />
+                      Group session
+                    </span>
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-[11px] font-medium">
+                      <Check size={10} strokeWidth={3} />
+                      Multiple seats
+                    </span>
+                  </div>
+                )}
 
                 <div className="space-y-2.5 p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <div className="flex items-center justify-between text-xs">
@@ -855,7 +877,7 @@ function SelectSlotContent() {
                             transition={{ delay: monthIdx * 0.08 }}
                           >
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{monthLabel}</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                               {monthSlots.map((slot, slotIdx) => {
                                 const isSelected = selectedDate === slot.date && selectedTime === slot.start;
                                 const spotsLow = slot.spotsLeft <= 5;
@@ -878,43 +900,55 @@ function SelectSlotContent() {
                                         setAvailableSlots([{ start: slot.start, end: slot.end, bookedCount: slot.bookedCount, maxParticipants: slot.maxParticipants, spotsLeft: slot.spotsLeft }]);
                                       }
                                     }}
-                                    className={`w-full rounded-xl p-4 text-left transition-all border-2 ${
+                                    className={`rounded-2xl p-5 text-left transition-all border-2 ${
                                       isSelected
-                                        ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
-                                        : "bg-white text-slate-800 border-slate-100 hover:border-blue-200 hover:bg-blue-50"
+                                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-300"
+                                        : "bg-white text-slate-800 border-slate-100 hover:border-blue-300 hover:shadow-md"
                                     }`}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
                                     transition={{ delay: monthIdx * 0.06 + slotIdx * 0.04 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ scale: 1.03, y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
                                   >
-                                    <p className={`text-sm font-bold mb-0.5 ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                    <p className={`text-lg font-bold leading-snug mb-3 ${isSelected ? "text-white" : "text-slate-900"}`}>
                                       {dateLabel}
                                     </p>
-                                    <p className={`text-xs mb-2 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
-                                      {fmt12(slot.start)} – {fmt12(slot.end)}
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                        isSelected
-                                          ? "bg-blue-500 text-white"
-                                          : spotsLow
-                                            ? "bg-amber-50 text-amber-600 border border-amber-200"
-                                            : "bg-green-50 text-green-600 border border-green-100"
-                                      }`}>
-                                        {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left
-                                      </span>
-                                      {isSelected && (
-                                        <motion.span
-                                          initial={{ opacity: 0, scale: 0 }}
-                                          animate={{ opacity: 1, scale: 1 }}
-                                          className="ml-auto text-[11px] text-blue-100 font-medium flex items-center gap-1"
-                                        >
-                                          <Check size={11} strokeWidth={3} /> Selected
-                                        </motion.span>
-                                      )}
+
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <Clock size={14} className={isSelected ? "text-blue-100" : "text-blue-500"} />
+                                      <p className={`text-sm font-semibold ${isSelected ? "text-blue-100" : "text-slate-600"}`}>
+                                        {fmt12(slot.start)} – {fmt12(slot.end)}
+                                      </p>
                                     </div>
+
+                                    {slot.topic && (
+                                      <div className={`inline-block px-3 py-1.5 rounded-lg mb-3 text-xs font-semibold ${
+                                        isSelected
+                                          ? "bg-white/25 text-white"
+                                          : "bg-blue-50 text-blue-700 border border-blue-100"
+                                      }`}>
+                                        Topic - {slot.topic}
+                                      </div>
+                                    )}
+
+                                    {(spotsLow || isSelected) && (
+                                      <div className="flex items-center gap-2 pt-2 border-t" style={{borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#e2e8f0"}}>
+                                        {spotsLow && !isSelected ? (
+                                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+                                            ⚡ {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left
+                                          </span>
+                                        ) : isSelected && (
+                                          <motion.span
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="text-[11px] font-bold text-blue-100 flex items-center gap-1"
+                                          >
+                                            ✓ Selected
+                                          </motion.span>
+                                        )}
+                                      </div>
+                                    )}
                                   </motion.button>
                                 );
                               })}

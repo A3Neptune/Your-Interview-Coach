@@ -145,6 +145,7 @@ const getAvailableSlots = async (dateStr, serviceId) => {
       slots.push({
         start: `${pad(hh)}:${pad(mm)}`,
         end:   `${pad(Math.floor(endTotalMins / 60) % 24)}:${pad(endTotalMins % 60)}`,
+        topic: ws.topic || '',
         bookedCount,
         maxParticipants,
         spotsLeft: maxParticipants - bookedCount,
@@ -484,6 +485,29 @@ const createBooking = async (bookingData, req) => {
     validateSlotBooking(mentor, scheduledDate, duration);
   }
 
+  // Prevent duplicate webinar registrations for the same user
+  if (sessionType === 'webinars') {
+    const schedStart     = new Date(scheduledDate);
+    const pendingCutoff  = new Date(Date.now() - 30 * 60 * 1000);
+    const existingUserBooking = await Booking.findOne({
+      studentId:     userId,
+      sessionType:   'webinars',
+      // 5-min window handles tiny floating-point differences in stored timestamps
+      scheduledDate: {
+        $gte: new Date(schedStart.getTime() - 5 * 60 * 1000),
+        $lte: new Date(schedStart.getTime() + 5 * 60 * 1000),
+      },
+      $or: [
+        { status: 'confirmed' },
+        // pending + payment still open (not failed/refunded/expired)
+        { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+      ],
+    });
+    if (existingUserBooking) {
+      throw new ConflictError('You are already registered for this webinar session');
+    }
+  }
+
   // Calculate server-side amount
   const serverCalculatedAmount = await calculateBookingAmount(sessionType);
 
@@ -639,6 +663,11 @@ const cancelBooking = async (bookingId, cancelledBy, reason, req) => {
   // FIX 4: Prevent cancellation during payment processing
   if (booking.paymentLocked) {
     throw new ValidationError('Cannot cancel booking during payment processing');
+  }
+
+  // Prevent cancellation of webinar bookings after payment is completed
+  if (booking.sessionType === 'webinars' && booking.paymentStatus === 'completed') {
+    throw new ValidationError('Webinar bookings cannot be cancelled after payment is completed');
   }
 
   const oldStatus = booking.status;
@@ -877,6 +906,7 @@ const getWebinarSchedule = async () => {
       date: ws.date,
       start: `${pad(hh)}:${pad(mm)}`,
       end:   `${pad(Math.floor((hh * 60 + mm + slotDuration) / 60) % 24)}:${pad((hh * 60 + mm + slotDuration) % 60)}`,
+      topic: ws.topic || '',
       bookedCount,
       maxParticipants,
       spotsLeft: maxParticipants - bookedCount,

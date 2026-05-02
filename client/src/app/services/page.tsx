@@ -168,7 +168,7 @@ export default function ServicesPage() {
       duration: "60 min",
       desc: "Perfect for focused discussions with your core team.",
       highlights: ["4 Participants", "Expert Feedback", "WhatsApp Support", "1 Session"],
-      href: "/gd-booking?plan=gd-starter",
+      href: "/select-slot?serviceId=gd-starter",
     },
     {
       id: "gd-popular",
@@ -185,7 +185,7 @@ export default function ServicesPage() {
       duration: "60 min",
       desc: "Our most popular choice for realistic group simulations.",
       highlights: ["6 Participants", "Peer Review", "Performance Report", "1 Session"],
-      href: "/gd-booking?plan=gd-popular",
+      href: "/select-slot?serviceId=gd-popular",
     },
     {
       id: "gd-value",
@@ -202,7 +202,7 @@ export default function ServicesPage() {
       duration: "60 min",
       desc: "Maximum value for large teams practicing together.",
       highlights: ["10 Participants", "Live Moderation", "Group Dynamics", "Best Value"],
-      href: "/gd-booking?plan=gd-value",
+      href: "/select-slot?serviceId=gd-value",
     },
   ];
 

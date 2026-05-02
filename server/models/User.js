@@ -108,6 +108,7 @@ const userSchema = new mongoose.Schema(
         type: [{
           date:            String,
           time:            String,
+          topic:           { type: String, default: '' },
           maxParticipants: { type: Number, default: 70 },
         }],
         default: [],

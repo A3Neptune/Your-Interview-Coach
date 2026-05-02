@@ -27,7 +27,7 @@ export default function SettingsPage() {
       slotDuration: 60,
       bufferMinutes: 0,
       webinarMaxParticipants: 70,
-      webinarSlots: [] as { date: string; time: string; maxParticipants: number }[],
+      webinarSlots: [] as { date: string; time: string; topic: string; maxParticipants: number }[],
       daysOff: [] as number[],
       blockedDates: [] as string[],
       dateOverrides: [] as { date: string; startHour: number; endHour: number }[],
@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const [originalSettings, setOriginalSettings] = useState<any>({});
   const [blockDateInput, setBlockDateInput] = useState('');
   const [overrideForm, setOverrideForm] = useState({ date: '', startHour: 9, endHour: 18 });
-  const [webinarSlotForm, setWebinarSlotForm] = useState({ date: '', time: '', maxParticipants: 70 });
+  const [webinarSlotForm, setWebinarSlotForm] = useState({ date: '', time: '', topic: '', maxParticipants: 70 });
 
   useEffect(() => {
     fetchSettings();
@@ -486,6 +486,15 @@ export default function SettingsPage() {
               onChange={e => setWebinarSlotForm(f => ({ ...f, maxParticipants: parseInt(e.target.value, 10) || 70 }))}
               className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition w-[110px]"
             />
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <input
+              type="text"
+              placeholder="Topic / session title (optional)"
+              value={webinarSlotForm.topic}
+              onChange={e => setWebinarSlotForm(f => ({ ...f, topic: e.target.value }))}
+              className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:border-blue-500 focus:outline-none transition flex-1 min-w-[200px]"
+            />
             <button type="button"
               onClick={() => {
                 if (!webinarSlotForm.date || !webinarSlotForm.time) { toast.error('Pick a date and time'); return; }
@@ -493,7 +502,7 @@ export default function SettingsPage() {
                 if ((settings.availabilitySettings.webinarSlots || []).find(s => s.date === webinarSlotForm.date && s.time === webinarSlotForm.time)) { toast.error('Slot already exists'); return; }
                 const updated = [...(settings.availabilitySettings.webinarSlots || []), { ...webinarSlotForm }].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
                 setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarSlots: updated } });
-                setWebinarSlotForm({ date: '', time: '', maxParticipants: 70 });
+                setWebinarSlotForm({ date: '', time: '', topic: '', maxParticipants: 70 });
               }}
               className="px-4 py-2.5 rounded-lg bg-blue-600/20 border border-blue-500/60 text-blue-400 text-sm font-semibold hover:bg-blue-600/30 transition whitespace-nowrap"
             >+ Add Slot</button>
@@ -509,7 +518,8 @@ export default function SettingsPage() {
                   <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700 text-sm">
                     <span className="text-white font-semibold w-28 shrink-0">{new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     <span className="text-blue-400 w-20 shrink-0">{timeLabel}</span>
-                    <span className="text-zinc-400 flex-1">max {s.maxParticipants} seats</span>
+                    <span className="text-zinc-300 flex-1 truncate">{s.topic || <span className="text-zinc-600 italic">No topic</span>}</span>
+                    <span className="text-zinc-500 text-xs shrink-0">max {s.maxParticipants}</span>
                     <button type="button"
                       onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarSlots: settings.availabilitySettings.webinarSlots.filter((_, j) => j !== i) } })}
                       className="text-zinc-600 hover:text-red-400 transition text-base leading-none"
