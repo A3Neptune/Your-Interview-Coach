@@ -665,11 +665,6 @@ const cancelBooking = async (bookingId, cancelledBy, reason, req) => {
     throw new ValidationError('Cannot cancel booking during payment processing');
   }
 
-  // Prevent cancellation of webinar bookings after payment is completed
-  if (booking.sessionType === 'webinars' && booking.paymentStatus === 'completed') {
-    throw new ValidationError('Webinar bookings cannot be cancelled after payment is completed');
-  }
-
   const oldStatus = booking.status;
   booking.status = 'cancelled';
   booking.cancelledBy = cancelledBy;

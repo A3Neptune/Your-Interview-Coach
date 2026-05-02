@@ -26,6 +26,7 @@ interface Booking {
   amount: number;
   sessionType?: string;
   meetingLink?: string;
+  topic?: string;
   mentorId: {
     _id: string;
     fullName: string;
@@ -309,6 +310,18 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
                       <p className="text-sm text-slate-900 font-bold">₹{booking.amount}</p>
                     </div>
                   </div>
+
+                  {booking.sessionType === 'webinars' && booking.topic && (
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl bg-cyan-50 border border-cyan-100">
+                        <span className="text-xl">📌</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Topic</p>
+                        <p className="text-sm text-slate-900 font-bold">{booking.topic}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}
