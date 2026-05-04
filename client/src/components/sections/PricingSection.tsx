@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import useSWR from "swr";
 import { Check } from "lucide-react";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 
 interface Service {
   id: string;
@@ -24,11 +26,17 @@ const fetcher = async (url: string) => {
 };
 
 export default function PricingSection() {
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const router = useRouter();
 
   const handleBook = (serviceId: string) => {
+    if (serviceId === "resumeAnalysis") {
+      setShowResumeUpload(true);
+      return;
+    }
+
     const token =
       typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
     const target = serviceId.startsWith("gd-")
@@ -514,6 +522,10 @@ export default function PricingSection() {
           )}
         </div>
       </section>
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </>
   );
 }

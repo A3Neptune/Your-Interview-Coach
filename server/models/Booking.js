@@ -66,6 +66,14 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    resumeFile: {
+      url: { type: String, default: null },
+      publicId: { type: String, default: null },
+      originalName: { type: String, default: '' },
+      format: { type: String, default: '' },
+      bytes: { type: Number, default: null },
+      uploadedAt: { type: Date, default: null },
+    },
     // Payment fields
     paymentRequired: {
       type: Boolean,

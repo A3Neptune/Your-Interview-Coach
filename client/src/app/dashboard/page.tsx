@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { authAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 import axios from "axios";
 
 interface UserData {
@@ -168,6 +169,7 @@ export default function DashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -510,11 +512,13 @@ export default function DashboardPage() {
                           
                           <button
                             onClick={() =>
-                              router.push(
-                                service.id.startsWith("gd-")
-                                  ? `/gd-booking?serviceId=${service.id}`
-                                  : `/select-slot?serviceId=${service.id}`,
-                              )
+                              service.id === "resumeAnalysis"
+                                ? setShowResumeUpload(true)
+                                : router.push(
+                                    service.id.startsWith("gd-")
+                                      ? `/gd-booking?serviceId=${service.id}`
+                                      : `/select-slot?serviceId=${service.id}`,
+                                  )
                             }
                             className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${p.cta} text-white text-xs font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95`}
                           >
@@ -531,6 +535,10 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </div>
   );
 }

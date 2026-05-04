@@ -76,7 +76,7 @@ export const getAvailableSlots = async (req, res) => {
  */
 export const createBooking = async (req, res) => {
   try {
-    const { mentorId, sessionType, title, description, scheduledDate } = req.body;
+    const { mentorId, sessionType, title, description, scheduledDate, resumeFile } = req.body;
     const { duration } = req.validated;
     const userId = req.user.id || req.user._id;
 
@@ -88,6 +88,7 @@ export const createBooking = async (req, res) => {
       description,
       scheduledDate,
       duration,
+      resumeFile,
     };
 
     const booking = await bookingService.createBooking(bookingData, req);

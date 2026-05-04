@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 import useSWR from "swr";
 
 const swrFetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -108,6 +109,7 @@ const faqs = [
 
 export default function ServicesPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const { data: pricingData } = useSWR(
@@ -134,6 +136,7 @@ export default function ServicesPage() {
       const gst = Math.round(finalPrice * 0.18);
       return {
         ...ac,
+        id: svc.id,
         title: svc.name,
         tag: svc.level || "",
         price: hasDsc ? `₹${finalPrice}` : `₹${svc.price}`,
@@ -665,7 +668,13 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     <Link
-                      href={s.href}
+                      href={s.id === "resumeAnalysis" ? "#" : s.href}
+                      onClick={(event) => {
+                        if (s.id === "resumeAnalysis") {
+                          event.preventDefault();
+                          setShowResumeUpload(true);
+                        }
+                      }}
                       className="sv-btn"
                       style={{
                         padding: "8px 15px",
@@ -1069,6 +1078,10 @@ export default function ServicesPage() {
         </div>
       </section>
       <StandardFooter />
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </main>
   );
 }

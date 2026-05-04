@@ -462,7 +462,7 @@ const validateSlotBooking = (mentor, scheduledDate, duration) => {
  * Create booking
  */
 const createBooking = async (bookingData, req) => {
-  const { userId, mentorId, sessionType, title, description, scheduledDate, duration } = bookingData;
+  const { userId, mentorId, sessionType, title, description, scheduledDate, duration, resumeFile } = bookingData;
 
   // Check mentor exists
   const mentor = await User.findById(mentorId);
@@ -544,6 +544,16 @@ const createBooking = async (bookingData, req) => {
     status: 'pending',
     paymentStatus: 'pending',
     paymentRequired: true,
+    resumeFile: sessionType === 'resumeAnalysis' && resumeFile?.url
+      ? {
+          url: resumeFile.url,
+          publicId: resumeFile.publicId || null,
+          originalName: resumeFile.originalName || 'resume',
+          format: resumeFile.format || '',
+          bytes: resumeFile.bytes || null,
+          uploadedAt: resumeFile.uploadedAt ? new Date(resumeFile.uploadedAt) : new Date(),
+        }
+      : undefined,
     metadata: {
       baseAmount: baseAmount,
       gstAmount: gstAmount,

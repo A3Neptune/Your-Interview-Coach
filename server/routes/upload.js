@@ -226,4 +226,51 @@ router.post('/course-document', verifyMentor, uploadDocument.single('file'), asy
   }
 });
 
+/**
+ * Upload resume for Resume Analysis booking
+ */
+router.post('/resume', verifyToken, uploadDocument.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No file uploaded',
+      });
+    }
+
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please upload a PDF, DOC, or DOCX resume',
+      });
+    }
+
+    const result = await uploadToCloudinary(req.file, 'resumes', 'auto');
+
+    res.json({
+      success: true,
+      data: {
+        url: result.url,
+        publicId: result.publicId,
+        format: result.format,
+        bytes: result.bytes,
+        originalName: req.file.originalname,
+      },
+      message: 'Resume uploaded successfully',
+    });
+  } catch (error) {
+    console.error('Resume upload error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to upload resume',
+    });
+  }
+});
+
 export default router;

@@ -638,6 +638,16 @@ function CheckoutContent() {
     }
   };
 
+  const getResumeAnalysisFile = () => {
+    if (serviceId !== 'resumeAnalysis') return null;
+    try {
+      const resumeFile = JSON.parse(localStorage.getItem('resume_analysis_file') || 'null');
+      return resumeFile?.url && resumeFile?.publicId ? resumeFile : null;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (slotData) {
       try { setSelectedSlot(JSON.parse(decodeURIComponent(slotData))); } catch {}
@@ -651,6 +661,12 @@ function CheckoutContent() {
 
     if (serviceId?.startsWith('gd-') && !getValidGdMembers()) {
       router.replace(`/gd-booking?serviceId=${serviceId}`);
+      return;
+    }
+
+    if (serviceId === 'resumeAnalysis' && !getResumeAnalysisFile()) {
+      toast.error('Please upload your resume before booking Resume Analysis.');
+      router.replace('/services');
       return;
     }
 
@@ -761,9 +777,17 @@ function CheckoutContent() {
         if (!mid) { toast.error('No mentor available'); setIsProcessing(false); return; }
 
         const durationMinutes = selectedSlot.duration || 60;
+        const resumeFile = serviceId === 'resumeAnalysis' ? getResumeAnalysisFile() : null;
+        if (serviceId === 'resumeAnalysis' && !resumeFile) {
+          toast.error('Please upload your resume before booking Resume Analysis.');
+          setIsProcessing(false);
+          router.replace('/services');
+          return;
+        }
+
         const bookingRes = await axios.post(
           `${API_URL}/bookings`,
-          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes },
+          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes, resumeFile },
           { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
         );
         bookingId = bookingRes.data.booking._id;
@@ -794,6 +818,9 @@ function CheckoutContent() {
               if (isGdBooking) {
                 localStorage.removeItem('gd_members');
                 localStorage.removeItem('gd_booking_context');
+              }
+              if (serviceId === 'resumeAnalysis') {
+                localStorage.removeItem('resume_analysis_file');
               }
               toast.success('Booking confirmed!');
               setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
