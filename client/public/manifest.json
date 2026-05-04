@@ -2,7 +2,7 @@
   "name": "Your Interview Coach - Resume Analyzer",
   "short_name": "Your Interview Coach",
   "description": "AI-powered ATS resume analysis tool to optimize your resume for applicant tracking systems",
-  "start_url": "/resume-analyzer",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
