@@ -197,41 +197,41 @@ export default function DashboardPage() {
         const gdPlans: Service[] = [
           {
             id: "gd-starter",
-            name: "GD Starter (4 Members)",
-            title: "Small Group Discussion",
+            name: "GD Team Practice - 4 Members",
+            title: "Bring your own team",
             price: 796,
             duration: "60 min",
-            points: ["4 Participants", "Expert Feedback", "WhatsApp Support", "1 Session"],
-            level: "Starter",
+            points: ["You bring all 4 teammates", "Team details required", "Expert moderation", "Feedback after session"],
+            level: "Bring Team",
             support: "WhatsApp",
             access: "Single",
-            value: "Perfect for focused discussions with your core team.",
+            value: "Bring your own 4-member team. We host and moderate the GD; this is not an individual seat in an open group.",
             isNewGd: true
           },
           {
             id: "gd-popular",
-            name: "GD Popular (6 Members)",
-            title: "Realistic Simulation",
+            name: "GD Team Practice - 6 Members",
+            title: "Bring your own team",
             price: 1014,
             duration: "60 min",
-            points: ["6 Participants", "Peer Review", "Performance Report", "1 Session"],
-            level: "Popular",
+            points: ["You bring all 6 teammates", "Team details required", "Real GD simulation", "Performance feedback"],
+            level: "Bring Team",
             support: "WhatsApp",
             access: "Single",
-            value: "Our most popular choice for realistic group simulations.",
+            value: "Bring your own 6-member team for a realistic moderated GD. Teammates are arranged by you.",
             isNewGd: true
           },
           {
             id: "gd-value",
-            name: "GD Value (10 Members)",
-            title: "Large Team Practice",
+            name: "GD Team Practice - 10 Members",
+            title: "Bring your own team",
             price: 990,
             duration: "60 min",
-            points: ["10 Participants", "Live Moderation", "Group Dynamics", "Best Value"],
-            level: "Value",
+            points: ["You bring all 10 teammates", "Team details required", "Full group simulation", "Best team value"],
+            level: "Bring Team",
             support: "WhatsApp",
             access: "Single",
-            value: "Maximum value for large teams practicing together.",
+            value: "Bring your own 10-member team for a full-size GD simulation. This plan is for your complete team.",
             isNewGd: true
           }
         ];
@@ -509,7 +509,13 @@ export default function DashboardPage() {
                           </div>
                           
                           <button
-                            onClick={() => router.push(`/select-slot?serviceId=${service.id}`)}
+                            onClick={() =>
+                              router.push(
+                                service.id.startsWith("gd-")
+                                  ? `/gd-booking?serviceId=${service.id}`
+                                  : `/select-slot?serviceId=${service.id}`,
+                              )
+                            }
                             className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${p.cta} text-white text-xs font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95`}
                           >
                             BOOK NOW

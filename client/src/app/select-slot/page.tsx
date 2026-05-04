@@ -192,8 +192,37 @@ function SelectSlotContent() {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        router.push(`/login?redirect=/select-slot?serviceId=${serviceId}`);
+        const target = serviceId?.startsWith("gd-")
+          ? `/gd-booking?serviceId=${serviceId}`
+          : `/select-slot?serviceId=${serviceId}`;
+        router.push(`/login?redirect=${encodeURIComponent(target)}`);
         return;
+      }
+
+      if (serviceId?.startsWith("gd-")) {
+        try {
+          const bookingContext = JSON.parse(
+            localStorage.getItem("gd_booking_context") || "null",
+          );
+          const savedMembers = bookingContext?.members;
+          const requiredMembers =
+            serviceId === "gd-starter" ? 4 : serviceId === "gd-popular" ? 6 : 10;
+          const hasValidMembers =
+            bookingContext?.serviceId === serviceId &&
+            Array.isArray(savedMembers) &&
+            savedMembers.length === requiredMembers &&
+            savedMembers.every((member) => {
+              const whatsapp = String(member?.whatsapp || "").replace(/[\s\-+]/g, "");
+              return String(member?.name || "").trim() && /^[6-9]\d{9}$/.test(whatsapp);
+          });
+          if (!hasValidMembers) {
+            router.replace(`/gd-booking?serviceId=${serviceId}`);
+            return;
+          }
+        } catch {
+          router.replace(`/gd-booking?serviceId=${serviceId}`);
+          return;
+        }
       }
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
