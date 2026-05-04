@@ -1,0 +1,61 @@
+{
+  "name": "Your Interview Coach - Resume Analyzer",
+  "short_name": "Your Interview Coach",
+  "description": "AI-powered ATS resume analysis tool to optimize your resume for applicant tracking systems",
+  "start_url": "/resume-analyzer",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/yic-logo-sm.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/yic-logo-lg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/yic-logo-sm.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/yic-logo-lg.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/yic-logo-lg.png",
+      "sizes": "1080x1440",
+      "type": "image/png"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "education"
+  ],
+  "shortcuts": [
+    {
+      "name": "Resume Analyzer",
+      "short_name": "Analyze Resume",
+      "description": "Analyze your resume with AI",
+      "url": "/resume-analyzer",
+      "icons": [
+        {
+          "src": "/yic-logo-sm.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

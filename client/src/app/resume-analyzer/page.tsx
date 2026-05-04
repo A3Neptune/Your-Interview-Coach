@@ -1,192 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import Navbar from "@/components/Navbar";
-// import StandardFooter from "@/components/StandardFooter";
-// import ResumeUpload from "./components/ResumeUpload";
-// import AnalysisResults from "./components/AnalysisResults";
-// import { useAuth } from "@/context/AuthContext";
-// import { Upload } from "lucide-react";
-
-// interface AnalysisData {
-//   ATS_Score?: number;
-//   "ATS Score"?: number;
-//   Breakdown?: {
-//     structure: number;
-//     keywords: number;
-//     clarity: number;
-//     sections: number;
-//     relevance: number;
-//   };
-//   Explanation?: string;
-//   "Section Availability"?: {
-//     "Professional Summary": boolean;
-//     "Technical Skills": boolean;
-//     "Work Experience": boolean;
-//     Projects: boolean;
-//     "Achievements & Leadership": boolean;
-//     Education: boolean;
-//   };
-//   "Issues List"?: string[];
-//   "Resume Summary"?: string;
-//   "Improvement Suggestions"?: string[];
-//   "Interview Questions with Answers"?: Array<{
-//     Question: string;
-//     Answer: string;
-//   }>;
-// }
-
-// function parseAnalysisResponse(rawText: string): AnalysisData {
-//   const trimmed = rawText.trim();
-
-//   const tryParse = (value: string) => {
-//     try {
-//       return JSON.parse(value) as AnalysisData;
-//     } catch {
-//       return null;
-//     }
-//   };
-
-//   // 1) Direct JSON response
-//   const direct = tryParse(trimmed);
-//   if (direct) return direct;
-
-//   // 2) JSON wrapped in Markdown fences
-//   const unfenced = trimmed
-//     .replace(/^```(?:json)?\s*/i, "")
-//     .replace(/\s*```$/, "")
-//     .trim();
-//   const fromUnfenced = tryParse(unfenced);
-//   if (fromUnfenced) return fromUnfenced;
-
-//   // 3) Extract JSON from inside any fenced block
-//   const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-//   if (fencedMatch?.[1]) {
-//     const fromFenceBlock = tryParse(fencedMatch[1].trim());
-//     if (fromFenceBlock) return fromFenceBlock;
-//   }
-
-//   // 4) Fallback: parse between first "{" and last "}"
-//   const firstBrace = trimmed.indexOf("{");
-//   const lastBrace = trimmed.lastIndexOf("}");
-//   if (firstBrace !== -1 && lastBrace > firstBrace) {
-//     const fromBraces = tryParse(trimmed.slice(firstBrace, lastBrace + 1));
-//     if (fromBraces) return fromBraces;
-//   }
-
-//   throw new Error("Invalid analysis response format");
-// }
-
-// export default function ResumeAnalyzerPage() {
-//   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-//   const [loading, setLoading] = useState(false);
-//   const [fileName, setFileName] = useState("");
-//   const { isLoggedIn } = useAuth();
-
-//   const handleAnalysis = async (file: File) => {
-//     setLoading(true);
-//     setFileName(file.name);
-
-//     const formData = new FormData();
-//     formData.append("file", file);
-
-//     try {
-//       const response = await fetch("https://kpeduresumeapi.vercel.app/", {
-//         method: "POST",
-//         body: formData,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to analyze resume");
-//       }
-
-//       const rawText = await response.text();
-//       const data = parseAnalysisResponse(rawText);
-//       setAnalysisData(data);
-//     } catch (error) {
-//       console.error("Error analyzing resume:", error);
-//       alert("Failed to analyze resume. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-white">
-//       <Navbar />
-
-//       <main className="pt-20 pb-12">
-//         {!analysisData ? (
-//           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-//             {/* Header Section */}
-//             <div className="text-center mb-12">
-//               <div className="flex justify-center mb-6">
-//                 <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-2xl">
-//                   <Upload className="w-10 h-10 text-white" />
-//                 </div>
-//               </div>
-//               <h1 className="text-4xl font-bold text-slate-900 mb-4">
-//                 Resume Screening
-//               </h1>
-//               <p className="text-lg text-gray-600 mb-2">
-//                 Get instant feedback on your resume with AI-powered analysis
-//               </p>
-//               <p className="text-gray-500">
-//                 Upload your resume and receive detailed insights on ATS
-//                 compatibility, keywords, and improvement suggestions
-//               </p>
-//             </div>
-
-//             {/* Upload Component */}
-//             <ResumeUpload
-//               onAnalysis={handleAnalysis}
-//               loading={loading}
-//               isLoggedIn={isLoggedIn}
-//             />
-
-//             {/* Features Section */}
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-//               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-//                 <div className="text-3xl font-bold text-blue-600 mb-2">92+</div>
-//                 <p className="text-slate-800 font-medium">ATS Score</p>
-//                 <p className="text-gray-600 text-sm mt-2">
-//                   Get your ATS compatibility score
-//                 </p>
-//               </div>
-//               <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-//                 <div className="text-3xl font-bold text-purple-600 mb-2">
-//                   Instant
-//                 </div>
-//                 <p className="text-slate-800 font-medium">Analysis</p>
-//                 <p className="text-gray-600 text-sm mt-2">
-//                   Get results in seconds
-//                 </p>
-//               </div>
-//               <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-//                 <div className="text-3xl font-bold text-green-600 mb-2">
-//                   10+
-//                 </div>
-//                 <p className="text-slate-800 font-medium">Insights</p>
-//                 <p className="text-gray-600 text-sm mt-2">
-//                   Detailed improvement suggestions
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         ) : (
-//           <AnalysisResults
-//             data={analysisData}
-//             fileName={fileName}
-//             onNewAnalysis={() => setAnalysisData(null)}
-//           />
-//         )}
-//       </main>
-
-//       <StandardFooter />
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -197,9 +8,18 @@ import AnalysisResults from "./components/AnalysisResults";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import {
-  FileText, ScanSearch, Zap, TrendingUp, CheckCircle2,
-  ArrowRight, Shield, Target, BarChart3,
-  CalendarDays, AlertTriangle, Sparkles, Lock,
+  Zap,
+  TrendingUp,
+  CheckCircle2,
+  ArrowRight,
+  Shield,
+  Target,
+  CalendarDays,
+  AlertTriangle,
+  Sparkles,
+  Lock,
+  Rocket,
+  Lightbulb,
 } from "lucide-react";
 
 interface AnalysisData {
@@ -233,11 +53,18 @@ interface AnalysisData {
 function parseAnalysisResponse(rawText: string): AnalysisData {
   const trimmed = rawText.trim();
   const tryParse = (value: string) => {
-    try { return JSON.parse(value) as AnalysisData; } catch { return null; }
+    try {
+      return JSON.parse(value) as AnalysisData;
+    } catch {
+      return null;
+    }
   };
   const direct = tryParse(trimmed);
   if (direct) return direct;
-  const unfenced = trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  const unfenced = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
   const fromUnfenced = tryParse(unfenced);
   if (fromUnfenced) return fromUnfenced;
   const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
@@ -262,8 +89,13 @@ function useInView(threshold = 0.12) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
-      { threshold }
+      ([e]) => {
+        if (e.isIntersecting) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { threshold },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -271,7 +103,13 @@ function useInView(threshold = 0.12) {
   return { ref, inView };
 }
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
   const { ref, inView } = useInView();
   return (
     <div
@@ -306,7 +144,12 @@ function useCounter(target: number, duration = 1400, active = false) {
 function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const { ref, inView } = useInView(0.4);
   const n = useCounter(target, 1400, inView);
-  return <span ref={ref}>{n.toLocaleString()}{suffix}</span>;
+  return (
+    <span ref={ref}>
+      {n.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
 /* ─── Coaching Banner ─────────────────────────────────────── */
@@ -316,117 +159,71 @@ function CoachingBanner({ score }: { score: number }) {
   if (!isLow && !isMid) return null;
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 mb-10">
+    <div className="max-w-6xl mx-auto px-6 mb-10 mt-12">
       <div
-        className={`relative overflow-hidden rounded-2xl border ${
-          isLow ? "bg-[#0F172A] border-[#1A3BCC]/30" : "bg-white border-[#1A3BCC]/20"
+        className={`relative overflow-hidden rounded-3xl border ${
+          isLow ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
         }`}
       >
-        <div
-          className="absolute inset-0 pointer-events-none rounded-2xl"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        <div
-          className="absolute -top-16 -right-16 w-[280px] h-[280px] rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${isLow ? "rgba(26,59,204,0.28)" : "rgba(26,59,204,0.07)"} 0%, transparent 70%)` }}
-        />
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6 p-6 lg:p-8">
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isLow ? "bg-red-500/15 border border-red-500/25" : "bg-amber-500/10 border border-amber-500/20"}`}>
-              {isLow ? <AlertTriangle className="w-6 h-6 text-red-400" /> : <Sparkles className="w-6 h-6 text-amber-500" />}
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6 p-8 lg:p-10">
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div
+              className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isLow ? "bg-red-100" : "bg-blue-100"}`}
+            >
+              {isLow ? (
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              ) : (
+                <Sparkles className="w-8 h-8 text-blue-600" />
+              )}
             </div>
-            <div className={`px-3 py-2 rounded-xl border ${isLow ? "bg-red-500/10 border-red-500/20" : "bg-amber-500/10 border-amber-500/20"}`}>
-              <p className={`text-[10px] font-extrabold tracking-[0.08em] uppercase mb-0.5 ${isLow ? "text-red-400" : "text-amber-600"}`}>Your Score</p>
-              <p className={`text-2xl font-black leading-none ${isLow ? "text-red-400" : "text-amber-500"}`}>
-                {score}<span className="text-sm font-bold">/100</span>
+            <div>
+              <p
+                className={`text-sm font-bold tracking-wider uppercase mb-1 ${isLow ? "text-red-600" : "text-blue-600"}`}
+              >
+                Your Score
+              </p>
+              <p
+                className={`text-4xl font-bold leading-none ${isLow ? "text-red-700" : "text-blue-700"}`}
+              >
+                {score}
+                <span className="text-lg font-semibold">/100</span>
               </p>
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isLow ? "bg-red-400" : "bg-amber-500"}`} />
-              <p className={`text-[11px] font-extrabold tracking-[0.1em] uppercase ${isLow ? "text-red-400" : "text-amber-500"}`}>
-                {isLow ? "Neel can fix this — one session" : "Neel can push you over the line"}
-              </p>
-            </div>
-            <h3 className={`text-lg lg:text-xl font-extrabold tracking-[-0.02em] mb-2 leading-snug ${isLow ? "text-white" : "text-[#0F172A]"}`}>
-              {isLow ? "A score this low gets auto-rejected before any human sees your name." : "Good foundation — but competitive firms filter at 80+."}
-            </h3>
-            <p className={`text-[13.5px] leading-[1.65] max-w-[520px] ${isLow ? "text-white/50" : "text-slate-500"}`}>
+          <div className="flex-1">
+            <h3
+              className={`text-2xl font-bold mb-2 leading-tight ${isLow ? "text-red-900" : "text-blue-900"}`}
+            >
               {isLow
-                ? "Neel has 12+ years inside hiring rooms. He knows exactly which fixes move the needle — and in one session, you'll know too."
-                : "Neel has sat in the debrief rooms where panels compare candidates. He knows what separates a 74 from a 91 — and it's always fixable."
-              }
+                ? "This score needs attention"
+                : "Great effort — get over the 80 line"}
+            </h3>
+            <p
+              className={`text-base leading-relaxed mb-4 ${isLow ? "text-red-700" : "text-blue-700"}`}
+            >
+              {isLow
+                ? "With expert guidance, we can transform your resume and unlock the right opportunities."
+                : 'A few targeted improvements can push you into the "no-filter" zone with top companies.'}
             </p>
+            <div className="flex gap-3">
+              <Link
+                href="/services"
+                className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 ${
+                  isLow
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                <CalendarDays className="w-5 h-5" />
+                Book Now
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 flex-shrink-0 w-full md:w-auto">
-            <Link
-              href="/services"
-              className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-[13px] no-underline transition-all duration-200 hover:-translate-y-0.5 ${
-                isLow ? "text-[#0F172A] bg-white hover:shadow-[0_8px_24px_rgba(26,59,204,0.28)]" : "text-white bg-[#1A3BCC] hover:shadow-[0_8px_24px_rgba(26,59,204,0.35)]"
-              }`}
-            >
-              <CalendarDays className="w-4 h-4 flex-shrink-0" />
-              Book a session
-            </Link>
-            <Link
-              href="/services"
-              className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-[13px] no-underline transition-colors duration-200 ${
-                isLow ? "text-white/70 border border-white/15 hover:bg-white/[0.06]" : "text-[#1A3BCC] border border-[#1A3BCC]/25 hover:bg-[#1A3BCC]/5"
-              }`}
-            >
-              View services <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-        <div className={`border-t px-6 lg:px-8 py-3.5 flex items-center gap-6 flex-wrap ${isLow ? "border-white/[0.06]" : "border-[#1A3BCC]/[0.08]"}`}>
-          {[
-            { label: "12+ years inside hiring panels", icon: Shield },
-            { label: "5,000+ candidates coached", icon: TrendingUp },
-            { label: "94% interview-to-offer rate", icon: Target },
-          ].map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <div key={i} className="flex items-center gap-1.5">
-                <Icon className={`w-3.5 h-3.5 ${isLow ? "text-[#1A3BCC]" : "text-[#1A3BCC]/60"}`} />
-                <span className={`text-[12px] font-semibold ${isLow ? "text-white/40" : "text-slate-400"}`}>{item.label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
   );
 }
-
-/* ─── Static data ─────────────────────────────────────────── */
-const HOW_STEPS = [
-  {
-    num: "01", icon: FileText, title: "Upload your resume",
-    desc: "Drop in your PDF or DOCX. We read every line — just like a real ATS system would.",
-    color: "text-[#1A3BCC]", bg: "bg-[#1A3BCC]/10", bar: "bg-[#1A3BCC]",
-  },
-  {
-    num: "02", icon: ScanSearch, title: "AI scans it cold",
-    desc: "No assumptions. The engine parses structure, keywords, clarity, and section completeness.",
-    color: "text-violet-600", bg: "bg-violet-600/10", bar: "bg-violet-600",
-  },
-  {
-    num: "03", icon: BarChart3, title: "Get your score & fixes",
-    desc: "Receive a ranked breakdown with specific, actionable improvements — not vague advice.",
-    color: "text-cyan-600", bg: "bg-cyan-600/10", bar: "bg-cyan-600",
-  },
-];
-
-const TICKER = [
-  "ATS Score Analysis", "✦", "Keyword Matching", "✦",
-  "Section Audit", "✦", "Instant Results", "✦",
-  "Improvement Suggestions", "✦", "Interview Question Prep", "✦",
-  "Clarity Score", "✦",
-];
 
 /* ─── Page ────────────────────────────────────────────────── */
 export default function ResumeAnalyzerPage() {
@@ -462,46 +259,29 @@ export default function ResumeAnalyzerPage() {
     : 0;
 
   return (
-    <div className="font-[DM_Sans,sans-serif] bg-[#F8F7F3] min-h-screen overflow-x-hidden text-[#0F172A]">
+    <div className="font-sans min-h-screen overflow-x-hidden">
       <Navbar />
 
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400;1,9..40,700&display=swap");
-
-        @keyframes tickerMove {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        .ticker-scroll { animation: tickerMove 28s linear infinite; }
-        .ticker-scroll:hover { animation-play-state: paused; }
-
         @keyframes fadeSlide {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .hero-in { animation: fadeSlide 0.75s cubic-bezier(0.22,1,0.36,1) both; }
-
-        @keyframes bannerIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .banner-in { animation: bannerIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
-
-        .upload-card {
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .upload-card:hover {
-          border-color: rgba(26,59,204,0.3);
-          box-shadow: 0 8px 40px rgba(26,59,204,0.08);
+        .fade-slide {
+          animation: fadeSlide 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
       `}</style>
 
       {analysisData ? (
         /* ── RESULTS VIEW ────────────────────────────────────── */
-        <main className="pt-20 pb-12 bg-[#F8F7F3]">
-          <div className="banner-in">
-            <CoachingBanner score={resolvedScore} />
-          </div>
+        <main>
+          <CoachingBanner score={resolvedScore} />
           <AnalysisResults
             data={analysisData}
             fileName={fileName}
@@ -511,216 +291,108 @@ export default function ResumeAnalyzerPage() {
       ) : (
         <>
           {/* ══════════════════════════════════════════════════════
-              SECTION 1 — UPLOAD HERO (full-width, centred)
+              PREMIUM UPLOAD SECTION - WHITE & BLUE THEME
           ══════════════════════════════════════════════════════ */}
-          <section className="pt-[100px] pb-16 px-6 relative overflow-hidden bg-[#F8F7F3]">
-            {/* Dot grid */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: "radial-gradient(rgba(26,59,204,0.1) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-            />
-            <div
-              className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none"
-              style={{ background: "linear-gradient(225deg, rgba(26,59,204,0.07) 0%, transparent 60%)" }}
-            />
-            <div
-              className="absolute bottom-0 left-0 w-[300px] h-[300px] pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)" }}
-            />
+          <section className="relative min-h-[calc(100vh-80px)] bg-gradient-to-b from-blue-50 via-white to-blue-50 flex items-center justify-center py-20 px-4 overflow-hidden">
+            {/* Premium background effects */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {/* Gradient orbs */}
+              <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-blue-200/50 to-transparent rounded-full blur-3xl" />
+              <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-blue-100/40 to-transparent rounded-full blur-3xl" />
 
-            <div className="max-w-[760px] mx-auto w-full relative z-10 text-center">
-
-              {/* ── Upload card — centred, prominent ── */}
-              <div className="hero-in" style={{ animationDelay: "200ms" }}>
-                <div
-                  className="upload-card bg-white border border-[#1A3BCC]/[0.13] rounded-2xl overflow-hidden text-left"
-                  style={{ boxShadow: "0 8px 48px rgba(26,59,204,0.09), 0 1px 4px rgba(0,0,0,0.04)" }}
-                >
-                  <div className="p-8">
-                    <ResumeUpload onAnalysis={handleAnalysis} loading={loading} isLoggedIn={isLoggedIn} />
-                  </div>
-
-                  {/* Bottom trust strip */}
-                  <div
-                    className="px-8 py-4 flex items-center justify-between flex-wrap gap-3"
-                    style={{ borderTop: "1px solid rgba(26,59,204,0.07)", background: "rgba(26,59,204,0.02)" }}
-                  >
-                    {[
-                      { icon: Shield,       label: "Encrypted & secure" },
-                      { icon: Zap,          label: "Results in ~10 seconds" },
-                      { icon: Lock,         label: "No account needed" },
-                      { icon: CheckCircle2, label: "Completely free" },
-                    ].map(({ icon: Icon, label }, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
-                        <Icon className="w-3 h-3 text-[#1A3BCC]/50" />
-                        <span className="text-[11px] font-semibold text-slate-400">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* What you'll get — pill row */}
-              <div className="hero-in flex flex-wrap gap-2 justify-center mt-7" style={{ animationDelay: "280ms" }}>
-                {[
-                  { label: "ATS Score",        color: "bg-[#1A3BCC]/10 text-[#1A3BCC] border-[#1A3BCC]/20" },
-                  { label: "Keyword Audit",    color: "bg-violet-500/10 text-violet-600 border-violet-500/20" },
-                  { label: "Section Check",    color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" },
-                  { label: "Clarity Score",    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-                  { label: "10+ Fix Ideas",    color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-                  { label: "Interview Prep",   color: "bg-rose-500/10 text-rose-600 border-rose-500/20" },
-                ].map(({ label, color }, i) => (
-                  <span key={i} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold tracking-[0.04em] ${color}`}>
-                    <CheckCircle2 className="w-3 h-3" />
-                    {label}
-                  </span>
-                ))}
-              </div>
-
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              TICKER
-          ══════════════════════════════════════════════════════ */}
-          <div className="bg-[#1A3BCC] py-3.5 overflow-hidden">
-            <div className="flex whitespace-nowrap">
-              <div className="ticker-scroll flex gap-9 pr-9">
-                {[...TICKER, ...TICKER].map((t, i) => (
-                  <span
-                    key={i}
-                    className={`text-[12px] tracking-[0.06em] uppercase flex-shrink-0 ${t === "✦" ? "font-normal text-white/30" : "font-bold text-white/[0.88]"}`}
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ══════════════════════════════════════════════════════
-              SECTION 2 — STATS
-          ══════════════════════════════════════════════════════ */}
-          <section className="py-20 px-6 bg-white">
-            <div className="max-w-[1120px] mx-auto">
+              {/* Subtle grid pattern */}
               <div
-                className="grid grid-cols-1 sm:grid-cols-3 gap-px rounded-2xl overflow-hidden border border-[#1A3BCC]/[0.08]"
-                style={{ background: "rgba(26,59,204,0.08)" }}
-              >
-                {[
-                  { n: 92, suf: "+", label: "Avg ATS score after fixes", icon: Target, color: "text-[#1A3BCC]", bg: "bg-[#1A3BCC]/10" },
-                  { n: 10, suf: "+", label: "Specific improvements per scan", icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-600/10" },
-                  { n: 10, suf: "s", label: "Average time to results", icon: Zap, color: "text-cyan-600", bg: "bg-cyan-600/10" },
-                ].map((s, i) => {
-                  const Icon = s.icon;
-                  return (
-                    <div key={i} className="bg-white p-10 lg:p-[48px_36px]">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${s.bg} mb-4`}>
-                        <Icon className={`w-3 h-3 ${s.color}`} />
-                        <span className={`text-[10px] font-extrabold ${s.color} uppercase tracking-[0.08em]`}>{s.label}</span>
-                      </div>
-                      <div className="text-[clamp(48px,7vw,80px)] font-black text-[#0F172A] leading-none tracking-[-0.04em]">
-                        <Counter target={s.n} suffix={s.suf} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                className="absolute inset-0 opacity-[0.02]"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 1px 1px, rgba(59,130,246,1) 1px, transparent 1px)",
+                  backgroundSize: "40px 40px",
+                }}
+              />
             </div>
-          </section>
 
-          {/* ══════════════════════════════════════════════════════
-              SECTION 3 — HOW IT WORKS
-          ══════════════════════════════════════════════════════ */}
-          <section id="how" className="py-24 px-6 bg-[#F8F7F3]">
-            <div className="max-w-[1120px] mx-auto">
-              <Reveal>
-                <p className="text-[11px] font-extrabold text-[#1A3BCC] tracking-[0.1em] uppercase mb-2.5">Process</p>
-                <div className="flex items-end justify-between mb-14 gap-6 flex-wrap">
-                  <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-[#0F172A] leading-[1.1] tracking-[-0.03em] max-w-[520px]">
-                    Three steps.<br />
-                    <span className="font-light text-slate-500 text-[clamp(22px,3vw,38px)] italic">Brutal clarity.</span>
-                  </h2>
-                  <p className="text-sm text-slate-400 max-w-[280px] leading-[1.75]">
-                    No signup forms. No waiting. Upload and get the unfiltered truth about your resume.
-                  </p>
-                </div>
-              </Reveal>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {HOW_STEPS.map((step, i) => {
-                  const Icon = step.icon;
-                  return (
-                    <Reveal key={i} delay={i * 90}>
-                      <div className="bg-white border border-[#1A3BCC]/[0.09] rounded-2xl p-8 h-full relative overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-[#1A3BCC]/25 cursor-default">
-                        <div className="absolute top-5 right-5 text-[11px] font-extrabold text-[#1A3BCC]/20 tracking-[0.08em]">{step.num}</div>
-                        <div className={`w-9 h-[3px] ${step.bar} rounded-full mb-6`} />
-                        <div className={`w-11 h-11 rounded-xl ${step.bg} flex items-center justify-center mb-5`}>
-                          <Icon className={`w-5 h-5 ${step.color}`} />
-                        </div>
-                        <h3 className="text-lg font-extrabold text-[#0F172A] tracking-[-0.02em] mb-3 leading-snug">{step.title}</h3>
-                        <p className="text-[13.5px] text-slate-500 leading-[1.7]">{step.desc}</p>
-                      </div>
-                    </Reveal>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+            <div className="relative z-10 w-full max-w-3xl">
+              {/* Premium container with card effect */}
+              <div className="rounded-3xl bg-white shadow-2xl overflow-hidden border border-blue-100">
+                {/* Top accent bar */}
+                <div className="h-1 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400" />
 
-          {/* ══════════════════════════════════════════════════════
-              SECTION 4 — CTA
-          ══════════════════════════════════════════════════════ */}
-          <section className="pt-[72px] pb-28 px-6 bg-[#F8F7F3]">
-            <div className="max-w-[900px] mx-auto">
-              <Reveal>
-                <div className="rounded-[28px] p-12 lg:p-[72px_64px] bg-[#0F172A] relative overflow-hidden text-center">
-                  <div
-                    className="absolute inset-0 rounded-[28px] pointer-events-none"
-                    style={{
-                      backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                      backgroundSize: "36px 36px",
-                    }}
-                  />
-                  <div
-                    className="absolute -top-20 -left-20 w-[340px] h-[340px] rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(circle, rgba(26,59,204,0.35) 0%, transparent 65%)" }}
-                  />
-                  <div
-                    className="absolute -bottom-16 -right-16 w-[260px] h-[260px] rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 65%)" }}
-                  />
-                  <div className="relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] mb-7">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
-                      <span className="text-[11px] font-extrabold text-white/70 uppercase tracking-[0.1em]">Free to use</span>
+                <div className="p-8 md:p-12 space-y-8">
+                  {/* Content section */}
+                  <div className="text-center space-y-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-200">
+                      <Zap className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-600">
+                        AI-Powered Resume Analysis
+                      </span>
                     </div>
-                    <h2 className="text-[clamp(26px,5vw,52px)] font-extrabold text-white leading-[1.1] tracking-[-0.03em] mb-3.5">
-                      Stop guessing. Start knowing.
-                    </h2>
-                    <p className="text-[15px] text-white/45 leading-[1.7] max-w-[400px] mx-auto mb-11">
-                      Upload your resume and get an honest, detailed ATS score in seconds.
+
+                    <p className="text-gray-600 text-sm leading-relaxed max-w-2xl mx-auto">
+                      Upload your resume and get instant AI-powered ATS
+                      analysis. See your score, identify weak areas, and get
+                      actionable recommendations to land your dream job.
                     </p>
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
-                      <a
-                        href="#"
-                        onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                        className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-extrabold text-sm text-[#0F172A] bg-white no-underline transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(26,59,204,0.35)]"
-                      >
-                        Analyze my resume <ArrowRight className="w-4 h-4" />
-                      </a>
-                      <a
-                        href="#how"
-                        className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white/80 border border-white/[0.18] no-underline hover:bg-white/[0.06] transition-colors duration-200"
-                      >
-                        See how it works
-                      </a>
+                  </div>
+
+                  {/* Upload Component */}
+                  <div>
+                    <ResumeUpload
+                      onAnalysis={handleAnalysis}
+                      loading={loading}
+                      isLoggedIn={isLoggedIn}
+                    />
+                  </div>
+
+                  {/* Features Grid */}
+                  <div className="pt-6 border-t border-blue-100">
+                    <div className="grid grid-cols-3 gap-4">
+                      {[
+                        {
+                          icon: Zap,
+                          label: "1 min.",
+                          desc: "Instant analysis",
+                        },
+                        {
+                          icon: Target,
+                          label: "ATS Score",
+                          desc: "Know your ranking",
+                        },
+                        {
+                          icon: CheckCircle2,
+                          label: "100% Free",
+                          desc: "No signup needed",
+                        },
+                      ].map((item, i) => {
+                        const Icon = item.icon;
+                        return (
+                          <div key={i} className="text-center py-2">
+                            <Icon className="w-5 h-5 text-blue-600 mx-auto mb-2" />
+                            <p className="font-semibold text-gray-900 text-sm">
+                              {item.label}
+                            </p>
+                            <p className="text-gray-500 text-xs mt-1">
+                              {item.desc}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-              </Reveal>
+              </div>
+
+              {/* Trust indicators below card */}
+              <div className="mt-8 flex items-center justify-center gap-6 text-center text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Shield className="w-4 h-4 text-blue-600" />
+                  <span>Secure & Private</span>
+                </div>
+                <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                <div className="flex items-center gap-2 text-gray-600">
+                  <TrendingUp className="w-4 h-4 text-blue-600" />
+                  <span>5000+ Analyzed</span>
+                </div>
+              </div>
             </div>
           </section>
         </>

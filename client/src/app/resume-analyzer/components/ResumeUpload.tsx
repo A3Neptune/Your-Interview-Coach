@@ -2,7 +2,15 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { Upload, File, Loader, LogIn } from "lucide-react";
+import {
+  Upload,
+  File,
+  Loader,
+  LogIn,
+  CheckCircle2,
+  Shield,
+  Zap,
+} from "lucide-react";
 
 interface ResumeUploadProps {
   onAnalysis: (file: File) => void;
@@ -62,149 +70,170 @@ export default function ResumeUpload({
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Upload Area */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-xl p-12 transition-all duration-300 ${
-          isDragging ? "border-blue-400 bg-blue-50" : "border-blue-200 bg-white"
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+    <div className="w-full">
+      <div className="space-y-6">
+        {/* Upload Area */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`relative border-2 border-dashed rounded-3xl p-12 transition-all duration-300 cursor-pointer group ${
+            isDragging
+              ? "border-blue-500 bg-blue-100"
+              : "border-blue-300 bg-white"
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
 
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div
-              className={`p-4 rounded-full transition-colors ${
-                isDragging
-                  ? "bg-blue-100 text-blue-600"
-                  : "bg-blue-100 text-blue-600"
-              }`}
-            >
-              <Upload className="w-8 h-8" />
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div
+                className={`p-4 rounded-2xl transition-all duration-300 ${isDragging ? "bg-blue-200 scale-110" : "bg-gradient-to-br from-blue-100 to-purple-100"}`}
+              >
+                <Upload
+                  className={`w-8 h-8 transition-all ${isDragging ? "text-blue-700" : "text-blue-600"}`}
+                />
+              </div>
             </div>
-          </div>
 
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">
-            Drop your resume here
-          </h3>
-          <p className="text-gray-600 mb-4">
-            or click below to browse your computer
-          </p>
-          <p className="text-sm text-gray-500">
-            Supported format: PDF (Max 10MB)
-          </p>
-        </div>
-
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="absolute inset-0 cursor-pointer"
-          disabled={loading}
-        />
-      </div>
-
-      {/* Selected File Display */}
-      {selectedFile && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <File className="w-5 h-5 text-blue-600" />
             <div>
-              <p className="text-slate-900 font-medium">{selectedFile.name}</p>
-              <p className="text-sm text-gray-600">
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              <h3 className="text-xl font-semibold text-gray-900">
+                Drop your resume here
+              </h3>
+              <p className="text-gray-600 text-sm">
+                or click to browse (PDF format only)
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setSelectedFile(null)}
-            className="text-gray-500 hover:text-slate-900 transition-colors"
-            disabled={loading}
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
-      {/* Analyze Button */}
-      <div className="mt-8 flex gap-4">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute inset-0 cursor-pointer rounded-3xl"
+            disabled={loading}
+          />
+        </div>
+
+        {/* Selected File */}
+        {selectedFile && (
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-300 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-200 rounded-lg">
+                <File className="w-5 h-5 text-blue-700" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 truncate">
+                  {selectedFile.name}
+                </p>
+                <p className="text-xs text-gray-500">Ready to analyze</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white rounded-lg"
+              disabled={loading}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* CTA Button */}
         <button
           onClick={handleSubmit}
           disabled={!selectedFile || loading}
-          className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+          className={`w-full py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-lg ${
             !selectedFile || loading
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/50"
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105 hover:bg-blue-700"
           }`}
         >
           {loading ? (
             <>
               <Loader className="w-5 h-5 animate-spin" />
-              Screening your resume...
-              <span>Please wait 1–2 minutes</span>
+              Analyzing your resume...
             </>
           ) : !isLoggedIn ? (
-            "Login to start screening"
+            <>
+              <LogIn className="w-5 h-5" />
+              Sign in to continue
+            </>
           ) : (
-            "Check Your ATS Score Now"
+            <>
+              <Zap className="w-5 h-5" />
+              Get Your ATS Score
+            </>
           )}
         </button>
-      </div>
 
-      {/* Info Box */}
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-700">
-          💡 <strong>Tip:</strong> Make sure your resume includes relevant
-          keywords, clear section headings, and quantifiable achievements for
-          the best analysis results.
-        </p>
-      </div>
-
-      {/* Login Prompt Modal */}
-      {showLoginPrompt && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-center mb-4">
-              <div className="bg-blue-100 p-4 rounded-2xl">
-                <LogIn className="w-8 h-8 text-blue-600" />
+        {/* Trust Indicators */}
+        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-200">
+          {[
+            { icon: Shield, label: "Secure" },
+            { icon: Zap, label: "1 min." },
+            { icon: CheckCircle2, label: "Free" },
+          ].map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={i}
+                className="flex flex-col items-center gap-1 text-center"
+              >
+                <Icon className="w-4 h-4 text-blue-600" />
+                <span className="text-xs text-gray-600 font-medium">
+                  {item.label}
+                </span>
               </div>
-            </div>
-            <h3 className="text-2xl font-bold text-slate-900 text-center mb-2">
-              Sign in to Continue
-            </h3>
-            <p className="text-gray-600 text-center mb-6">
-              You need to be logged in to analyze your resume and get
-              personalized feedback.
-            </p>
-
-            <div className="space-y-3">
-              <Link
-                href="/login?redirect=/resume-analyzer"
-                className="block w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg text-center hover:shadow-lg hover:shadow-blue-500/50 transition-all"
-              >
-                Sign In
-              </Link>
-            </div>
-
-            <p className="text-center text-gray-600 text-sm mt-4">
-              Don't have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-blue-600 hover:text-blue-700"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Login Prompt Modal */}
+        {showLoginPrompt && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-8 max-w-sm shadow-2xl border border-blue-200">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-blue-100 rounded-2xl">
+                  <LogIn className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                Sign in Required
+              </h3>
+              <p className="text-gray-600 text-center text-sm mb-6">
+                Create an account to get your personalized resume analysis
+              </p>
+
+              <div className="space-y-3">
+                <Link
+                  href="/login?redirect=/resume-analyzer"
+                  className="block w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl text-center hover:shadow-lg hover:bg-blue-700 transition-all"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block w-full py-3 px-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl text-center hover:bg-blue-50 transition-all"
+                >
+                  Create Account
+                </Link>
+              </div>
+
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="w-full mt-4 text-gray-600 hover:text-gray-800 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

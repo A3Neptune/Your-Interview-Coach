@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  CheckCircle,
-  AlertCircle,
   TrendingUp,
-  BookOpen,
+  AlertCircle,
   Zap,
   ArrowLeft,
   Calendar,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 
 interface AnalysisData {
@@ -38,59 +38,79 @@ interface AnalysisResultsProps {
   onNewAnalysis: () => void;
 }
 
-function ScoreCircle({ score }: { score: number }) {
-  const isGood = score >= 80;
-  const isOk = score >= 60;
-
-  const getColor = () => {
-    if (isGood) return "text-green-600";
-    if (isOk) return "text-yellow-600";
-    return "text-red-600";
+function ScoreGauge({ score }: { score: number }) {
+  const getStatus = () => {
+    if (score >= 85)
+      return {
+        label: "Excellent",
+        color: "text-green-600",
+        bg: "bg-green-50",
+        border: "border-green-200",
+      };
+    if (score >= 75)
+      return {
+        label: "Great",
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+      };
+    if (score >= 65)
+      return {
+        label: "Good",
+        color: "text-amber-600",
+        bg: "bg-amber-50",
+        border: "border-amber-200",
+      };
+    return {
+      label: "Needs Work",
+      color: "text-red-600",
+      bg: "bg-red-50",
+      border: "border-red-200",
+    };
   };
 
-  const getGradient = () => {
-    if (isGood) return "from-green-500 to-green-600";
-    if (isOk) return "from-yellow-500 to-yellow-600";
-    return "from-red-500 to-red-600";
-  };
+  const status = getStatus();
+  const percentage = (score / 100) * 360;
 
   return (
-    <div className="relative w-32 h-32 mx-auto">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-50 to-white flex items-center justify-center border border-blue-200">
-        <svg className="w-32 h-32 transform -rotate-90">
+    <div
+      className={`${status.bg} border ${status.border} rounded-3xl p-8 text-center`}
+    >
+      <div className="relative w-40 h-40 mx-auto mb-6">
+        <svg className="w-full h-full" viewBox="0 0 200 200">
           <circle
-            cx="64"
-            cy="64"
-            r="58"
+            cx="100"
+            cy="100"
+            r="90"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            className="text-blue-100"
+            stroke="#e5e7eb"
+            strokeWidth="8"
           />
           <circle
-            cx="64"
-            cy="64"
-            r="58"
+            cx="100"
+            cy="100"
+            r="90"
             fill="none"
             stroke="url(#gradient)"
-            strokeWidth="4"
-            strokeDasharray={`${(score / 100) * 364.42} 364.42`}
-            className="transition-all duration-1000"
+            strokeWidth="8"
+            strokeDasharray={`${percentage * 2.51} 565`}
+            transform="rotate(-90 100 100)"
+            strokeLinecap="round"
           />
           <defs>
-            <linearGradient id="gradient">
-              <stop
-                offset="0%"
-                className={`stop-${getGradient().split(" ")[1]}`}
-              />
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#a855f7" />
             </linearGradient>
           </defs>
         </svg>
-        <div className="absolute flex flex-col items-center">
-          <span className={`text-4xl font-bold ${getColor()}`}>{score}</span>
-          <span className="text-sm text-gray-500">/ 100</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className={`text-5xl font-bold ${status.color}`}>{score}</div>
+          <div className="text-sm text-gray-600">/ 100</div>
         </div>
       </div>
+      <h3 className={`text-2xl font-bold ${status.color}`}>{status.label}</h3>
+      <p className="text-gray-600 text-sm mt-2">ATS Compatibility Score</p>
     </div>
   );
 }
@@ -112,247 +132,208 @@ export default function AnalysisResults({
   };
   const breakdownEntries = Object.entries(breakdown) as Array<[string, number]>;
   const explanation = data.Explanation || "";
-  const sectionAvailability = data["Section Availability"] || {};
   const issues = data["Issues List"] || [];
   const resumeSummary = data["Resume Summary"] || "";
   const improvements = data["Improvement Suggestions"] || [];
   const interviewQA = data["Interview Questions with Answers"] || [];
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Back Button */}
-      <button
-        onClick={onNewAnalysis}
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        Run Resume Screening Again
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <button
+          onClick={onNewAnalysis}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8 transition-colors font-medium group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          Analyze Another Resume
+        </button>
 
-      {/* Main Results Card */}
-      <div className="bg-white border border-blue-200 rounded-2xl p-8 mb-8">
-        {/* Score Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="flex flex-col items-center justify-center">
-            <ScoreCircle score={atsScore} />
-            <p className="text-center text-blue-500 mt-6 text-sm">
-              Resume analyzed. Boost your score further—book an expert review.
-            </p>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Score Card */}
+          <div className="lg:col-span-1">
+            <ScoreGauge score={atsScore} />
           </div>
 
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              Score Breakdown
+          {/* Details Panel */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Analysis Summary */}
+            <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-blue-400" />
+                Analysis Summary
+              </h2>
+              <p className="text-gray-300 leading-relaxed text-lg">
+                {explanation}
+              </p>
+              <p className="text-gray-500 text-sm mt-6 pt-6 border-t border-slate-600">
+                📄 File:{" "}
+                <span className="text-gray-300 font-medium">{fileName}</span>
+              </p>
+            </div>
+
+            {/* Score Breakdown */}
+            <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-purple-400" />
+                Score Breakdown
+              </h3>
+              <div className="space-y-5">
+                {breakdownEntries.slice(0, 3).map(([key, value]) => (
+                  <div key={key}>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300 capitalize font-medium">
+                        {key}
+                      </span>
+                      <span className="text-lg font-bold text-blue-400">
+                        {value}/20
+                      </span>
+                    </div>
+                    <div className="h-3 bg-slate-600 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-1000 rounded-full ${
+                          value >= 16
+                            ? "bg-gradient-to-r from-green-500 to-emerald-400"
+                            : value >= 12
+                              ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                              : "bg-gradient-to-r from-red-500 to-pink-400"
+                        }`}
+                        style={{ width: `${value * 5}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Resume Summary */}
+        {resumeSummary && (
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl mb-8">
+            <h2 className="text-xl font-bold text-white mb-4">
+              📋 Resume Summary
             </h2>
+            <p className="text-gray-300 leading-relaxed">{resumeSummary}</p>
+          </div>
+        )}
+
+        {/* Issues and Wins */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Issues */}
+          {issues.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-8 shadow-lg">
+              <h3 className="text-xl font-bold text-red-700 mb-5 flex items-center gap-2">
+                <AlertCircle className="w-6 h-6" />
+                Areas to Fix
+              </h3>
+              <ul className="space-y-3">
+                {issues.slice(0, 4).map((issue, i) => (
+                  <li key={i} className="flex items-start gap-3 text-gray-700">
+                    <span className="text-red-600 font-bold mt-1">✕</span>
+                    <span>{issue}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Wins */}
+          {improvements.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-3xl p-8 shadow-lg">
+              <h3 className="text-xl font-bold text-green-700 mb-5 flex items-center gap-2">
+                <Zap className="w-6 h-6" />
+                Quick Wins
+              </h3>
+              <ul className="space-y-3">
+                {improvements.slice(0, 4).map((sug, i) => (
+                  <li key={i} className="flex items-start gap-3 text-gray-700">
+                    <span className="text-green-600 font-bold mt-1">✓</span>
+                    <span>{sug}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Interview Questions */}
+        {interviewQA.length > 0 && (
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl mb-8">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-cyan-400" />
+              Interview Preparation
+            </h3>
             <div className="space-y-3">
-              {breakdownEntries.map(([key, value]) => (
-                <div key={key}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-gray-700 capitalize">{key}</span>
-                    <span className={`font-semibold ${getScoreColor(value)}`}>
-                      {value}/20
+              {interviewQA.slice(0, 5).map((qa, i) => (
+                <div
+                  key={i}
+                  className="border border-slate-600 rounded-2xl overflow-hidden hover:border-slate-500 transition-colors"
+                >
+                  <button
+                    onClick={() =>
+                      setExpandedQuestion(expandedQuestion === i ? null : i)
+                    }
+                    className="w-full p-5 hover:bg-slate-700/50 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span className="text-gray-200 font-medium flex-1 pr-3">
+                      {qa.Question}
                     </span>
-                  </div>
-                  <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${
-                        value >= 16
-                          ? "bg-green-500"
-                          : value >= 12
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                      }`}
-                      style={{ width: `${value * 5}%` }}
-                    />
-                  </div>
+                    <span className="text-blue-400 flex-shrink-0 text-xl">
+                      {expandedQuestion === i ? "−" : "+"}
+                    </span>
+                  </button>
+                  {expandedQuestion === i && (
+                    <div className="p-5 bg-slate-700/30 border-t border-slate-600">
+                      <p className="text-gray-300">{qa.Answer}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Explanation */}
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <p className="text-gray-700">{explanation}</p>
-        </div>
-      </div>
-
-      {/* Resume Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-        <h3 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-blue-600" />
-          Resume Summary
-        </h3>
-        <p className="text-gray-700">{resumeSummary}</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Section Availability */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            Section Availability
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(sectionAvailability).map(([section, available]) => (
-              <div
-                key={section}
-                className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200"
-              >
-                <span className="text-gray-700">{section}</span>
-                {available ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Issues */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-yellow-600" />
-            Issues Found
-          </h3>
-          {issues.length > 0 ? (
-            <ul className="space-y-2">
-              {issues.map((issue, index) => (
-                <li
-                  key={index}
-                  className="text-gray-700 flex items-start gap-2 p-2"
-                >
-                  <span className="text-yellow-600 mt-1">•</span>
-                  <span>{issue}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-green-600">No major issues found!</p>
-          )}
-        </div>
-      </div>
-
-      {/* Improvement Suggestions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-        <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-purple-600" />
-          Improvement Suggestions
-        </h3>
-        <div className="space-y-3">
-          {improvements.map((suggestion, index) => (
-            <div
-              key={index}
-              className="p-4 bg-white rounded-lg border-l-4 border-purple-600"
-            >
-              <p className="text-gray-700">{suggestion}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Interview Prep Section */}
-      {interviewQA.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            Interview Preparation
-          </h3>
-          <p className="text-gray-600 mb-4 text-sm">
-            Based on your resume, here are questions you might encounter:
-          </p>
-          <div className="space-y-3">
-            {interviewQA.map((qa, index) => (
-              <div
-                key={index}
-                className="border border-blue-200 rounded-lg overflow-hidden"
-              >
-                <button
-                  onClick={() =>
-                    setExpandedQuestion(
-                      expandedQuestion === index ? null : index,
-                    )
-                  }
-                  className="w-full p-4 bg-white hover:bg-blue-50 transition-colors text-left flex items-start justify-between"
-                >
-                  <span className="text-slate-900 font-medium flex-1">
-                    {qa.Question}
-                  </span>
-                  <span className="text-gray-500 ml-4">
-                    {expandedQuestion === index ? "−" : "+"}
-                  </span>
-                </button>
-                {expandedQuestion === index && (
-                  <div className="p-4 bg-blue-50 border-t border-blue-200">
-                    <p className="text-gray-700">{qa.Answer}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CTA Section */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Improved Resume Card */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-8 text-center border border-blue-500/50">
-          <div className="flex justify-center mb-4">
-            <div className="bg-blue-500/30 p-3 rounded-2xl">
-              <BookOpen className="w-6 h-6 text-blue-200" />
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">
-            Optimize Your Resume
-          </h3>
-          <p className="text-blue-100 mb-6 text-sm">
-            Get 1-on-1 guidance from career coaches to improve your resume based
-            on this analysis
-          </p>
+        {/* CTA Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
             href="https://www.yourinterviewcoach.in/select-slot?serviceId=resumeAnalysis"
             target="_blank"
-            className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+            className="group relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 text-white text-center hover:shadow-2xl hover:shadow-blue-500/20 transition-all overflow-hidden"
           >
-            <Calendar className="w-5 h-5" />
-            Book Optimization Session
-          </Link>
-        </div>
-
-        {/* Interview Tips Card */}
-        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-8 text-center border border-purple-500/50">
-          <div className="flex justify-center mb-4">
-            <div className="bg-purple-500/30 p-3 rounded-2xl">
-              <TrendingUp className="w-6 h-6 text-purple-200" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-transparent group-hover:from-blue-400/20 transition-all" />
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-3">Optimize Your Resume</h3>
+              <p className="text-blue-100 text-sm mb-6">
+                1-on-1 guidance from career experts to maximize your ATS score
+              </p>
+              <button className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors group-hover:scale-105 transform">
+                <Calendar className="w-5 h-5" />
+                Book Optimization
+              </button>
             </div>
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">
-            Interview Preparation
-          </h3>
-          <p className="text-purple-100 mb-6 text-sm">
-            Practice with expert mentors and ace your interviews with confidence
-          </p>
+          </Link>
+
           <Link
             href="https://www.yourinterviewcoach.in/select-slot?serviceId=webinars"
             target="_blank"
-            className="inline-flex items-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
+            className="group relative bg-gradient-to-br from-purple-600 to-purple-700 rounded-3xl p-8 text-white text-center hover:shadow-2xl hover:shadow-purple-500/20 transition-all overflow-hidden"
           >
-            <Calendar className="w-5 h-5" />
-            Book Interview Session
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-transparent group-hover:from-purple-400/20 transition-all" />
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-3">Interview Mastery</h3>
+              <p className="text-purple-100 text-sm mb-6">
+                Practice with mentors and ace your next interview with
+                confidence
+              </p>
+              <button className="inline-flex items-center gap-2 bg-white text-purple-600 px-8 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors group-hover:scale-105 transform">
+                <Calendar className="w-5 h-5" />
+                Book Interview Prep
+              </button>
+            </div>
           </Link>
         </div>
-      </div>
-
-      {/* File Info */}
-      <div className="text-center text-gray-600 pb-8">
-        <p className="text-sm">Analyzed file: {fileName}</p>
       </div>
     </div>
   );
