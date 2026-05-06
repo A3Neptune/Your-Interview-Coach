@@ -12,51 +12,30 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-
-type GdPlanId = "gd-starter" | "gd-popular" | "gd-value";
+import axios from "axios";
 
 type Member = {
   name: string;
   whatsapp: string;
 };
 
-type GdBookingContext = {
-  serviceId: GdPlanId;
-  members: Member[];
-  createdAt: number;
+type GdPlan = {
+  id: string;
+  memberCount: number;
+  pricePerMember: number;
+  totalAmount: number;
+  basePrice: number;
+  name: string;
+  title: string;
+  value: string;
+  duration: string;
+  points: string[];
 };
 
-const GD_PLANS: Record<
-  GdPlanId,
-  {
-    title: string;
-    memberCount: number;
-    price: number;
-    pricePerMember: number;
-    summary: string;
-  }
-> = {
-  "gd-starter": {
-    title: "GD Team Practice - 4 Members",
-    memberCount: 4,
-    price: 796,
-    pricePerMember: 199,
-    summary: "Bring your own 4-member team for a focused moderated GD session.",
-  },
-  "gd-popular": {
-    title: "GD Team Practice - 6 Members",
-    memberCount: 6,
-    price: 1014,
-    pricePerMember: 169,
-    summary: "Bring your own 6-member team for a realistic group discussion round.",
-  },
-  "gd-value": {
-    title: "GD Team Practice - 10 Members",
-    memberCount: 10,
-    price: 990,
-    pricePerMember: 99,
-    summary: "Bring your own 10-member team for a full-size group discussion simulation.",
-  },
+type GdBookingContext = {
+  serviceId: string;
+  members: Member[];
+  createdAt: number;
 };
 
 function getEmptyMembers(count: number): Member[] {
@@ -70,12 +49,17 @@ function normalizePhone(value: string) {
 function GdBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const serviceId = searchParams.get("serviceId") as GdPlanId | null;
-  const plan = serviceId ? GD_PLANS[serviceId] : null;
+  const serviceId = searchParams.get("serviceId");
+  const [plan, setPlan] = useState<GdPlan | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+  // Fetch plan details from API
   useEffect(() => {
-    if (!plan || !serviceId) {
+    if (!serviceId) {
       toast.error("Please choose a valid GD plan first.");
       router.replace("/services");
       return;
@@ -88,32 +72,54 @@ function GdBookingContent() {
       return;
     }
 
-    try {
-      const savedContext = JSON.parse(
-        localStorage.getItem("gd_booking_context") || "null",
-      ) as GdBookingContext | null;
-      if (
-        savedContext?.serviceId === serviceId &&
-        Array.isArray(savedContext.members) &&
-        savedContext.members.length === plan.memberCount
-      ) {
-        setMembers(
-          savedContext.members.map((member: Partial<Member>) => ({
-            name: member.name || "",
-            whatsapp: member.whatsapp || "",
-          })),
-        );
-        return;
-      }
-    } catch {}
+    (async () => {
+      try {
+        const res = await axios.get(`${API_URL}/gd-bookings/plans`);
+        const plans: GdPlan[] = res.data.plans || [];
+        const found = plans.find((p) => p.id === serviceId);
+        if (!found) {
+          toast.error("GD plan not found. Please choose a valid plan.");
+          router.replace("/services");
+          return;
+        }
+        setPlan(found);
 
-    setMembers(getEmptyMembers(plan.memberCount));
-  }, [plan, router, serviceId]);
+        // Try to restore saved context
+        try {
+          const savedContext = JSON.parse(
+            localStorage.getItem("gd_booking_context") || "null",
+          ) as GdBookingContext | null;
+          if (
+            savedContext?.serviceId === serviceId &&
+            Array.isArray(savedContext.members) &&
+            savedContext.members.length === found.memberCount
+          ) {
+            setMembers(
+              savedContext.members.map((member: Partial<Member>) => ({
+                name: member.name || "",
+                whatsapp: member.whatsapp || "",
+              })),
+            );
+            setIsLoading(false);
+            return;
+          }
+        } catch {}
+
+        setMembers(getEmptyMembers(found.memberCount));
+      } catch {
+        toast.error("Failed to load GD plans.");
+        router.replace("/services");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [serviceId, router, API_URL]);
 
   const completedCount = useMemo(
     () =>
       members.filter(
-        (member) => member.name.trim() && normalizePhone(member.whatsapp).length === 10,
+        (member) =>
+          member.name.trim() && normalizePhone(member.whatsapp).length === 10,
       ).length,
     [members],
   );
@@ -138,7 +144,9 @@ function GdBookingContent() {
 
       const phone = normalizePhone(member.whatsapp);
       if (!/^[6-9]\d{9}$/.test(phone)) {
-        toast.error(`Member ${index + 1}: enter a valid 10-digit WhatsApp number.`);
+        toast.error(
+          `Member ${index + 1}: enter a valid 10-digit WhatsApp number.`,
+        );
         return;
       }
     }
@@ -160,7 +168,7 @@ function GdBookingContent() {
     router.push(`/select-slot?serviceId=${serviceId}`);
   };
 
-  if (!plan) {
+  if (isLoading || !plan) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -188,30 +196,40 @@ function GdBookingContent() {
               Team details first
             </p>
             <h1 className="mb-3 text-2xl font-black leading-tight text-slate-950">
-              {plan.title}
+              {plan.name}
             </h1>
-            <p className="mb-6 text-sm leading-6 text-slate-500">{plan.summary}</p>
+            <p className="mb-6 text-sm leading-6 text-slate-500">
+              {plan.value}
+            </p>
 
             <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-semibold text-slate-600">Team size</span>
-                <span className="font-black text-slate-950">{plan.memberCount} members</span>
+                <span className="font-black text-slate-950">
+                  {plan.memberCount} members
+                </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-semibold text-slate-600">Per member</span>
-                <span className="font-black text-slate-950">Rs {plan.pricePerMember}</span>
+                <span className="font-black text-slate-950">
+                  Rs {plan.pricePerMember}
+                </span>
               </div>
               <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-600">Plan price</span>
-                <span className="text-xl font-black text-blue-600">Rs {plan.price}</span>
+                <span className="text-sm font-semibold text-slate-600">
+                  Plan price
+                </span>
+                <span className="text-xl font-black text-blue-600">
+                  Rs {plan.totalAmount}
+                </span>
               </div>
             </div>
 
             <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
               <p className="text-xs font-medium leading-5 text-emerald-800">
-                This is a private team booking. You must bring your own teammates;
-                we do not add individual candidates to this group.
+                This is a private team booking. You must bring your own
+                teammates; we do not add individual candidates to this group.
               </p>
             </div>
           </aside>
@@ -219,9 +237,12 @@ function GdBookingContent() {
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
             <div className="mb-6 flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-950">Enter team member details</h2>
+                <h2 className="text-xl font-black text-slate-950">
+                  Enter team member details
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Add name and WhatsApp number for all {plan.memberCount} teammates.
+                  Add name and WhatsApp number for all {plan.memberCount}{" "}
+                  teammates.
                 </p>
               </div>
               <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
@@ -239,9 +260,10 @@ function GdBookingContent() {
                     <p className="text-sm font-black text-slate-800">
                       Member {index + 1}
                     </p>
-                    {member.name.trim() && normalizePhone(member.whatsapp).length === 10 && (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    )}
+                    {member.name.trim() &&
+                      normalizePhone(member.whatsapp).length === 10 && (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      )}
                   </div>
                   <label className="mb-3 block">
                     <span className="mb-1.5 block text-xs font-bold text-slate-500">
@@ -249,7 +271,9 @@ function GdBookingContent() {
                     </span>
                     <input
                       value={member.name}
-                      onChange={(event) => updateMember(index, "name", event.target.value)}
+                      onChange={(event) =>
+                        updateMember(index, "name", event.target.value)
+                      }
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                       placeholder="Enter member name"
                     />
@@ -277,7 +301,8 @@ function GdBookingContent() {
 
             <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-medium leading-6 text-blue-900">
-                After this, choose your GD date and time slot, then complete payment.
+                After this, choose your GD date and time slot, then complete
+                payment.
               </p>
               <button
                 onClick={handleContinue}

@@ -27,6 +27,8 @@ interface Service {
   level: string;
   support: string;
   access: string;
+  memberCount?: number | null;
+  pricePerMember?: number | null;
   discount?: {
     type: "percentage" | "fixed" | "none";
     value: number;
@@ -1166,6 +1168,66 @@ export default function MentorPricingPage() {
                   </div>
                 </div>
 
+                {/* GD-specific fields */}
+                {service.id?.startsWith("gd-") && (
+                  <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
+                    <div>
+                      <label className="block text-sm font-semibold text-purple-300 mb-2">
+                        Team Size (Members)
+                      </label>
+                      <input
+                        type="number"
+                        value={(service as any).memberCount || ""}
+                        min={2}
+                        max={20}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-", "."].includes(e.key) &&
+                          e.preventDefault()
+                        }
+                        onChange={(e) =>
+                          handleFieldChange(
+                            service.id,
+                            "memberCount",
+                            e.target.value === ""
+                              ? null
+                              : Math.abs(parseInt(e.target.value)) || null,
+                          )
+                        }
+                        placeholder="e.g., 4"
+                        className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-purple-500/30 text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-purple-300 mb-2">
+                        Price Per Member (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={(service as any).pricePerMember || ""}
+                        min={0}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-", "."].includes(e.key) &&
+                          e.preventDefault()
+                        }
+                        onChange={(e) =>
+                          handleFieldChange(
+                            service.id,
+                            "pricePerMember",
+                            e.target.value === ""
+                              ? null
+                              : Math.abs(parseInt(e.target.value)) || null,
+                          )
+                        }
+                        placeholder="e.g., 199"
+                        className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-purple-500/30 text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                    <p className="col-span-2 text-xs text-purple-400">
+                      Total plan price = Members × Per-member price. Update the Price (₹) field above accordingly.
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
                     Description
@@ -1298,6 +1360,18 @@ export default function MentorPricingPage() {
                     <p className="text-white font-bold">{service.support}</p>
                   </div>
                 </div>
+
+                {/* GD-specific info in view mode */}
+                {service.id?.startsWith("gd-") && (service as any).memberCount && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/20">
+                      GD Plan
+                    </span>
+                    <span className="text-sm text-zinc-300">
+                      {(service as any).memberCount} members × ₹{(service as any).pricePerMember}/member
+                    </span>
+                  </div>
+                )}
 
                 <p className="text-zinc-300 text-sm mt-3">{service.value}</p>
 

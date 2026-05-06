@@ -617,11 +617,12 @@ function CheckoutContent() {
     try {
       const bookingContext = JSON.parse(localStorage.getItem('gd_booking_context') || 'null');
       const members = bookingContext?.members;
-      const requiredMembers = serviceId === 'gd-starter' ? 4 : serviceId === 'gd-popular' ? 6 : 10;
+      // Validate context matches current serviceId and members have valid data
+      // Exact member count is validated server-side against the DB plan
       const isValid =
         bookingContext?.serviceId === serviceId &&
         Array.isArray(members) &&
-        members.length === requiredMembers &&
+        members.length > 0 &&
         members.every((member: any) => {
           const whatsapp = String(member?.whatsapp || '').replace(/[\s\-+]/g, '');
           return String(member?.name || '').trim() && /^[6-9]\d{9}$/.test(whatsapp);

@@ -205,12 +205,10 @@ function SelectSlotContent() {
             localStorage.getItem("gd_booking_context") || "null",
           );
           const savedMembers = bookingContext?.members;
-          const requiredMembers =
-            serviceId === "gd-starter" ? 4 : serviceId === "gd-popular" ? 6 : 10;
           const hasValidMembers =
             bookingContext?.serviceId === serviceId &&
             Array.isArray(savedMembers) &&
-            savedMembers.length === requiredMembers &&
+            savedMembers.length > 0 &&
             savedMembers.every((member) => {
               const whatsapp = String(member?.whatsapp || "").replace(/[\s\-+]/g, "");
               return String(member?.name || "").trim() && /^[6-9]\d{9}$/.test(whatsapp);
@@ -713,21 +711,31 @@ function SelectSlotContent() {
                   </div>
 
                   {service.discount?.isActive && service.discount.type !== "none" ? (
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-slate-400 line-through text-xs">₹{service.price}</span>
-                      <div className="text-right">
-                        <span className="text-xl font-black text-blue-600">
-                          ₹{Math.round(discountedPrice)}
-                        </span>
-                        <span className="text-slate-400 text-[11px] ml-1">/session</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-slate-400 line-through text-xs">₹{service.price}</span>
+                        <div className="text-right">
+                          <span className="text-xl font-black text-blue-600">
+                            ₹{Math.round(discountedPrice)}
+                          </span>
+                          <span className="text-slate-400 text-[11px] ml-1">/session</span>
+                        </div>
+                      </div>
+                      <div className="text-right text-[10px] text-slate-400 font-medium leading-none">
+                        excl. GST · +₹{Math.round(discountedPrice * 0.18)} (18%)
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-slate-500 text-xs">Price</span>
-                      <div>
-                        <span className="text-xl font-black text-slate-900">₹{service.price}</span>
-                        <span className="text-slate-400 text-[11px] ml-1">/session</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-slate-500 text-xs">Price</span>
+                        <div className="text-right">
+                          <span className="text-xl font-black text-slate-900">₹{service.price}</span>
+                          <span className="text-slate-400 text-[11px] ml-1">/session</span>
+                        </div>
+                      </div>
+                      <div className="text-right text-[10px] text-slate-400 font-medium leading-none">
+                        excl. GST · +₹{Math.round(service.price * 0.18)} (18%)
                       </div>
                     </div>
                   )}

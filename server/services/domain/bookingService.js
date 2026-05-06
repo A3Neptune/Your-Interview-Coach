@@ -834,6 +834,58 @@ const addBookingFeedback = async (bookingId, feedbackData, req) => {
   return booking;
 };
 
+
+/**
+ * Get all bookings for mentor (transaction-level, not grouped by user).
+ * Supports filtering by sessionType, sorting by createdAt desc,
+ * and pagination via page/limit.
+ */
+const getMentorAllBookings = async (mentorId, { sessionType, page = 1, limit = 10 } = {}) => {
+  const query = { mentorId };
+
+  // Filter by session type if provided
+  if (sessionType && sessionType !== 'all') {
+    const sessionTypeMapping = {
+      resumeAnalysis: ['resumeAnalysis', 'resume-analysis', 'cvReview', 'resumeReview'],
+      mockInterview: ['oneMentorship', 'mockInterview', 'mock-interview', 'interviewPrep'],
+      liveWebinar: ['webinars', 'liveWebinar', 'live-webinar'],
+      gdGroupDiscussions: ['gdGroupDiscussions', 'groupDiscussion', 'gd-practice'],
+    };
+
+    const dbValues = sessionTypeMapping[sessionType];
+    if (dbValues) {
+      query.sessionType = { $in: dbValues };
+    } else {
+      const allKnown = Object.values(sessionTypeMapping).flat();
+      query.sessionType = { $nin: allKnown };
+    }
+  }
+
+  const skip = (Math.max(1, Number(page)) - 1) * Number(limit);
+  const lim = Math.min(100, Math.max(1, Number(limit)));
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(query)
+      .populate('studentId', 'name email profileImage mobile userType company designation')
+      .populate('mentorId', 'name email designation profileImage')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(lim),
+    Booking.countDocuments(query),
+  ]);
+
+  return {
+    bookings,
+    pagination: {
+      total,
+      page: Math.max(1, Number(page)),
+      limit: lim,
+      totalPages: Math.ceil(total / lim),
+    },
+  };
+};
+
+
 export {
   getPublicAvailability,
   getAvailableMentors,
@@ -844,6 +896,7 @@ export {
   createBooking,
   getMentorBookings,
   getMentorStudentsList,
+  getMentorAllBookings,
   getStudentBookings,
   getBookingById,
   cancelBooking,
@@ -932,6 +985,7 @@ export default {
   createBooking,
   getMentorBookings,
   getMentorStudentsList,
+  getMentorAllBookings,
   getStudentBookings,
   getBookingById,
   cancelBooking,

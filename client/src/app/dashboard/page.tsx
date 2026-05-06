@@ -170,6 +170,11 @@ export default function DashboardPage() {
   const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -192,53 +197,7 @@ export default function DashboardPage() {
         );
         const fetchedServices = servicesRes.data.services || [];
         
-        // Filter out any GD services from API to avoid duplicates
-        const filteredServices = fetchedServices.filter((s: any) => !s.id.toLowerCase().includes("gd"));
-
-        // Add 3 new tiered GD plans manually
-        const gdPlans: Service[] = [
-          {
-            id: "gd-starter",
-            name: "GD Team Practice - 4 Members",
-            title: "Bring your own team",
-            price: 796,
-            duration: "60 min",
-            points: ["You bring all 4 teammates", "Team details required", "Expert moderation", "Feedback after session"],
-            level: "Bring Team",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Bring your own 4-member team. We host and moderate the GD; this is not an individual seat in an open group.",
-            isNewGd: true
-          },
-          {
-            id: "gd-popular",
-            name: "GD Team Practice - 6 Members",
-            title: "Bring your own team",
-            price: 1014,
-            duration: "60 min",
-            points: ["You bring all 6 teammates", "Team details required", "Real GD simulation", "Performance feedback"],
-            level: "Bring Team",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Bring your own 6-member team for a realistic moderated GD. Teammates are arranged by you.",
-            isNewGd: true
-          },
-          {
-            id: "gd-value",
-            name: "GD Team Practice - 10 Members",
-            title: "Bring your own team",
-            price: 990,
-            duration: "60 min",
-            points: ["You bring all 10 teammates", "Team details required", "Full group simulation", "Best team value"],
-            level: "Bring Team",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Bring your own 10-member team for a full-size GD simulation. This plan is for your complete team.",
-            isNewGd: true
-          }
-        ];
-
-        setServices([...filteredServices, ...gdPlans]);
+        setServices(fetchedServices);
 
         try {
           const bookingsRes = await axios.get(`${API_URL}/bookings/student`, {
@@ -411,11 +370,11 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                      {new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                      {mounted ? new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : ""}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Clock className="w-3.5 h-3.5 text-blue-500" />
-                      {new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                      {mounted ? new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <User className="w-3.5 h-3.5 text-blue-500" />
@@ -502,12 +461,12 @@ export default function DashboardPage() {
                       <div className="pt-6 border-t border-slate-50 space-y-4">
                         <div className="flex items-end justify-between">
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Payable</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Price</p>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{totalWithGst}</span>
-                              {hasDiscount && <span className="text-xs text-slate-400 line-through">₹{Math.round(service.price * 1.18)}</span>}
+                              <span className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{Math.round(pricing.discounted)}</span>
+                              {hasDiscount && <span className="text-xs text-slate-400 line-through">₹{service.price}</span>}
                             </div>
-                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">Incl. 18% GST</p>
+                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">excl. GST · +₹{Math.round(pricing.discounted * 0.18)} (18%)</p>
                           </div>
                           
                           <button

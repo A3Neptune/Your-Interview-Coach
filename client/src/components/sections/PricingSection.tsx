@@ -189,31 +189,9 @@ export default function PricingSection() {
               const ac = accents[idx % accents.length];
               const cardKey = `${svc.id || "service"}-${idx}`;
 
-              const isGdService = svc.id.startsWith("gd-");
-              const displayName =
-                isGdService && svc.id === "gd-starter"
-                  ? "GD Team Practice - 4 Members"
-                  : isGdService && svc.id === "gd-popular"
-                    ? "GD Team Practice - 6 Members"
-                    : isGdService && svc.id === "gd-value"
-                      ? "GD Team Practice - 10 Members"
-                      : svc.name;
-              const displayValue =
-                isGdService && svc.id === "gd-starter"
-                  ? "Bring your own 4-member team. We host and moderate the GD; this is not an individual seat in an open group."
-                  : isGdService && svc.id === "gd-popular"
-                    ? "Bring your own 6-member team for a realistic moderated GD. Teammates are arranged by you."
-                    : isGdService && svc.id === "gd-value"
-                      ? "Bring your own 10-member team for a full-size GD simulation. This plan is for your complete team."
-                      : svc.value;
-              const displayPoints =
-                isGdService && svc.id === "gd-starter"
-                  ? ["You bring all 4 teammates", "Team member details required", "Expert moderation", "Feedback after session"]
-                  : isGdService && svc.id === "gd-popular"
-                    ? ["You bring all 6 teammates", "Team member details required", "Real GD simulation", "Performance feedback"]
-                    : isGdService && svc.id === "gd-value"
-                      ? ["You bring all 10 teammates", "Team member details required", "Full group simulation", "Best team value"]
-                      : svc.points;
+              const displayName = svc.name;
+              const displayValue = svc.value;
+              const displayPoints = svc.points ?? [];
 
               return (
                 <div

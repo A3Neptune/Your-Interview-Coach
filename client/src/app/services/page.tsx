@@ -121,11 +121,11 @@ export default function ServicesPage() {
     },
   );
 
-  // Build card data from API, falling back gracefully while loading
-  const dynamicServices = (pricingData?.services ?? [])
-    .filter((svc: any) => !svc.id.toLowerCase().includes("gd"))
-    .map((svc: any, i: number) => {
+  // Build card data from API — both regular services AND GD plans
+  const allServices = (pricingData?.services ?? []).map(
+    (svc: any, i: number) => {
       const ac = accentPalette[i % accentPalette.length];
+      const isGD = svc.id?.startsWith("gd-");
       const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
       const dAmt = hasDsc
         ? svc.discount.type === "percentage"
@@ -134,6 +134,13 @@ export default function ServicesPage() {
         : 0;
       const finalPrice = Math.round(svc.price - dAmt);
       const gst = Math.round(finalPrice * 0.18);
+
+      // For GD cards, show per-member price as the discount label
+      const gdPerMemberLabel =
+        isGD && svc.pricePerMember
+          ? `₹${svc.pricePerMember}/Member`
+          : null;
+
       return {
         ...ac,
         id: svc.id,
@@ -146,70 +153,16 @@ export default function ServicesPage() {
           ? svc.discount.type === "percentage"
             ? `${svc.discount.value}% OFF`
             : `Save ₹${svc.discount.value}`
-          : null,
+          : gdPerMemberLabel,
         duration: svc.duration,
         desc: svc.value,
         highlights: svc.points ?? [],
-        href: `/select-slot?serviceId=${svc.id}`,
+        href: isGD
+          ? `/gd-booking?serviceId=${svc.id}`
+          : `/select-slot?serviceId=${svc.id}`,
       };
-    });
-
-  // Add the 3 new GD plans manually
-  const gdPlans = [
-    {
-      id: "gd-starter",
-      accent: "#2563eb",
-      accentLight: "rgba(37,99,235,0.08)",
-      accentBorder: "rgba(37,99,235,0.2)",
-      tagColor: "#2563eb",
-      title: "GD Team Practice - 4 Members",
-      tag: "Bring Your Team",
-      price: "₹796",
-      originalPrice: null,
-      gst: Math.round(796 * 0.18),
-      discountLabel: "₹199/Member",
-      duration: "60 min",
-      desc: "Bring your own 4-member team. We host, moderate, and give feedback after the GD.",
-      highlights: ["You bring all 4 teammates", "Team details required", "Expert moderation", "1 Session"],
-      href: "/gd-booking?serviceId=gd-starter",
     },
-    {
-      id: "gd-popular",
-      accent: "#7c3aed",
-      accentLight: "rgba(124,58,237,0.08)",
-      accentBorder: "rgba(124,58,237,0.2)",
-      tagColor: "#7c3aed",
-      title: "GD Team Practice - 6 Members",
-      tag: "Bring Your Team",
-      price: "₹1014",
-      originalPrice: null,
-      gst: Math.round(1014 * 0.18),
-      discountLabel: "₹169/Member",
-      duration: "60 min",
-      desc: "Bring your own 6-member team for a realistic moderated group discussion round.",
-      highlights: ["You bring all 6 teammates", "Team details required", "Performance feedback", "1 Session"],
-      href: "/gd-booking?serviceId=gd-popular",
-    },
-    {
-      id: "gd-value",
-      accent: "#059669",
-      accentLight: "rgba(5,150,105,0.08)",
-      accentBorder: "rgba(5,150,105,0.2)",
-      tagColor: "#059669",
-      title: "GD Team Practice - 10 Members",
-      tag: "Bring Your Team",
-      price: "₹990",
-      originalPrice: null,
-      gst: Math.round(990 * 0.18),
-      discountLabel: "₹99/Member",
-      duration: "60 min",
-      desc: "Bring your own 10-member team for a full-size GD simulation with live moderation.",
-      highlights: ["You bring all 10 teammates", "Team details required", "Full GD simulation", "Best Team Value"],
-      href: "/gd-booking?serviceId=gd-value",
-    },
-  ];
-
-  const allServices = [...dynamicServices, ...gdPlans];
+  );
 
   return (
     <main

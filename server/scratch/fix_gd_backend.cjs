@@ -1,4 +1,44 @@
-import GDBooking from '../models/GDBooking.js';
+const fs = require('fs');
+const path = require('path');
+
+// ──── 1. Update PricingSection model ────
+const modelPath = path.join(__dirname, '..', 'models', 'PricingSection.js');
+let modelContent = fs.readFileSync(modelPath, 'utf8');
+
+// Add memberCount and pricePerMember after the 'access' field
+const accessField = `        access: {
+          type: String,
+          default: 'Multiple',
+        },`;
+
+const newFields = `        access: {
+          type: String,
+          default: 'Multiple',
+        },
+        // GD-specific optional fields
+        memberCount: {
+          type: Number,
+          default: null,
+        },
+        pricePerMember: {
+          type: Number,
+          default: null,
+        },`;
+
+if (!modelContent.includes('memberCount')) {
+  modelContent = modelContent.replace(accessField, newFields);
+  fs.writeFileSync(modelPath, modelContent, 'utf8');
+  console.log('✅ Updated PricingSection model with memberCount & pricePerMember');
+} else {
+  console.log('⏭ PricingSection model already has memberCount field');
+}
+
+// ──── 2. Update gdBookingController.js ────
+const controllerPath = path.join(__dirname, '..', 'controllers', 'gdBookingController.js');
+let controllerContent = fs.readFileSync(controllerPath, 'utf8');
+
+// Replace the entire file with updated version that reads from DB
+const newController = `import GDBooking from '../models/GDBooking.js';
 import User from '../models/User.js';
 import PricingSection from '../models/PricingSection.js';
 import Razorpay from 'razorpay';
@@ -67,20 +107,20 @@ export const createGDBooking = async (req, res) => {
   try {
     const userId = req.user.id;
     const { planType, members, scheduledDate } = req.body;
-    console.log(`GD Booking Request: planType=${planType}, membersCount=${members?.length}`);
+    console.log(\`GD Booking Request: planType=\${planType}, membersCount=\${members?.length}\`);
 
     // Validate plan from DB
     const plans = await getGDPlansFromDB();
     const plan = plans[planType];
     if (!plan) {
-      console.log(`Plan not found: ${planType}`);
+      console.log(\`Plan not found: \${planType}\`);
       return res.status(400).json({ error: 'Invalid plan type' });
     }
 
     // Validate members count
     if (!Array.isArray(members) || members.length !== plan.memberCount) {
       return res.status(400).json({
-        error: `This plan requires exactly ${plan.memberCount} members`,
+        error: \`This plan requires exactly \${plan.memberCount} members\`,
       });
     }
 
@@ -90,19 +130,19 @@ export const createGDBooking = async (req, res) => {
       if (!m.name || !m.name.trim()) {
         return res
           .status(400)
-          .json({ error: `Member ${i + 1}: Name is required` });
+          .json({ error: \`Member \${i + 1}: Name is required\` });
       }
       if (!m.whatsapp || !m.whatsapp.trim()) {
         return res
           .status(400)
-          .json({ error: `Member ${i + 1}: WhatsApp number is required` });
+          .json({ error: \`Member \${i + 1}: WhatsApp number is required\` });
       }
       // Basic phone validation (10 digits)
-      const cleaned = m.whatsapp.replace(/[\s\-\+]/g, '');
-      if (!/^[6-9]\d{9}$/.test(cleaned)) {
+      const cleaned = m.whatsapp.replace(/[\\s\\-\\+]/g, '');
+      if (!/^[6-9]\\d{9}$/.test(cleaned)) {
         return res
           .status(400)
-          .json({ error: `Member ${i + 1}: Invalid 10-digit phone number starting with 6-9` });
+          .json({ error: \`Member \${i + 1}: Invalid 10-digit phone number starting with 6-9\` });
       }
     }
 
@@ -126,7 +166,7 @@ export const createGDBooking = async (req, res) => {
     const order = await razorpay.orders.create({
       amount: plan.totalAmount * 100, // amount in paise
       currency: 'INR',
-      receipt: `gd_${Date.now()}`,
+      receipt: \`gd_\${Date.now()}\`,
       notes: {
         planType,
         memberCount: plan.memberCount,
@@ -288,3 +328,98 @@ export default {
   getAllGDBookings,
   updateGDBookingStatus,
 };
+`;
+
+fs.writeFileSync(controllerPath, newController, 'utf8');
+console.log('✅ Updated gdBookingController.js to use dynamic pricing from DB');
+
+// ──── 3. Create seed script for GD plans ────
+const seedPath = path.join(__dirname, '..', 'scripts', 'seedGDPlans.js');
+const seedScript = `import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import PricingSection from '../models/PricingSection.js';
+
+dotenv.config();
+
+async function seedGDPlans() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    const pricingSection = await PricingSection.findOne({ isGlobal: true });
+    if (!pricingSection) {
+      console.log('❌ No PricingSection document found. Create one first.');
+      process.exit(1);
+    }
+
+    const gdPlans = [
+      {
+        id: 'gd-starter',
+        name: 'GD Team Practice - 4 Members',
+        price: 796,
+        duration: '60 min',
+        title: 'GD Team Practice',
+        value: 'Bring your own 4-member team for a focused moderated GD session.',
+        points: ['You bring all 4 teammates', 'Team details required', 'Expert moderation', '1 Session'],
+        level: 'Bring Your Team',
+        support: 'Moderated',
+        access: 'Single',
+        memberCount: 4,
+        pricePerMember: 199,
+      },
+      {
+        id: 'gd-popular',
+        name: 'GD Team Practice - 6 Members',
+        price: 1014,
+        duration: '60 min',
+        title: 'GD Team Practice',
+        value: 'Bring your own 6-member team for a realistic moderated group discussion round.',
+        points: ['You bring all 6 teammates', 'Team details required', 'Performance feedback', '1 Session'],
+        level: 'Bring Your Team',
+        support: 'Moderated',
+        access: 'Single',
+        memberCount: 6,
+        pricePerMember: 169,
+      },
+      {
+        id: 'gd-value',
+        name: 'GD Team Practice - 10 Members',
+        price: 990,
+        duration: '60 min',
+        title: 'GD Team Practice',
+        value: 'Bring your own 10-member team for a full-size GD simulation with live moderation.',
+        points: ['You bring all 10 teammates', 'Team details required', 'Full GD simulation', 'Best Team Value'],
+        level: 'Bring Your Team',
+        support: 'Moderated',
+        access: 'Single',
+        memberCount: 10,
+        pricePerMember: 99,
+      },
+    ];
+
+    for (const plan of gdPlans) {
+      const exists = pricingSection.services.find(s => s.id === plan.id);
+      if (exists) {
+        console.log(\`⏭ Plan \${plan.id} already exists, skipping\`);
+        continue;
+      }
+      pricingSection.services.push(plan);
+      console.log(\`✅ Added plan \${plan.id}\`);
+    }
+
+    await pricingSection.save();
+    console.log('\\n✅ GD plans seeded successfully!');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error seeding GD plans:', err);
+    process.exit(1);
+  }
+}
+
+seedGDPlans();
+`;
+
+fs.writeFileSync(seedPath, seedScript, 'utf8');
+console.log('✅ Created scripts/seedGDPlans.js');
+
+console.log('\\n🎉 Backend updates complete!');
