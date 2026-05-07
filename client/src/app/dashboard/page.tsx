@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { authAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 import axios from "axios";
 
 interface UserData {
@@ -168,6 +169,12 @@ export default function DashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -190,53 +197,7 @@ export default function DashboardPage() {
         );
         const fetchedServices = servicesRes.data.services || [];
         
-        // Filter out any GD services from API to avoid duplicates
-        const filteredServices = fetchedServices.filter((s: any) => !s.id.toLowerCase().includes("gd"));
-
-        // Add 3 new tiered GD plans manually
-        const gdPlans: Service[] = [
-          {
-            id: "gd-starter",
-            name: "GD Starter (4 Members)",
-            title: "Small Group Discussion",
-            price: 796,
-            duration: "60 min",
-            points: ["4 Participants", "Expert Feedback", "WhatsApp Support", "1 Session"],
-            level: "Starter",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Perfect for focused discussions with your core team.",
-            isNewGd: true
-          },
-          {
-            id: "gd-popular",
-            name: "GD Popular (6 Members)",
-            title: "Realistic Simulation",
-            price: 1014,
-            duration: "60 min",
-            points: ["6 Participants", "Peer Review", "Performance Report", "1 Session"],
-            level: "Popular",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Our most popular choice for realistic group simulations.",
-            isNewGd: true
-          },
-          {
-            id: "gd-value",
-            name: "GD Value (10 Members)",
-            title: "Large Team Practice",
-            price: 990,
-            duration: "60 min",
-            points: ["10 Participants", "Live Moderation", "Group Dynamics", "Best Value"],
-            level: "Value",
-            support: "WhatsApp",
-            access: "Single",
-            value: "Maximum value for large teams practicing together.",
-            isNewGd: true
-          }
-        ];
-
-        setServices([...filteredServices, ...gdPlans]);
+        setServices(fetchedServices);
 
         try {
           const bookingsRes = await axios.get(`${API_URL}/bookings/student`, {
@@ -409,11 +370,11 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                      {new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                      {mounted ? new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : ""}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Clock className="w-3.5 h-3.5 text-blue-500" />
-                      {new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                      {mounted ? new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <User className="w-3.5 h-3.5 text-blue-500" />
@@ -500,16 +461,24 @@ export default function DashboardPage() {
                       <div className="pt-6 border-t border-slate-50 space-y-4">
                         <div className="flex items-end justify-between">
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Payable</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Price</p>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{totalWithGst}</span>
-                              {hasDiscount && <span className="text-xs text-slate-400 line-through">₹{Math.round(service.price * 1.18)}</span>}
+                              <span className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{Math.round(pricing.discounted)}</span>
+                              {hasDiscount && <span className="text-xs text-slate-400 line-through">₹{service.price}</span>}
                             </div>
-                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">Incl. 18% GST</p>
+                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">excl. GST · +₹{Math.round(pricing.discounted * 0.18)} (18%)</p>
                           </div>
                           
                           <button
-                            onClick={() => router.push(`/select-slot?serviceId=${service.id}`)}
+                            onClick={() =>
+                              service.id === "resumeAnalysis"
+                                ? setShowResumeUpload(true)
+                                : router.push(
+                                    service.id.startsWith("gd-")
+                                      ? `/gd-booking?serviceId=${service.id}`
+                                      : `/select-slot?serviceId=${service.id}`,
+                                  )
+                            }
                             className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${p.cta} text-white text-xs font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95`}
                           >
                             BOOK NOW
@@ -525,6 +494,10 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </div>
   );
 }

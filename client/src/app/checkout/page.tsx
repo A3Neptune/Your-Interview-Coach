@@ -612,6 +612,43 @@ function CheckoutContent() {
   const slotData  = searchParams.get('slot');
   const API_URL   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+  const getValidGdMembers = () => {
+    if (!serviceId?.startsWith('gd-')) return null;
+    try {
+      const bookingContext = JSON.parse(localStorage.getItem('gd_booking_context') || 'null');
+      const members = bookingContext?.members;
+      // Validate context matches current serviceId and members have valid data
+      // Exact member count is validated server-side against the DB plan
+      const isValid =
+        bookingContext?.serviceId === serviceId &&
+        Array.isArray(members) &&
+        members.length > 0 &&
+        members.every((member: any) => {
+          const whatsapp = String(member?.whatsapp || '').replace(/[\s\-+]/g, '');
+          return String(member?.name || '').trim() && /^[6-9]\d{9}$/.test(whatsapp);
+        });
+
+      return isValid
+        ? members.map((member: any) => ({
+            name: String(member.name).trim(),
+            whatsapp: String(member.whatsapp).replace(/[\s\-+]/g, ''),
+          }))
+        : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const getResumeAnalysisFile = () => {
+    if (serviceId !== 'resumeAnalysis') return null;
+    try {
+      const resumeFile = JSON.parse(localStorage.getItem('resume_analysis_file') || 'null');
+      return resumeFile?.url && resumeFile?.publicId ? resumeFile : null;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (slotData) {
       try { setSelectedSlot(JSON.parse(decodeURIComponent(slotData))); } catch {}
@@ -622,6 +659,18 @@ function CheckoutContent() {
       router.push(`/login?redirect=/checkout?serviceId=${serviceId}`);
       return;
     }
+
+    if (serviceId?.startsWith('gd-') && !getValidGdMembers()) {
+      router.replace(`/gd-booking?serviceId=${serviceId}`);
+      return;
+    }
+
+    if (serviceId === 'resumeAnalysis' && !getResumeAnalysisFile()) {
+      toast.error('Please upload your resume before booking Resume Analysis.');
+      router.replace('/services');
+      return;
+    }
+
     // Preload Razorpay
     if (!document.querySelector('script[src*="razorpay"]')) {
       const s = document.createElement('script');
@@ -704,13 +753,12 @@ function CheckoutContent() {
       let keyId;
 
       if (isGdBooking) {
-        const membersData = localStorage.getItem('gd_members');
-        console.log('Retrieved gd_members:', membersData);
-        const members = JSON.parse(membersData || '[]');
+        const members = getValidGdMembers();
         
-        if (members.length === 0) {
+        if (!members) {
           toast.error('Team member details missing. Please go back to the GD form.');
           setIsProcessing(false);
+          router.replace(`/gd-booking?serviceId=${serviceId}`);
           return;
         }
         const gdRes = await axios.post(
@@ -730,9 +778,17 @@ function CheckoutContent() {
         if (!mid) { toast.error('No mentor available'); setIsProcessing(false); return; }
 
         const durationMinutes = selectedSlot.duration || 60;
+        const resumeFile = serviceId === 'resumeAnalysis' ? getResumeAnalysisFile() : null;
+        if (serviceId === 'resumeAnalysis' && !resumeFile) {
+          toast.error('Please upload your resume before booking Resume Analysis.');
+          setIsProcessing(false);
+          router.replace('/services');
+          return;
+        }
+
         const bookingRes = await axios.post(
           `${API_URL}/bookings`,
-          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes },
+          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes, resumeFile },
           { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
         );
         bookingId = bookingRes.data.booking._id;
@@ -760,7 +816,13 @@ function CheckoutContent() {
             toast.dismiss(tid);
             if (vr.data.success) {
               setPaymentDone(true);
-              if (isGdBooking) localStorage.removeItem('gd_members');
+              if (isGdBooking) {
+                localStorage.removeItem('gd_members');
+                localStorage.removeItem('gd_booking_context');
+              }
+              if (serviceId === 'resumeAnalysis') {
+                localStorage.removeItem('resume_analysis_file');
+              }
               toast.success('Booking confirmed!');
               setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
             } else {
@@ -885,7 +947,7 @@ function CheckoutContent() {
                       <Users className="w-3.5 h-3.5 text-blue-500" /> Team Members
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {JSON.parse(localStorage.getItem('gd_members') || '[]').map((m: any, i: number) => (
+                      {(getValidGdMembers() || []).map((m: any, i: number) => (
                         <div key={i} className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100/50 flex flex-col gap-0.5">
                           <p className="text-xs font-bold text-slate-700 truncate">{m.name}</p>
                           <p className="text-[10px] text-slate-400 font-medium">{m.whatsapp}</p>

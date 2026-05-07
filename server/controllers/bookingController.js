@@ -76,7 +76,7 @@ export const getAvailableSlots = async (req, res) => {
  */
 export const createBooking = async (req, res) => {
   try {
-    const { mentorId, sessionType, title, description, scheduledDate } = req.body;
+    const { mentorId, sessionType, title, description, scheduledDate, resumeFile } = req.body;
     const { duration } = req.validated;
     const userId = req.user.id || req.user._id;
 
@@ -88,6 +88,7 @@ export const createBooking = async (req, res) => {
       description,
       scheduledDate,
       duration,
+      resumeFile,
     };
 
     const booking = await bookingService.createBooking(bookingData, req);
@@ -124,6 +125,27 @@ export const getMentorStudentsList = async (req, res) => {
     res.json({ success: true, students });
   } catch (error) {
     console.error('Error fetching students:', error);
+    handleControllerError(res, error);
+  }
+};
+
+
+/**
+ * Get all bookings for mentor dashboard (transaction-level, paginated)
+ * GET /api/bookings/mentor/all-bookings?sessionType=&page=&limit=
+ */
+export const getMentorAllBookings = async (req, res) => {
+  try {
+    const mentorId = req.user.id || req.user._id;
+    const { sessionType, page, limit } = req.query;
+    const result = await bookingService.getMentorAllBookings(mentorId, {
+      sessionType,
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
+    });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error fetching all bookings:', error);
     handleControllerError(res, error);
   }
 };
@@ -337,6 +359,7 @@ export default {
   createBooking,
   getMentorBookings,
   getMentorStudentsList,
+  getMentorAllBookings,
   getStudentBookings,
   getBookingById,
   cancelBooking,

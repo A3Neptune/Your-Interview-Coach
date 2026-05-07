@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search,
   Mail,
   Phone,
   Award,
-  Trash2,
-  Edit2,
   Download,
+  FileDown,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  IndianRupee,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
-import EditStudentModal from "@/components/EditStudentModal";
-import AddStudentModal from "@/components/AddStudentModal";
+
+/* ──────────────────────── Types ──────────────────────── */
 
 type SessionTypeKey =
   | "all"
@@ -23,14 +27,7 @@ type SessionTypeKey =
   | "gdGroupDiscussions"
   | "other";
 
-const makeSessionTypeCounter = (): Record<SessionTypeKey, number> => ({
-  all: 0,
-  resumeAnalysis: 0,
-  mockInterview: 0,
-  liveWebinar: 0,
-  gdGroupDiscussions: 0,
-  other: 0,
-});
+/* ──────────────────────── Constants ──────────────────────── */
 
 const normalizeSessionType = (sessionType?: string): SessionTypeKey => {
   const value = (sessionType || "").trim();
@@ -57,7 +54,7 @@ const normalizeSessionType = (sessionType?: string): SessionTypeKey => {
 };
 
 const sessionTypeLabels: Record<SessionTypeKey, string> = {
-  all: "All Session Types",
+  all: "All Bookings",
   resumeAnalysis: "Resume Analysis",
   mockInterview: "Mock Interview",
   liveWebinar: "Live Webinar",
@@ -65,154 +62,202 @@ const sessionTypeLabels: Record<SessionTypeKey, string> = {
   other: "Other",
 };
 
+const sessionTypeBadgeColors: Record<SessionTypeKey, string> = {
+  all: "bg-zinc-500/20 text-zinc-300 border-zinc-400/20",
+  resumeAnalysis: "bg-cyan-500/15 text-cyan-300 border-cyan-400/20",
+  mockInterview: "bg-violet-500/15 text-violet-300 border-violet-400/20",
+  liveWebinar: "bg-amber-500/15 text-amber-300 border-amber-400/20",
+  gdGroupDiscussions: "bg-rose-500/15 text-rose-300 border-rose-400/20",
+  other: "bg-zinc-500/15 text-zinc-300 border-zinc-400/20",
+};
+
+const statusBadgeColors: Record<string, string> = {
+  pending: "bg-yellow-500/20 text-yellow-300",
+  confirmed: "bg-blue-500/20 text-blue-300",
+  completed: "bg-emerald-500/20 text-emerald-300",
+  cancelled: "bg-red-500/20 text-red-300",
+  "no-show": "bg-zinc-700/50 text-zinc-300",
+};
+
+const paymentStatusBadge: Record<string, string> = {
+  pending: "text-yellow-400",
+  completed: "text-emerald-400",
+  failed: "text-red-400",
+  refunded: "text-orange-400",
+};
+
 const csvCell = (value: unknown) =>
   `"${String(value ?? "").replace(/"/g, '""')}"`;
 
+const PAGE_SIZE = 10;
+
+/* ──────────────────────── Component ──────────────────────── */
+
 export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Status");
   const [sessionTypeFilter, setSessionTypeFilter] =
     useState<SessionTypeKey>("all");
-  const [students, setStudents] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [allBookings, setAllBookings] = useState<any[]>([]); // for stats
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const fetchStudents = async () => {
-    try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        toast.error("Session expired. Please login again.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const [usersRes, bookingsRes] = await Promise.allSettled([
-          axios.get(`${API_URL}/auth/all-users`, {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Cache-Control": "no-cache",
-            },
-            timeout: 10000,
-          }),
-          axios.get(`${API_URL}/bookings/mentor`, {
-            withCredentials: true,
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 10000,
-          }),
-        ]);
-
-        const users =
-          usersRes.status === "fulfilled"
-            ? usersRes.value.data.users || []
-            : [];
-        const bookings =
-          bookingsRes.status === "fulfilled"
-            ? bookingsRes.value.data.bookings || []
-            : [];
-        setBookings(bookings);
-
-        // Build per-student session count and spend from real bookings
-        const sessionMap: Record<string, number> = {};
-        const spendMap: Record<string, number> = {};
-        const sessionTypeMap: Record<
-          string,
-          Record<SessionTypeKey, number>
-        > = {};
-        bookings.forEach((b: any) => {
-          const sid = b.studentId?._id || b.studentId;
-          if (!sid) return;
-
-          if (!sessionTypeMap[sid])
-            sessionTypeMap[sid] = makeSessionTypeCounter();
-          const normalizedType = normalizeSessionType(b.sessionType);
-          sessionTypeMap[sid][normalizedType] += 1;
-          sessionTypeMap[sid].all += 1;
-
-          sessionMap[sid] = (sessionMap[sid] || 0) + 1;
-          if (b.paymentStatus === "completed")
-            spendMap[sid] = (spendMap[sid] || 0) + (b.amount || 0);
-        });
-
-        const studentsList = users.map((student: any) => ({
-          sessionTypeCounts:
-            sessionTypeMap[student._id] || makeSessionTypeCounter(),
-          sessionTypes: Object.entries(
-            sessionTypeMap[student._id] || makeSessionTypeCounter(),
-          )
-            .filter(([type, count]) => type !== "all" && count > 0)
-            .map(([type]) => type as SessionTypeKey),
-          id: student._id,
-          name: student.name,
-          email: student.email,
-          mobile: student.mobile || "N/A",
-          joinDate: student.createdAt || new Date().toISOString(),
-          sessions: sessionMap[student._id] || 0,
-          totalSpent: spendMap[student._id] || 0,
-          status: student.isActive !== false ? "Active" : "Inactive",
-          avatar: (student.name || "")
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2),
-          skills: student.skills || [],
-          userType: student.userType,
-          company: student.company || "N/A",
-          designation: student.designation || "N/A",
-        }));
-
-        setStudents(studentsList);
-        setIsLoading(false);
-      } catch (apiErr: any) {
-        setStudents([]);
-        setIsLoading(false);
-      }
-    } catch (err) {
-      setStudents([]);
-      setIsLoading(false);
-    }
-  };
-
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch =
-      (student.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.email || "").toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All Status" || student.status === statusFilter;
-
-    const matchesSessionType =
-      sessionTypeFilter === "all" ||
-      (student.sessionTypeCounts?.[sessionTypeFilter] || 0) > 0;
-
-    return matchesSearch && matchesStatus && matchesSessionType;
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: PAGE_SIZE,
+    totalPages: 1,
   });
 
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+  /* ──── Fetch bookings (paginated) ──── */
+  const fetchBookings = useCallback(
+    async (page = 1, sessionType: SessionTypeKey = "all") => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          toast.error("Session expired. Please login again.");
+          setIsLoading(false);
+          return;
+        }
+
+        setIsPageLoading(true);
+
+        const params: Record<string, string | number> = {
+          page,
+          limit: PAGE_SIZE,
+        };
+        if (sessionType !== "all") params.sessionType = sessionType;
+
+        const res = await axios.get(`${API_URL}/bookings/mentor/all-bookings`, {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+          params,
+          timeout: 15000,
+        });
+
+        setBookings(res.data.bookings || []);
+        setPagination(
+          res.data.pagination || {
+            total: 0,
+            page: 1,
+            limit: PAGE_SIZE,
+            totalPages: 1,
+          },
+        );
+      } catch (err: any) {
+        console.error("Error fetching bookings:", err);
+        toast.error("Failed to load bookings");
+        setBookings([]);
+      } finally {
+        setIsLoading(false);
+        setIsPageLoading(false);
+      }
+    },
+    [API_URL],
+  );
+
+  /* ──── Fetch ALL bookings once (for session-type counts / stats) ──── */
+  const fetchAllBookingsForStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const res = await axios.get(`${API_URL}/bookings/mentor`, {
+        withCredentials: true,
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 15000,
+      });
+
+      setAllBookings(res.data.bookings || []);
+    } catch {
+      setAllBookings([]);
+    }
+  }, [API_URL]);
+
+  useEffect(() => {
+    fetchBookings(1, "all");
+    fetchAllBookingsForStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ──── Session type stats from allBookings ──── */
   const sessionTypeStats = useMemo(() => {
-    const stats = makeSessionTypeCounter();
-    bookings.forEach((b: any) => {
-      const normalizedType = normalizeSessionType(b.sessionType);
-      stats[normalizedType] += 1;
+    const stats: Record<SessionTypeKey, number> = {
+      all: 0,
+      resumeAnalysis: 0,
+      mockInterview: 0,
+      liveWebinar: 0,
+      gdGroupDiscussions: 0,
+      other: 0,
+    };
+    allBookings.forEach((b: any) => {
+      const n = normalizeSessionType(b.sessionType);
+      stats[n] += 1;
       stats.all += 1;
     });
     return stats;
-  }, [bookings]);
+  }, [allBookings]);
 
+  /* ──── Summary stats ──── */
+  const summaryStats = useMemo(() => {
+    const uniqueStudents = new Set(
+      allBookings.map(
+        (b: any) => b.studentId?._id || b.studentId,
+      ),
+    );
+    const activeCount = allBookings.filter(
+      (b: any) => b.status === "confirmed" || b.status === "pending",
+    ).length;
+    const totalSessions = allBookings.length;
+    const revenue = allBookings
+      .filter((b: any) => b.paymentStatus === "completed")
+      .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
+
+    return {
+      totalStudents: uniqueStudents.size,
+      activeNow: activeCount,
+      totalSessions,
+      revenue,
+    };
+  }, [allBookings]);
+
+  /* ──── Filter change ──── */
+  const handleFilterChange = (type: SessionTypeKey) => {
+    setSessionTypeFilter(type);
+    setCurrentPage(1);
+    fetchBookings(1, type);
+  };
+
+  /* ──── Pagination ──── */
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
+    setCurrentPage(newPage);
+    fetchBookings(newPage, sessionTypeFilter);
+  };
+
+  /* ──── Client-side search on the current page ──── */
+  const displayedBookings = useMemo(() => {
+    if (!searchTerm.trim()) return bookings;
+    const q = searchTerm.toLowerCase();
+    return bookings.filter((b: any) => {
+      const name = (b.studentId?.name || "").toLowerCase();
+      const email = (b.studentId?.email || "").toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }, [bookings, searchTerm]);
+
+  /* ──── Export CSV ──── */
   const handleExportData = () => {
-    if (filteredStudents.length === 0) {
-      toast.error("No student data available for export");
+    if (displayedBookings.length === 0) {
+      toast.error("No booking data available for export");
       return;
     }
 
@@ -220,26 +265,22 @@ export default function StudentsPage() {
       "Student Name",
       "Email",
       "Mobile",
-      "User Type",
-      "Session Types",
-      "Total Sessions",
-      "Total Spent",
-      "Status",
-      "Joined Date",
+      "Session Type",
+      "Booking Date",
+      "Amount",
+      "Payment Status",
+      "Booking Status",
     ];
 
-    const rows = filteredStudents.map((student) => [
-      student.name,
-      student.email,
-      student.mobile,
-      student.userType,
-      (student.sessionTypes || [])
-        .map((type: SessionTypeKey) => sessionTypeLabels[type])
-        .join(" | ") || "None",
-      student.sessions,
-      student.totalSpent,
-      student.status,
-      new Date(student.joinDate).toLocaleDateString("en-IN"),
+    const rows = displayedBookings.map((b: any) => [
+      b.studentId?.name || "N/A",
+      b.studentId?.email || "N/A",
+      b.studentId?.mobile || "N/A",
+      sessionTypeLabels[normalizeSessionType(b.sessionType)] || b.sessionType,
+      new Date(b.createdAt).toLocaleDateString("en-IN"),
+      b.amount || 0,
+      b.paymentStatus || "N/A",
+      b.status || "N/A",
     ]);
 
     const csv = [header, ...rows]
@@ -249,76 +290,16 @@ export default function StudentsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `mentor-students-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `mentor-bookings-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    toast.success("Student data exported successfully");
+    toast.success("Booking data exported successfully");
   };
 
-  const handleEdit = (student: any) => {
-    setSelectedStudent(student);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdateStudent = (updatedStudent: any) => {
-    setStudents(
-      students.map((s) => (s.id === updatedStudent.id ? updatedStudent : s)),
-    );
-    setIsModalOpen(false);
-    setSelectedStudent(null);
-  };
-
-  const handleAddStudent = (newStudent: any) => {
-    setStudents([newStudent, ...students]);
-    setIsAddModalOpen(false);
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove ${name}?`)) {
-      try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-        const token = localStorage.getItem("authToken");
-
-        await axios.delete(`${API_URL}/auth/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setStudents(students.filter((s) => s.id !== id));
-        toast.success(`${name} removed successfully`);
-      } catch (err: any) {
-        const errorMsg =
-          err.response?.data?.error || "Failed to remove student";
-        toast.error(errorMsg);
-      }
-    }
-  };
-
-  const toggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
-    try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-      const token = localStorage.getItem("authToken");
-
-      await axios.put(
-        `${API_URL}/auth/users/${id}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setStudents(
-        students.map((s) => (s.id === id ? { ...s, status: newStatus } : s)),
-      );
-      toast.success(`Status changed to ${newStatus}`);
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || "Failed to update status";
-      toast.error(errorMsg);
-    }
-  };
+  /* ──────────────────────── Render ──────────────────────── */
 
   if (isLoading) {
     return (
@@ -333,18 +314,77 @@ export default function StudentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Student Management</h1>
-          <p className="text-zinc-400 mt-2">Manage your enrolled students</p>
+          <h1 className="text-3xl font-bold text-white">
+            Booking Management
+          </h1>
+          <p className="text-zinc-400 mt-2">
+            All bookings &amp; transactions — each row is one booking
+          </p>
         </div>
         <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+          onClick={handleExportData}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20 transition font-semibold"
         >
-          Add Student
+          <Download size={16} />
+          Export CSV
         </button>
       </div>
 
-      {/* Search and Filters */}
+      {/* Session Type Filter Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+        {(Object.keys(sessionTypeLabels) as SessionTypeKey[]).map((type) => (
+          <button
+            key={type}
+            onClick={() => handleFilterChange(type)}
+            className={`rounded-xl border px-4 py-3 text-left transition ${
+              sessionTypeFilter === type
+                ? "border-blue-500/50 bg-blue-500/15 ring-1 ring-blue-500/30"
+                : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+            }`}
+          >
+            <p className="text-xs text-zinc-400">{sessionTypeLabels[type]}</p>
+            <p className="text-2xl font-bold text-white mt-1">
+              {sessionTypeStats[type]}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          {
+            label: "Total Students",
+            value: summaryStats.totalStudents,
+            color: "from-blue-500/10",
+          },
+          {
+            label: "Active Bookings",
+            value: summaryStats.activeNow,
+            color: "from-emerald-500/10",
+          },
+          {
+            label: "Total Sessions",
+            value: summaryStats.totalSessions,
+            color: "from-purple-500/10",
+          },
+          {
+            label: "Revenue",
+            value: `₹${summaryStats.revenue.toLocaleString("en-IN")}`,
+            color: "from-orange-500/10",
+          },
+        ].map((stat, index) => (
+          <div
+            key={index}
+            className={`bg-gradient-to-br ${stat.color} to-transparent border border-zinc-800 rounded-lg p-4`}
+          >
+            <p className="text-zinc-400 text-sm">{stat.label}</p>
+            <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search */}
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
           <Search
@@ -359,263 +399,274 @@ export default function StudentsPage() {
             className="w-full pl-12 pr-4 py-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none transition"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white focus:border-blue-500 focus:outline-none transition"
-        >
-          <option>All Status</option>
-          <option>Active</option>
-          <option>Inactive</option>
-        </select>
-        <button
-          onClick={handleExportData}
-          className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20 transition font-semibold"
-        >
-          <Download size={16} />
-          Export CSV
-        </button>
       </div>
 
-      {/* Session Type Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
-        {(Object.keys(sessionTypeLabels) as SessionTypeKey[]).map((type) => (
-          <button
-            key={type}
-            onClick={() => setSessionTypeFilter(type)}
-            className={`rounded-xl border px-4 py-3 text-left transition ${
-              sessionTypeFilter === type
-                ? "border-blue-500/50 bg-blue-500/15"
-                : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-            }`}
-          >
-            <p className="text-xs text-zinc-400">{sessionTypeLabels[type]}</p>
-            <p className="text-2xl font-bold text-white mt-1">
-              {sessionTypeStats[type]}
-            </p>
-          </button>
-        ))}
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Students",
-            value: students.length,
-            color: "from-blue-500/10",
-          },
-          {
-            label: "Active Now",
-            value: students.filter((s) => s.status === "Active").length,
-            color: "from-emerald-500/10",
-          },
-          {
-            label: "Total Sessions",
-            value: students.reduce(
-              (sum: number, s: any) => sum + s.sessions,
-              0,
-            ),
-            color: "from-purple-500/10",
-          },
-          {
-            label: "Revenue",
-            value: `₹${students.reduce((sum: number, s: any) => sum + s.totalSpent, 0).toLocaleString()}`,
-            color: "from-orange-500/10",
-          },
-        ].map((stat, index) => (
-          <div
-            key={index}
-            className={`bg-gradient-to-br ${stat.color} to-transparent border border-zinc-800 rounded-lg p-4`}
-          >
-            <p className="text-zinc-400 text-sm">{stat.label}</p>
-            <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+      {/* Bookings Table */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-900/50 to-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition relative">
+        {/* Page loading overlay */}
+        {isPageLoading && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-10 flex items-center justify-center">
+            <Loader2 size={28} className="animate-spin text-blue-400" />
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Students Table */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-900/50 to-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-zinc-800 bg-black/50">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  User
+                  Student
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
                   Contact
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  User Type
+                  Session Type
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Session Types
+                  Booking Date
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Sessions
+                  Amount
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Spent
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Joined
+                  Payment
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Actions
+                  Resume
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student) => (
-                <tr
-                  key={student.id}
-                  className="border-b border-zinc-800 hover:bg-white/5 transition"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                        {student.avatar}
-                      </div>
-                      <div>
-                        <p className="font-medium text-white">{student.name}</p>
-                        <p className="text-xs text-zinc-400">{student.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm text-zinc-300">
-                        <Mail size={14} className="text-zinc-400" />
-                        {student.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-400">
-                        <Phone size={14} />
-                        {student.mobile}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                        student.userType === "student"
-                          ? "bg-blue-500/20 text-blue-300"
-                          : student.userType === "professional"
-                            ? "bg-purple-500/20 text-purple-300"
-                            : "bg-zinc-700/50 text-zinc-300"
-                      }`}
-                    >
-                      {student.userType}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {(student.sessionTypes || []).length > 0 ? (
-                        (student.sessionTypes as SessionTypeKey[]).map(
-                          (type: SessionTypeKey) => (
-                            <span
-                              key={`${student.id}-${type}`}
-                              className="px-2.5 py-1 rounded-full text-xs bg-indigo-500/15 text-indigo-300 border border-indigo-400/20"
-                            >
-                              {sessionTypeLabels[type]}
-                            </span>
-                          ),
-                        )
-                      ) : (
-                        <span className="text-xs text-zinc-500">
-                          No sessions yet
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Award size={16} className="text-blue-400" />
-                      <span className="font-semibold text-white">
-                        {student.sessions}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-semibold text-emerald-400">
-                      ₹{Number(student.totalSpent || 0).toLocaleString("en-IN")}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm text-zinc-300">
-                      {new Date(student.joinDate).toLocaleDateString()}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => toggleStatus(student.id, student.status)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer ${
-                        student.status === "Active"
-                          ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
-                          : "bg-zinc-700/50 text-zinc-300 hover:bg-zinc-700/70"
-                      }`}
-                    >
-                      {student.status}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(student)}
-                        className="p-2 rounded-lg transition text-zinc-400 hover:bg-blue-500/10 hover:text-blue-300"
-                        title="Edit student details"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(student.id, student.name)}
-                        className="p-2 rounded-lg hover:bg-red-500/10 text-zinc-400 hover:text-red-400 transition"
-                        title={`Delete ${student.name}`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+              {displayedBookings.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-zinc-500"
+                  >
+                    No bookings found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                displayedBookings.map((booking: any) => {
+                  const student = booking.studentId || {};
+                  const avatar = (student.name || "")
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2);
+                  const normalizedType = normalizeSessionType(
+                    booking.sessionType,
+                  );
+                  const isResumeAnalysis = normalizedType === "resumeAnalysis";
+                  const resumeUrl = booking.resumeFile?.url;
+
+                  return (
+                    <tr
+                      key={booking._id}
+                      className="border-b border-zinc-800 hover:bg-white/5 transition"
+                    >
+                      {/* Student */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {avatar || "?"}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-white truncate">
+                              {student.name || "Unknown"}
+                            </p>
+                            <p className="text-xs text-zinc-500 capitalize">
+                              {student.userType || "student"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Contact */}
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-zinc-300">
+                            <Mail size={14} className="text-zinc-400 flex-shrink-0" />
+                            <span className="truncate max-w-[180px]">
+                              {student.email || "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                            <Phone size={14} className="flex-shrink-0" />
+                            {student.mobile || "N/A"}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Session Type */}
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${sessionTypeBadgeColors[normalizedType]}`}
+                        >
+                          {sessionTypeLabels[normalizedType]}
+                        </span>
+                      </td>
+
+                      {/* Booking Date */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-zinc-300">
+                          <Calendar
+                            size={14}
+                            className="text-zinc-400 flex-shrink-0"
+                          />
+                          <div>
+                            <p>
+                              {new Date(booking.createdAt).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </p>
+                            <p className="text-xs text-zinc-500">
+                              {new Date(booking.createdAt).toLocaleTimeString(
+                                "en-IN",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Amount */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <IndianRupee
+                            size={14}
+                            className="text-emerald-400"
+                          />
+                          <span className="font-semibold text-emerald-400">
+                            {Number(booking.amount || 0).toLocaleString(
+                              "en-IN",
+                            )}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Payment Status */}
+                      <td className="px-6 py-4">
+                        <span
+                          className={`text-xs font-semibold capitalize ${paymentStatusBadge[booking.paymentStatus] || "text-zinc-400"}`}
+                        >
+                          {booking.paymentStatus || "N/A"}
+                        </span>
+                      </td>
+
+                      {/* Booking Status */}
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusBadgeColors[booking.status] || "bg-zinc-700/50 text-zinc-300"}`}
+                        >
+                          {booking.status || "N/A"}
+                        </span>
+                      </td>
+
+                      {/* Resume Download */}
+                      <td className="px-6 py-4">
+                        {isResumeAnalysis && resumeUrl ? (
+                          <a
+                            href={resumeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-500/25 transition"
+                          >
+                            <FileDown size={14} />
+                            Download
+                          </a>
+                        ) : isResumeAnalysis ? (
+                          <span className="text-xs text-zinc-500 italic">
+                            No resume
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-600">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Pagination — just a count since all records are shown */}
+      {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-400">
-          Showing {filteredStudents.length} of {students.length} student
-          {students.length !== 1 ? "s" : ""}
+          Showing{" "}
+          {pagination.total === 0
+            ? 0
+            : (pagination.page - 1) * pagination.limit + 1}
+          –{Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+          {pagination.total} booking{pagination.total !== 1 ? "s" : ""}
         </p>
-        <div className="flex gap-2">
-          <span className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-500 text-sm cursor-default">
-            All results shown
-          </span>
-        </div>
+
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {/* Page numbers */}
+            {Array.from(
+              { length: Math.min(5, pagination.totalPages) },
+              (_, i) => {
+                // Show pages around current page
+                let page: number;
+                if (pagination.totalPages <= 5) {
+                  page = i + 1;
+                } else if (currentPage <= 3) {
+                  page = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  page = pagination.totalPages - 4 + i;
+                } else {
+                  page = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
+                      page === currentPage
+                        ? "bg-blue-600 text-white"
+                        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              },
+            )}
+
+            <button
+              disabled={currentPage >= pagination.totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Edit Modal */}
-      <EditStudentModal
-        student={selectedStudent}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedStudent(null);
-        }}
-        onUpdate={handleUpdateStudent}
-      />
-
-      {/* Add Student Modal */}
-      <AddStudentModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddStudent}
-      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 import useSWR from "swr";
 
 const swrFetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -108,6 +109,7 @@ const faqs = [
 
 export default function ServicesPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const { data: pricingData } = useSWR(
@@ -119,11 +121,11 @@ export default function ServicesPage() {
     },
   );
 
-  // Build card data from API, falling back gracefully while loading
-  const dynamicServices = (pricingData?.services ?? [])
-    .filter((svc: any) => !svc.id.toLowerCase().includes("gd"))
-    .map((svc: any, i: number) => {
+  // Build card data from API — both regular services AND GD plans
+  const allServices = (pricingData?.services ?? []).map(
+    (svc: any, i: number) => {
       const ac = accentPalette[i % accentPalette.length];
+      const isGD = svc.id?.startsWith("gd-");
       const hasDsc = svc.discount?.isActive && svc.discount?.type !== "none";
       const dAmt = hasDsc
         ? svc.discount.type === "percentage"
@@ -132,8 +134,16 @@ export default function ServicesPage() {
         : 0;
       const finalPrice = Math.round(svc.price - dAmt);
       const gst = Math.round(finalPrice * 0.18);
+
+      // For GD cards, show per-member price as the discount label
+      const gdPerMemberLabel =
+        isGD && svc.pricePerMember
+          ? `₹${svc.pricePerMember}/Member`
+          : null;
+
       return {
         ...ac,
+        id: svc.id,
         title: svc.name,
         tag: svc.level || "",
         price: hasDsc ? `₹${finalPrice}` : `₹${svc.price}`,
@@ -143,70 +153,16 @@ export default function ServicesPage() {
           ? svc.discount.type === "percentage"
             ? `${svc.discount.value}% OFF`
             : `Save ₹${svc.discount.value}`
-          : null,
+          : gdPerMemberLabel,
         duration: svc.duration,
         desc: svc.value,
         highlights: svc.points ?? [],
-        href: `/select-slot?serviceId=${svc.id}`,
+        href: isGD
+          ? `/gd-booking?serviceId=${svc.id}`
+          : `/select-slot?serviceId=${svc.id}`,
       };
-    });
-
-  // Add the 3 new GD plans manually
-  const gdPlans = [
-    {
-      id: "gd-starter",
-      accent: "#2563eb",
-      accentLight: "rgba(37,99,235,0.08)",
-      accentBorder: "rgba(37,99,235,0.2)",
-      tagColor: "#2563eb",
-      title: "GD Starter (4 Members)",
-      tag: "Small Group",
-      price: "₹796",
-      originalPrice: null,
-      gst: Math.round(796 * 0.18),
-      discountLabel: "₹199/Member",
-      duration: "60 min",
-      desc: "Perfect for focused discussions with your core team.",
-      highlights: ["4 Participants", "Expert Feedback", "WhatsApp Support", "1 Session"],
-      href: "/select-slot?serviceId=gd-starter",
     },
-    {
-      id: "gd-popular",
-      accent: "#7c3aed",
-      accentLight: "rgba(124,58,237,0.08)",
-      accentBorder: "rgba(124,58,237,0.2)",
-      tagColor: "#7c3aed",
-      title: "GD Popular (6 Members)",
-      tag: "Standard",
-      price: "₹1014",
-      originalPrice: null,
-      gst: Math.round(1014 * 0.18),
-      discountLabel: "₹169/Member",
-      duration: "60 min",
-      desc: "Our most popular choice for realistic group simulations.",
-      highlights: ["6 Participants", "Peer Review", "Performance Report", "1 Session"],
-      href: "/select-slot?serviceId=gd-popular",
-    },
-    {
-      id: "gd-value",
-      accent: "#059669",
-      accentLight: "rgba(5,150,105,0.08)",
-      accentBorder: "rgba(5,150,105,0.2)",
-      tagColor: "#059669",
-      title: "GD Value (10 Members)",
-      tag: "Large Group",
-      price: "₹990",
-      originalPrice: null,
-      gst: Math.round(990 * 0.18),
-      discountLabel: "₹99/Member",
-      duration: "60 min",
-      desc: "Maximum value for large teams practicing together.",
-      highlights: ["10 Participants", "Live Moderation", "Group Dynamics", "Best Value"],
-      href: "/select-slot?serviceId=gd-value",
-    },
-  ];
-
-  const allServices = [...dynamicServices, ...gdPlans];
+  );
 
   return (
     <main
@@ -665,7 +621,13 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     <Link
-                      href={s.href}
+                      href={s.id === "resumeAnalysis" ? "#" : s.href}
+                      onClick={(event) => {
+                        if (s.id === "resumeAnalysis") {
+                          event.preventDefault();
+                          setShowResumeUpload(true);
+                        }
+                      }}
                       className="sv-btn"
                       style={{
                         padding: "8px 15px",
@@ -1069,6 +1031,10 @@ export default function ServicesPage() {
         </div>
       </section>
       <StandardFooter />
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </main>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import useSWR from "swr";
 import { Check } from "lucide-react";
+import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
 
 interface Service {
   id: string;
@@ -24,14 +26,22 @@ const fetcher = async (url: string) => {
 };
 
 export default function PricingSection() {
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const router = useRouter();
 
   const handleBook = (serviceId: string) => {
+    if (serviceId === "resumeAnalysis") {
+      setShowResumeUpload(true);
+      return;
+    }
+
     const token =
       typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-    const target = `/select-slot?serviceId=${serviceId}`;
+    const target = serviceId.startsWith("gd-")
+      ? `/gd-booking?serviceId=${serviceId}`
+      : `/select-slot?serviceId=${serviceId}`;
     if (!token) {
       router.push(`/login?redirect=${encodeURIComponent(target)}`);
     } else {
@@ -179,6 +189,10 @@ export default function PricingSection() {
               const ac = accents[idx % accents.length];
               const cardKey = `${svc.id || "service"}-${idx}`;
 
+              const displayName = svc.name;
+              const displayValue = svc.value;
+              const displayPoints = svc.points ?? [];
+
               return (
                 <div
                   key={cardKey}
@@ -286,7 +300,7 @@ export default function PricingSection() {
                     </div>
 
                     {/* Title + desc */}
-                    <h3
+                        <h3
                       style={{
                         fontSize: 17,
                         fontWeight: 700,
@@ -295,7 +309,7 @@ export default function PricingSection() {
                         marginBottom: 8,
                       }}
                     >
-                      {svc.name}
+                          {displayName}
                     </h3>
                     <p
                       style={{
@@ -306,7 +320,7 @@ export default function PricingSection() {
                         flex: 1,
                       }}
                     >
-                      {svc.value}
+                        {displayValue}
                     </p>
 
                     {/* Features */}
@@ -318,7 +332,7 @@ export default function PricingSection() {
                         marginBottom: 18,
                       }}
                     >
-                      {svc.points.map((point: string, i: number) => (
+                      {displayPoints.map((point: string, i: number) => (
                         <div
                           key={i}
                           style={{
@@ -486,6 +500,10 @@ export default function PricingSection() {
           )}
         </div>
       </section>
+      <ResumeBookingUploadDialog
+        isOpen={showResumeUpload}
+        onClose={() => setShowResumeUpload(false)}
+      />
     </>
   );
 }
