@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Star } from "lucide-react";
+import { Star, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 const testimonialsRow1 = [
   {
@@ -76,7 +77,7 @@ const videoTestimonials = testimonialsAutoRow.map((t) => ({
 /* avatar bg shades — all blue toned to match site palette */
 const avatarBg = [
   "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
-  "linear-gradient(135deg,#0369a1,#0891b2)",
+  "linear-gradient(135deg,#0369a1,#2563eb)",
   "linear-gradient(135deg,#3730a3,#4f46e5)",
   "linear-gradient(135deg,#065f46,#059669)",
   "linear-gradient(135deg,#1e3a8a,#2563eb)",
@@ -547,62 +548,81 @@ export default function TestimonialsSection() {
               "opacity 0.6s ease, transform 0.6s cubic-bezier(.23,1,.32,1)",
           }}
         >
-          {/* ── Section header ── */}
-          <div className="text-center px-4 mb-12 lg:mb-16">
-            <div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5 border"
-              style={{
-                background: "rgba(29,78,216,0.05)",
-                borderColor: "rgba(29,78,216,0.15)",
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "#1d40b0",
-                  letterSpacing: "0.10em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Success Stories
-              </span>
+          {/* ── SECTION HEADER (shared pattern) ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              textAlign: "center",
+              maxWidth: 760,
+              margin: "0 auto clamp(2.5rem, 5vw, 4.5rem)",
+              padding: "0 16px",
+              position: "relative",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}
+          >
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, transparent, #2563eb)" }} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                <Sparkles size={11} style={{ color: "#2563eb" }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  04 · Success Stories
+                </span>
+              </div>
+              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, #2563eb, transparent)" }} />
             </div>
-            <h2
-              style={{
-                fontSize: "clamp(28px,4vw,48px)",
-                fontWeight: 300,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.1,
-                color: "#0f172a",
-                marginBottom: 14,
-              }}
-            >
+
+            <h2 style={{
+              margin: "0 0 14px",
+              fontSize: "clamp(34px, 5.4vw, 68px)",
+              lineHeight: 1.04, letterSpacing: "-0.035em",
+              fontWeight: 700, color: "#0f172a",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}>
               What our{" "}
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: "#1d4ed8",
-                  fontStyle: "italic",
-                }}
-              >
-                mentees say
+              <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                mentees say.
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg, #2563eb, #1d4ed8)", transformOrigin: "left", display: "block" }}
+                />
               </span>
             </h2>
-            <p
-              style={{
-                fontSize: 16,
-                color: "#64748b",
-                maxWidth: 420,
-                margin: "0 auto",
-                lineHeight: 1.7,
-              }}
-            >
-              Real stories from professionals who transformed their careers with
-              Neel's mentorship.
+
+            <p style={{
+              fontSize: "clamp(14px, 1.4vw, 17px)",
+              color: "#64748b", lineHeight: 1.65,
+              maxWidth: 600, margin: "0 auto",
+              fontWeight: 400,
+            }}>
+              Real stories from professionals who transformed their careers with Neel&apos;s mentorship.
             </p>
-          </div>
+
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "clamp(14px, 3vw, 44px)",
+              flexWrap: "wrap", justifyContent: "center", marginTop: 22,
+              padding: "14px 22px", borderRadius: 99,
+              background: "#fff", border: "1px solid #2563eb22",
+              boxShadow: "0 8px 30px #2563eb14",
+            }}>
+              {[
+                { val: "5,000+", label: "Coached" },
+                { val: "4.9★", label: "Avg rating" },
+                { val: "94%", label: "Success rate" },
+                { val: "700+", label: "Stories" },
+              ].map((s) => (
+                <div key={s.label} style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
+                  <span style={{ fontSize: "clamp(15px, 1.6vw, 20px)", fontWeight: 800, color: "#2563eb", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.val}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
           {/* ── Row 1: Small video cards ── */}
           <div className="relative mx-4 sm:mx-8 lg:mx-20 rounded-2xl overflow-hidden mb-6 lg:mb-8">

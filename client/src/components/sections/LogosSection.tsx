@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 
 const companies = [
   {
@@ -214,61 +216,63 @@ export default function LogosSection() {
 
         <div className="relative z-10">
           {/* Header */}
-          <div className="text-center px-4 mb-10 lg:mb-14">
-            <div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4 border"
-              style={{
-                background: "rgba(29,78,216,0.05)",
-                borderColor: "rgba(29,78,216,0.15)",
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "#1d40b0",
-                  letterSpacing: "0.10em",
-                  textTransform: "uppercase",
-                }}
-              >
-                From Potential To Placement
-              </span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              textAlign: "center",
+              maxWidth: 600,
+              margin: "0 auto clamp(2rem, 4vw, 3.5rem)",
+              padding: "0 16px",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}
+          >
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <span style={{ width: "clamp(20px, 4vw, 32px)", height: 1, background: "linear-gradient(90deg, transparent, #2563eb)" }} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 12px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                <Sparkles size={10} style={{ color: "#2563eb" }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  03 · From Potential To Placement
+                </span>
+              </div>
+              <span style={{ width: "clamp(20px, 4vw, 32px)", height: 1, background: "linear-gradient(90deg, #2563eb, transparent)" }} />
             </div>
-            <h2
-              style={{
-                fontSize: "clamp(24px,3.5vw,42px)",
-                fontWeight: 300,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.15,
-                color: "#0f172a",
-                marginBottom: 12,
-              }}
-            >
+
+            <h2 style={{
+              margin: "0 0 10px",
+              fontSize: "clamp(22px, 3vw, 36px)",
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              fontWeight: 700,
+              color: "#0f172a",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}>
               Our mentees work at the{" "}
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: "#1d4ed8",
-                  fontStyle: "italic",
-                }}
-              >
-                world's best
+              <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                world&apos;s best.
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ position: "absolute", left: 0, right: 0, bottom: "-2px", height: 2.5, borderRadius: 2, background: "linear-gradient(90deg, #2563eb, #1d4ed8)", transformOrigin: "left", display: "block" }}
+                />
               </span>
             </h2>
-            <p
-              style={{
-                fontSize: 15,
-                color: "#64748b",
-                maxWidth: 400,
-                margin: "0 auto",
-                lineHeight: 1.7,
-              }}
-            >
-              From FAANG to fintech — graduates of Neel's coaching land roles
-              everywhere.
+
+            <p style={{
+              fontSize: "clamp(12px, 1.2vw, 14px)",
+              color: "#64748b",
+              lineHeight: 1.65,
+              maxWidth: 420,
+              margin: "0 auto",
+              fontWeight: 400,
+            }}>
+              From FAANG to fintech — graduates of Neel&apos;s coaching land roles everywhere.
             </p>
-          </div>
+          </motion.div>
 
           {/* Row 1 */}
           <div className="relative mb-3 mx-4 sm:mx-8 lg:mx-20">

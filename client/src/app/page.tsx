@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/sections/HeroSection";
+import GroupDiscussionSection from "@/components/sections/GroupDiscussionSection";
 import LogosSection from "@/components/sections/LogosSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import HowItWorksSection from "@/components/sections/HowItWorksSection";
@@ -18,6 +19,7 @@ export default function Home() {
       <Navbar />
       <LaunchNotificationToast />
       <HeroSection />
+      <GroupDiscussionSection />
       <LogosSection />
       <TestimonialsSection />
       <PricingSection />

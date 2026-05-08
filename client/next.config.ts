@@ -31,6 +31,16 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    // HTML pages — never cache, always fresh
+    {
+      source: "/(.*)",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=0, must-revalidate",
+        },
+      ],
+    },
   ],
 };
 

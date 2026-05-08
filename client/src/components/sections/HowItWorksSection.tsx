@@ -289,7 +289,9 @@ import {
   Star,
   Award,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -447,46 +449,60 @@ export default function HowItWorksSection() {
 
         <div className="relative z-10 max-w-5xl mx-auto">
           {/* Section header */}
-          <div className="text-center mb-16 lg:mb-20">
-            <div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5 border"
-              style={{
-                background: "rgba(29,78,216,0.05)",
-                borderColor: "rgba(29,78,216,0.15)",
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-              <span className="text-[11px] font-semibold text-blue-700 tracking-[0.10em] uppercase">
-                The Process
-              </span>
+          {/* ── SECTION HEADER (shared pattern) ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              textAlign: "center",
+              maxWidth: 760,
+              margin: "0 auto clamp(2.5rem, 5vw, 4.5rem)",
+              position: "relative",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}
+          >
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, transparent, #2563eb)" }} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                <Sparkles size={11} style={{ color: "#2563eb" }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  06 · The Process
+                </span>
+              </div>
+              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, #2563eb, transparent)" }} />
             </div>
-            <h2
-              className="text-slate-900 mb-4"
-              style={{
-                fontSize: "clamp(28px, 4vw, 48px)",
-                fontWeight: 300,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.1,
-              }}
-            >
+
+            <h2 style={{
+              margin: "0 0 14px",
+              fontSize: "clamp(34px, 5.4vw, 68px)",
+              lineHeight: 1.04, letterSpacing: "-0.035em",
+              fontWeight: 700, color: "#0f172a",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}>
               How it{" "}
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: "#1d4ed8",
-                  fontStyle: "italic",
-                }}
-              >
-                works
+              <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                works.
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg, #2563eb, #1d4ed8)", transformOrigin: "left", display: "block" }}
+                />
               </span>
             </h2>
-            <p
-              className="text-slate-500 max-w-md mx-auto"
-              style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.7 }}
-            >
-              Four steps from sign-up to offer letter
+
+            <p style={{
+              fontSize: "clamp(14px, 1.4vw, 17px)",
+              color: "#64748b", lineHeight: 1.65,
+              maxWidth: 600, margin: "0 auto",
+              fontWeight: 400,
+            }}>
+              Four steps from sign-up to offer letter.
             </p>
-          </div>
+          </motion.div>
 
           {/* Steps */}
           <div className="relative">

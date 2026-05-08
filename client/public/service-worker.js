@@ -1,92 +1,77 @@
-const CACHE_NAME = 'yic-resume-analyzer-v1';
-const urlsToCache = [
-  '/',
-  '/resume-analyzer',
-  '/offline.html',
-  '/yic-logo-sm.png',
-  '/yic-logo-lg.png',
-];
+const CACHE_NAME = 'yic-cache-v2';
+const STATIC_CACHE = 'yic-static-v2';
 
-// Install Service Worker
+// Install — only pre-cache the offline fallback
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache).catch(() => {
-          // Continue even if some files fail to cache
-          return Promise.resolve();
-        });
-      })
+      .then((cache) => cache.addAll(['/offline.html']).catch(() => Promise.resolve()))
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate Service Worker
+// Activate — delete ALL old caches, take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((n) => n !== CACHE_NAME && n !== STATIC_CACHE)
+          .map((n) => caches.delete(n))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch event - Cache first, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
 
-  // Skip API calls and external resources
+  const url = new URL(event.request.url);
+
+  // Never intercept API calls or external domains
   if (
-    event.request.url.includes('/api/') ||
-    event.request.url.includes('kpeduresumeapi.vercel.app')
+    url.pathname.startsWith('/api/') ||
+    event.request.url.includes('kpeduresumeapi.vercel.app') ||
+    url.origin !== self.location.origin
   ) {
     return;
   }
 
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request).then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return response;
+  // Next.js content-hashed static chunks — safe to cache forever
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((res) => {
+          const clone = res.clone();
+          caches.open(STATIC_CACHE).then((c) => c.put(event.request, clone));
+          return res;
         });
       })
-      .catch(() => {
-        // Return offline page if available
-        return caches.match('/offline.html');
+    );
+    return;
+  }
+
+  // Everything else (HTML pages, API routes, images) — Network First
+  event.respondWith(
+    fetch(event.request)
+      .then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+        return res;
       })
+      .catch(() =>
+        caches
+          .match(event.request)
+          .then((cached) => cached || caches.match('/offline.html'))
+      )
   );
 });
 
-// Handle messages from clients
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
