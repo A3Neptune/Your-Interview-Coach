@@ -1,907 +1,914 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import {
-  FileText, Users, Mic2, Video, ArrowRight, CheckCircle2,
-  Clock, ChevronRight, Sparkles, Zap, Target,
-  TrendingUp, Play, Pause, Star,
+  FileText, Users, Mic2, Video,
+  CheckCircle2, ArrowRight, Clock, Zap,
+  ChevronDown, Star, TrendingUp, Award, Sparkles, Check,
+  ShieldCheck, BadgeCheck,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import StandardFooter from "@/components/StandardFooter";
 
-/* ── Brand tokens (matches /services accentPalette + HeroCarousel) ── */
-const PAPER   = "#F8F6F1";
-const INK     = "#0f172a";
-const MUTED   = "#64748b";
-const BRAND   = "#2563eb";
-const BRAND_D = "#1e3a8a";
-
-/* ── Module data ── */
-type ModuleType = {
-  id: string;
-  step: string;
-  icon: React.ElementType;
-  dur: string;
-  tag: string;
-  color: string;
-  colorDk: string;
-  colorLt: string;
-  colorBd: string;
-  name: string;
-  full: string;
-  eyebrow: string;
-  obj: string;
-  content: { type: "points"; points: string[] } | { type: "parts"; parts: { label: string; items: string[] }[] };
-  activity?: string;
-  outcomes: string[];
-  proof: string;
-  floater: { initials: string; name: string; win: string; time: string };
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS — consistent with site-wide theme
+───────────────────────────────────────────────────────────── */
+const T = {
+  blue:   "#2563eb",
+  blueDk: "#1d4ed8",
+  ink:    "#0f172a",
+  soft:   "#334155",
+  muted:  "#64748b",
+  rule:   "rgba(37,99,235,0.10)",
+  green:  "#059669",
+  amber:  "#b45309",
+  purple: "#7c3aed",
 };
 
-const MODULES: ModuleType[] = [
+/* ─────────────────────────────────────────────────────────────
+   MODULE DATA
+───────────────────────────────────────────────────────────── */
+const MODULES = [
   {
-    id: "resume",
-    step: "01",
-    icon: FileText,
-    dur: "60 min",
-    tag: "Start Here",
-    color: "#2563eb",
-    colorDk: "#1e3a8a",
-    colorLt: "rgba(37,99,235,0.08)",
-    colorBd: "rgba(37,99,235,0.22)",
-    name: "Resume",
-    full: "Resume Analysis & Positioning",
-    eyebrow: "Before anything else — fix your resume.",
-    obj: "Turn a basic resume into an interview-winning document.",
-    content: {
-      type: "points",
-      points: [
-        "Live resume audit — structure, keywords, impact",
-        "Identifying gaps & weak areas",
-        "Converting responsibilities → achievements",
-        "Aligning resume with your target roles",
-      ],
-    },
-    outcomes: ["Refined, recruiter-ready resume", "Clear positioning of your profile"],
-    proof: "Students report 5× more callbacks after the session",
-    floater: { initials: "RS", name: "Rahul S.", win: "landed Infosys offer", time: "2 h ago" },
+    num: "01",
+    duration: "60 mins",
+    Icon: FileText,
+    accent: T.green,
+    accentLight: "rgba(5,150,105,0.09)",
+    accentXLight: "rgba(5,150,105,0.04)",
+    label: "Resume Analysis & Positioning",
+    objective: "Turn a basic resume into an interview-winning document",
+    topics: [
+      "Live resume audit — structure, keywords, impact",
+      "Identifying gaps & weak areas at a glance",
+      "Converting responsibilities → achievements",
+      "Aligning resume with target roles precisely",
+    ],
+    outcomes: [
+      "Refined, recruiter-ready resume",
+      "Clear positioning of your profile",
+    ],
+    tag: "Foundation",
   },
   {
-    id: "gd",
-    step: "02",
-    icon: Users,
-    dur: "60 min",
-    tag: "Group Activity",
-    color: "#0891b2",
-    colorDk: "#155e75",
-    colorLt: "rgba(8,145,178,0.08)",
-    colorBd: "rgba(8,145,178,0.22)",
-    name: "GD Mastery",
-    full: "Group Discussion (GD) Mastery",
-    eyebrow: "For when groups shut you out.",
-    obj: "Stand out in GDs without over-speaking.",
-    content: {
-      type: "points",
-      points: [
-        "Types of GDs — abstract, case-based, current affairs",
-        "How to start, enter, and conclude effectively",
-        "Structuring thoughts quickly under pressure",
-        "Common mistakes that eliminate candidates",
-      ],
-    },
+    num: "02",
+    duration: "60 mins",
+    Icon: Users,
+    accent: T.amber,
+    accentLight: "rgba(180,83,9,0.09)",
+    accentXLight: "rgba(180,83,9,0.04)",
+    label: "Group Discussion Mastery",
+    objective: "Stand out in GDs without over-speaking",
+    topics: [
+      "Types of GDs — abstract, case-based, current affairs",
+      "How to start, enter & conclude effectively",
+      "Structuring thoughts quickly under pressure",
+      "Common mistakes that eliminate candidates",
+    ],
+    outcomes: [
+      "Structured thinking under pressure",
+      "Confident participation strategy",
+    ],
     activity: "Live mini GD simulation + real-time feedback",
-    outcomes: ["Structured thinking under pressure", "Confident participation strategy"],
-    proof: "Batches capped at 8 — every participant gets personal feedback",
-    floater: { initials: "MK", name: "Meera K.", win: "cleared campus GD round", time: "3 days ago" },
+    tag: "Group Skill",
   },
   {
-    id: "interview",
-    step: "03",
-    icon: Mic2,
-    dur: "120 min",
-    tag: "Intensive",
-    color: "#7c3aed",
-    colorDk: "#4c1d95",
-    colorLt: "rgba(124,58,237,0.08)",
-    colorBd: "rgba(124,58,237,0.22)",
-    name: "Interview Prep",
-    full: "Interview Preparation – Core",
-    eyebrow: "For when you blank out mid-answer.",
-    obj: "Build strong, structured, and confident responses.",
-    content: {
-      type: "parts",
-      parts: [
-        {
-          label: "Part A — Introduction Mastery",
-          items: [
-            'Crafting a powerful "Tell Me About Yourself"',
-            "Personal branding in 60–90 seconds",
-          ],
-        },
-        {
-          label: "Part B — Common Questions",
-          items: [
-            "HR questions — strengths, weaknesses, goals",
-            "Situation-based answers using STAR method",
-            "Answer structuring for clarity & impact",
-          ],
-        },
-        {
-          label: "Part C — Live Practice",
-          items: ["Real-time correction & improvement"],
-        },
-      ],
-    },
+    num: "03",
+    duration: "120 mins",
+    Icon: Mic2,
+    accent: T.blue,
+    accentLight: "rgba(37,99,235,0.09)",
+    accentXLight: "rgba(37,99,235,0.04)",
+    label: "Interview Preparation – Core",
+    objective: "Build strong, structured, and confident responses",
+    parts: [
+      {
+        label: "Part A — Introduction Mastery",
+        items: [
+          'Crafting a powerful "Tell Me About Yourself"',
+          "Personal branding in 60–90 seconds",
+        ],
+      },
+      {
+        label: "Part B — Common Questions",
+        items: [
+          "STAR-method answers for behavioural questions",
+          "Handling strengths, weaknesses & salary questions",
+        ],
+      },
+      {
+        label: "Part C — Live Practice",
+        items: ["Real-time correction & improvement sessions"],
+      },
+    ],
     outcomes: [
       "Finalized, polished introduction",
       "Ready answers for most-asked questions",
       "Improved articulation & confidence",
     ],
-    proof: "94% of participants feel interview-ready after this module",
-    floater: { initials: "AP", name: "Ananya P.", win: "got 3 callbacks in a week", time: "yesterday" },
+    tag: "Core Module",
+    featured: true,
   },
   {
-    id: "mock",
-    step: "04",
-    icon: Video,
-    dur: "60 min",
-    tag: "Final Round",
-    color: "#059669",
-    colorDk: "#064e3b",
-    colorLt: "rgba(5,150,105,0.08)",
-    colorBd: "rgba(5,150,105,0.22)",
-    name: "Mock Interview",
-    full: "Mock Interview + Feedback",
-    eyebrow: "The final test before the real one.",
-    obj: "Simulate real interview pressure in a safe environment.",
-    content: {
-      type: "points",
-      points: [
-        "Short mock interview rounds",
-        "Personalized feedback on communication & confidence",
-        "Assessment of content quality",
-        "Key improvement pointers",
-      ],
-    },
-    outcomes: ["Real interview experience", "Clear action plan for improvement"],
-    proof: "3 in 4 graduates bag an offer within 4 weeks",
-    floater: { initials: "VT", name: "Vikram T.", win: "cracked TCS & Wipro", time: "this week" },
+    num: "04",
+    duration: "60 mins",
+    Icon: Video,
+    accent: T.purple,
+    accentLight: "rgba(124,58,237,0.09)",
+    accentXLight: "rgba(124,58,237,0.04)",
+    label: "Mock Interview + Feedback",
+    objective: "Simulate real interview pressure and get actionable clarity",
+    topics: [
+      "Short mock interview rounds — as real as it gets",
+      "Personalised feedback on communication",
+      "Assessment of confidence & content quality",
+      "Key improvement pointers & next steps",
+    ],
+    outcomes: [
+      "Real interview experience under pressure",
+      "Clear action plan for improvement",
+    ],
+    tag: "Capstone",
   },
-];
+] as const;
 
 const DELIVERABLES = [
-  { icon: FileText,    color: "#2563eb", lt: "rgba(37,99,235,0.08)",    label: "Resume improvement suggestions (documented)" },
-  { icon: Mic2,        color: "#0891b2", lt: "rgba(8,145,178,0.08)",    label: "Finalized interview introduction" },
-  { icon: Users,       color: "#7c3aed", lt: "rgba(124,58,237,0.08)",   label: "GD performance feedback" },
-  { icon: TrendingUp,  color: "#059669", lt: "rgba(5,150,105,0.08)",    label: "Personalized interview improvement roadmap" },
-];
+  { icon: "📄", label: "Resume improvement suggestions", sub: "Documented & actionable" },
+  { icon: "🎤", label: "Finalized interview introduction", sub: "Polished & personalised" },
+  { icon: "💬", label: "GD performance feedback", sub: "Scored & detailed" },
+  { icon: "🗺️", label: "Personalised improvement roadmap", sub: "Your next 30 days planned" },
+] as const;
 
-const MENTORS = [
-  { name: "Neel",    role: "Interview Coach & Career Strategist", color: "#2563eb", grd: "linear-gradient(135deg,#1e3a8a,#2563eb)" },
-  { name: "Aashish", role: "GD Facilitator & HR Specialist",      color: "#0891b2", grd: "linear-gradient(135deg,#155e75,#0891b2)" },
-  { name: "Seru",    role: "Resume Expert & Placement Advisor",    color: "#7c3aed", grd: "linear-gradient(135deg,#4c1d95,#7c3aed)" },
-];
-
-/* ── Motion variants ── */
-const tabContent = {
-  enter: { opacity: 0, y: 20, filter: "blur(6px)" },
-  center: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const, staggerChildren: 0.06 } },
-  exit:   { opacity: 0, y: -14, filter: "blur(4px)", transition: { duration: 0.25 } },
-};
-const child = {
-  enter: { opacity: 0, y: 16 },
-  center: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const } },
-  exit:   { opacity: 0, y: -8, transition: { duration: 0.2 } },
-};
-const floaterV = {
-  enter: { opacity: 0, y: 18, scale: 0.92 },
-  center: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const, delay: 0.65 } },
-  exit:   { opacity: 0, y: -8, scale: 0.95, transition: { duration: 0.22 } },
-};
-const cardV = {
-  enter: { opacity: 0, scale: 0.94, x: 24 },
-  center: { opacity: 1, scale: 1, x: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] as const, delay: 0.08 } },
-  exit:   { opacity: 0, scale: 0.97, x: -16, transition: { duration: 0.28 } },
-};
-const megaV = {
-  enter: { opacity: 0, scale: 0.55 },
-  center: { opacity: 1, scale: 1, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } },
-  exit:   { opacity: 0, scale: 0.75, transition: { duration: 0.25 } },
-};
-
-/* ── Animated counter ── */
-function Counter({ to, suffix = "", decimals = 0, trigger }: { to: number; suffix?: string; decimals?: number; trigger: number }) {
-  const [val, setVal] = useState(0);
+/* ─────────────────────────────────────────────────────────────
+   SCROLL REVEAL HOOK
+───────────────────────────────────────────────────────────── */
+function useReveal(threshold = 0.12) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const c = animate(0, to, { duration: 1.4, ease: [0.22, 1, 0.36, 1], onUpdate: v => setVal(v) });
-    return () => c.stop();
-  }, [to, trigger]);
-  return <>{decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString("en-IN")}{suffix}</>;
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
 }
 
-/* ── Point item ── */
-function Point({ text, color, lt, bd }: { text: string; color: string; lt: string; bd: string }) {
+/* ─────────────────────────────────────────────────────────────
+   REVEAL WRAPPER
+───────────────────────────────────────────────────────────── */
+function Reveal({
+  children, delay = 0, className = "", style = {},
+}: {
+  children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
+}) {
+  const { ref, visible } = useReveal();
   return (
-    <motion.div variants={child} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 9 }}>
-      <div style={{
-        width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
-        background: lt, border: `1px solid ${bd}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <CheckCircle2 size={10} style={{ color }} strokeWidth={3} />
-      </div>
-      <span style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, fontWeight: 450 }}>{text}</span>
-    </motion.div>
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "none" : "translateY(28px)",
+        transition: `opacity 0.65s ${delay}s cubic-bezier(0.22,1,0.36,1), transform 0.65s ${delay}s cubic-bezier(0.22,1,0.36,1)`,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   MAIN COMPONENT
-════════════════════════════════════════════════════════ */
-export default function PlacementJourney() {
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [tick, setTick]     = useState(0);
-  const DURATION = 7000;
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+/* ─────────────────────────────────────────────────────────────
+   MODULE CARD
+───────────────────────────────────────────────────────────── */
+function ModuleCard({ mod, index }: { mod: typeof MODULES[number]; index: number }) {
+  const { ref, visible } = useReveal(0.08);
+  const isEven = index % 2 === 0;
 
-  /* Parallax for right card */
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rotX = useSpring(useTransform(my, [-1, 1], [6, -6]), { stiffness: 100, damping: 18 });
-  const rotY = useSpring(useTransform(mx, [-1, 1], [-8, 8]), { stiffness: 100, damping: 18 });
-  const tx   = useSpring(useTransform(mx, [-1, 1], [-7, 7]), { stiffness: 100, damping: 18 });
-  const ty   = useSpring(useTransform(my, [-1, 1], [-4, 4]), { stiffness: 100, damping: 18 });
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "none" : `translateX(${isEven ? -32 : 32}px)`,
+        transition: `opacity 0.7s ${index * 0.1}s cubic-bezier(0.22,1,0.36,1), transform 0.7s ${index * 0.1}s cubic-bezier(0.22,1,0.36,1)`,
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          borderRadius: 22,
+          border: `1px solid ${mod.accent}22`,
+          background: "#fff",
+          overflow: "hidden",
+          boxShadow: `0 12px 48px -8px ${mod.accent}14, 0 2px 8px rgba(15,23,42,0.04)`,
+        }}
+      >
+        <div style={{ height: 4, background: mod.accent, width: "100%" }} />
+        <div style={{ padding: "28px 30px 30px" }}>
+          <div style={{
+            display: "flex", alignItems: "flex-start",
+            justifyContent: "space-between", gap: 12, marginBottom: 22,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: 14,
+                background: mod.accentLight,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                border: `1.5px solid ${mod.accent}22`,
+              }}>
+                <mod.Icon size={24} style={{ color: mod.accent }} />
+              </div>
+              <div>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: "0.09em",
+                  textTransform: "uppercase", color: mod.accent, marginBottom: 4,
+                }}>
+                  Module {mod.num} · {mod.tag}
+                </div>
+                <h3 style={{
+                  fontSize: "clamp(17px,1.8vw,21px)", fontWeight: 800,
+                  color: T.ink, letterSpacing: "-0.025em", lineHeight: 1.2,
+                }}>
+                  {mod.label}
+                </h3>
+              </div>
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: mod.accentXLight,
+              border: `1px solid ${mod.accent}22`,
+              borderRadius: 99, padding: "5px 12px", flexShrink: 0,
+            }}>
+              <Clock size={11} style={{ color: mod.accent }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: mod.accent, letterSpacing: "0.05em" }}>
+                {mod.duration}
+              </span>
+            </div>
+          </div>
 
-  const mod = MODULES[active];
+          <p style={{
+            fontSize: 13.5, color: T.muted, lineHeight: 1.65, marginBottom: 22,
+            paddingLeft: 14, borderLeft: `2px solid ${mod.accent}40`,
+          }}>
+            <strong style={{ color: T.soft, fontWeight: 600 }}>Objective:</strong>{" "}
+            {mod.objective}
+          </p>
 
-  const goTo = useCallback((i: number) => { setActive(i); setTick(t => t + 1); }, []);
-  const advance = useCallback(() => goTo((active + 1) % MODULES.length), [active, goTo]);
+          {"parts" in mod ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 22 }}>
+              {mod.parts.map((part) => (
+                <div key={part.label}>
+                  <p style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: "0.07em",
+                    textTransform: "uppercase", color: mod.accent, marginBottom: 8,
+                  }}>
+                    {part.label}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {part.items.map((item) => (
+                      <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                        <div style={{
+                          width: 6, height: 6, borderRadius: "50%",
+                          background: mod.accent, flexShrink: 0, marginTop: 6,
+                        }} />
+                        <span style={{ fontSize: 13, color: T.soft, lineHeight: 1.55 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 22 }}>
+              {mod.topics.map((t) => (
+                <div key={t} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                  <div style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    background: mod.accent, flexShrink: 0, marginTop: 6,
+                  }} />
+                  <span style={{ fontSize: 13, color: T.soft, lineHeight: 1.55 }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
-  useEffect(() => {
-    if (paused) return;
-    timerRef.current = setTimeout(advance, DURATION);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [active, paused, advance]);
+          {"activity" in mod && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: mod.accentLight, border: `1px solid ${mod.accent}22`,
+              borderRadius: 10, padding: "9px 14px", marginBottom: 20,
+            }}>
+              <Zap size={13} style={{ color: mod.accent, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: mod.accent }}>
+                Activity: {mod.activity}
+              </span>
+            </div>
+          )}
 
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    mx.set(((e.clientX - r.left) / r.width) * 2 - 1);
-    my.set(((e.clientY - r.top)  / r.height) * 2 - 1);
-  };
-  const onMouseLeave = () => { mx.set(0); my.set(0); };
+          <div style={{ paddingTop: 18, borderTop: `1px solid ${T.rule}` }}>
+            <p style={{
+              fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em",
+              textTransform: "uppercase", color: "#94a3b8", marginBottom: 10,
+            }}>
+              What you walk away with
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {mod.outcomes.map((o) => (
+                <div key={o} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircle2 size={14} style={{ color: mod.accent, flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.soft }}>{o}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  /* For scroll-reveal on static sections */
-  const useReveal = (threshold = 0.1) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const [vis, setVis] = useState(false);
-    useEffect(() => {
-      const el = ref.current;
-      if (!el) return;
-      const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } }, { threshold });
-      obs.observe(el);
-      return () => obs.disconnect();
-    }, [threshold]);
-    return { ref, vis };
-  };
-
-  const deliv   = useReveal();
-  const mentors = useReveal();
-  const cta     = useReveal();
-
+/* ─────────────────────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────────────────────── */
+export default function PlacementAccelerator() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400;1,9..144,600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,200;9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800;9..40,900&display=swap');
+        * { box-sizing: border-box; }
+        .pa-root { font-family: 'DM Sans', system-ui, sans-serif; background: #fff; color: #0f172a; -webkit-font-smoothing: antialiased; }
+        .pa-wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 clamp(20px,4vw,56px); }
 
-        .pj-wrap { --paper:${PAPER}; --ink:${INK}; --muted:${MUTED}; --brand:${BRAND}; --brand-d:${BRAND_D}; --rule:rgba(15,23,42,0.08); }
+        .pa-modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 820px) { .pa-modules-grid { grid-template-columns: 1fr; } }
 
-        @keyframes pj-bar   { from{transform:scaleX(0)} to{transform:scaleX(1)} }
-        @keyframes pj-bob   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-        @keyframes pj-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-        @keyframes pj-glow  { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.06)} }
-        @keyframes pj-shim  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .pa-deliv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        @media (max-width: 900px) { .pa-deliv-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .pa-deliv-grid { grid-template-columns: 1fr; } }
 
-        .pj-bar-fill {
-          height:100%; transform-origin:left; border-radius:0 2px 2px 0;
-          animation: pj-bar ${DURATION}ms linear forwards;
-        }
-        .pj-float { animation: pj-bob 4s ease-in-out infinite; }
-        .pj-dot-live { animation: pj-pulse 1.8s ease-in-out infinite; }
-        .pj-halo { position:absolute; border-radius:50%; filter:blur(72px); animation:pj-glow 5s ease-in-out infinite; pointer-events:none; }
+        .pa-stat-strip { display: flex; gap: 0; flex-wrap: wrap; }
+        .pa-stat + .pa-stat { border-left: 1px solid rgba(37,99,235,0.12); padding-left: clamp(1.2rem,3vw,2.4rem); }
+        .pa-stat { padding-right: clamp(1.2rem,3vw,2.4rem); }
 
-        /* Tab strip */
-        .pj-tab {
-          flex:1; min-width:0; padding:14px 12px 12px;
-          border:none; border-top:2px solid transparent;
-          cursor:pointer; background:transparent;
-          transition:border-color .22s,background .22s;
-          font-family:inherit; text-align:left;
-          display:flex; flex-direction:column; gap:4px;
-        }
-        .pj-tab:hover { background:rgba(37,99,235,0.04); }
+        .pa-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent, rgba(37,99,235,0.10) 15%, rgba(37,99,235,0.10) 85%, transparent); transform: translateX(-50%); pointer-events: none; }
+        @media (max-width: 820px) { .pa-spine { display: none; } }
 
-        /* Module card (glass) */
-        .pj-glass {
-          background:rgba(255,255,255,0.75);
-          backdrop-filter:blur(22px);
-          -webkit-backdrop-filter:blur(22px);
-          border:1px solid rgba(37,99,235,0.14);
-          box-shadow:0 1px 0 rgba(255,255,255,0.85) inset, 0 28px 64px -20px rgba(15,23,42,0.16), 0 6px 22px rgba(37,99,235,0.07);
-        }
+        .pa-blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
 
-        /* CTA primary */
-        .pj-cta-p {
-          display:inline-flex; align-items:center; gap:8px;
-          padding:14px 28px; border-radius:12px; font-size:15px;
-          font-weight:700; color:#fff; cursor:pointer; border:none;
-          background:linear-gradient(135deg,${BRAND_D},${BRAND});
-          box-shadow:0 8px 28px rgba(37,99,235,0.28);
-          transition:transform .2s,box-shadow .2s;
-          font-family:inherit; text-decoration:none; position:relative; overflow:hidden;
-        }
-        .pj-cta-p::before {
-          content:''; position:absolute; inset:0;
-          background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.26) 50%,transparent 70%);
-          background-size:200% 100%; animation:pj-shim 3.4s ease-in-out infinite;
-          pointer-events:none;
-        }
-        .pj-cta-p:hover { transform:translateY(-2px); box-shadow:0 14px 40px rgba(37,99,235,0.38); }
+        .pa-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 10px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 700; font-family: 'DM Sans', system-ui, sans-serif; border: none; cursor: pointer; text-decoration: none; transition: filter 0.18s, box-shadow 0.18s, transform 0.14s; }
+        .pa-cta-btn:hover { filter: brightness(1.08); box-shadow: 0 12px 32px rgba(37,99,235,0.28); transform: translateY(-1px); }
+        .pa-cta-btn:active { transform: none; }
 
-        /* Ghost CTA */
-        .pj-cta-g {
-          display:inline-flex; align-items:center; gap:6px;
-          padding:14px 22px; border-radius:12px; font-size:14px;
-          font-weight:600; cursor:pointer;
-          border:1.5px solid rgba(37,99,235,0.22);
-          background:rgba(37,99,235,0.05); color:${BRAND_D};
-          transition:background .2s,border-color .2s;
-          font-family:inherit; text-decoration:none;
-        }
-        .pj-cta-g:hover { background:rgba(37,99,235,0.1); border-color:${BRAND}; }
+        .pa-ghost-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #64748b; background: none; border: 1px solid rgba(37,99,235,0.2); border-radius: 10px; cursor: pointer; text-decoration: none; padding: 13px 24px; font-family: 'DM Sans', system-ui, sans-serif; transition: color 0.18s, border-color 0.18s, background 0.18s; }
+        .pa-ghost-btn:hover { color: #2563eb; border-color: rgba(37,99,235,0.4); background: rgba(37,99,235,0.04); }
 
-        /* Stat block */
-        .pj-stat + .pj-stat { border-left:1px solid var(--rule); padding-left:1.4rem; }
+        @keyframes heroFadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+        .pa-hero-anim { animation: heroFadeUp 0.72s cubic-bezier(0.22,1,0.36,1) both; }
 
-        /* Reveal */
-        .pj-reveal { opacity:0; transform:translateY(28px); transition:opacity .65s,transform .65s; }
-        .pj-reveal.in { opacity:1; transform:none; }
+        .pa-grid-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px), linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px); background-size: 64px 64px; }
 
-        /* Mega step number */
-        .pj-mega {
-          font-family:'DM Sans',system-ui,sans-serif;
-          font-size:clamp(110px,15vw,200px);
-          font-weight:800; line-height:0.84; letter-spacing:-0.07em;
-          color:rgba(37,99,235,0.15); pointer-events:none; user-select:none;
-          white-space:nowrap;
-        }
-
-        /* Mobile responsive */
-        @media(max-width:900px){
-          .pj-two-col { grid-template-columns:1fr !important; }
-          .pj-card-wrap { justify-content:center !important; }
-          .pj-card-inner { max-width:440px !important; }
-        }
-        @media(max-width:640px){
-          .pj-tab { padding:10px 6px 8px; }
-          .pj-tab-meta { display:none !important; }
-          .pj-tab-name { font-size:9px !important; }
-          .pj-floater { left:50% !important; transform:translateX(-50%) !important; bottom:-28px !important; min-width:220px !important; }
-          .pj-cta-p { padding:12px 20px !important; font-size:14px !important; }
-        }
-        @media(max-width:440px){
-          .pj-tab-name { display:none !important; }
-          .pj-tab-chip { min-width:28px !important; height:22px !important; font-size:10.5px !important; }
-        }
+        @keyframes tickerMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .pa-ticker { animation: tickerMove 28s linear infinite; }
+        .pa-ticker:hover { animation-play-state: paused; }
       `}</style>
 
-      <main className="pj-wrap" style={{ background: PAPER, fontFamily: "'DM Sans',system-ui,sans-serif", color: INK, minHeight: "100vh", overflowX: "hidden" }}>
+      <div className="pa-root" style={{ minHeight: "100vh" }}>
+        <Navbar />
 
-        {/* ══════════ HERO ══════════ */}
-        <section style={{ position: "relative", padding: "clamp(80px,10vw,130px) clamp(20px,5vw,60px) 0", overflow: "hidden" }}>
+        {/* ══════════════════════════════════════
+            HERO
+        ══════════════════════════════════════ */}
+        <section
+          style={{
+            position: "relative", overflow: "hidden",
+            paddingTop: "clamp(100px,12vw,140px)",
+            paddingBottom: "clamp(60px,8vw,100px)",
+            background: "#fff",
+          }}
+        >
+          <div className="pa-grid-bg" />
+          <div className="pa-blob" style={{ width: 600, height: 600, background: "radial-gradient(circle,rgba(37,99,235,0.08) 0%,transparent 65%)", top: -200, right: -140 }} />
+          <div className="pa-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle,rgba(5,150,105,0.07) 0%,transparent 70%)", bottom: -80, left: -80 }} />
 
-          {/* BG layers */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-            {/* Dot grid */}
-            <div style={{
-              position: "absolute", inset: 0,
-              backgroundImage: "radial-gradient(rgba(37,99,235,0.07) 1px,transparent 1px)",
-              backgroundSize: "30px 30px",
-              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent)",
-              maskImage: "radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent)",
-            }} />
-            {/* Line grid */}
-            <div style={{
-              position: "absolute", inset: 0,
-              backgroundImage: "linear-gradient(rgba(37,99,235,0.045) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.045) 1px,transparent 1px)",
-              backgroundSize: "48px 48px",
-              WebkitMaskImage: "radial-gradient(ellipse 55% 45% at 50% 20%,black,transparent)",
-              maskImage: "radial-gradient(ellipse 55% 45% at 50% 20%,black,transparent)",
-            }} />
-            {/* Top-right glow */}
-            <div style={{ position: "absolute", top: -100, right: -80, width: 600, height: 600, borderRadius: "50%", filter: "blur(100px)", background: "radial-gradient(circle,rgba(37,99,235,0.1),transparent 65%)" }} />
-            <div style={{ position: "absolute", bottom: 0, left: -60, width: 400, height: 400, borderRadius: "50%", filter: "blur(80px)", background: "radial-gradient(circle,rgba(8,145,178,0.07),transparent 65%)" }} />
-          </div>
-
-          {/* Progress bar */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "rgba(37,99,235,0.07)", zIndex: 40 }}>
-            {!paused && (
-              <div key={tick} className="pj-bar-fill" style={{ background: `linear-gradient(90deg,${BRAND},${BRAND_D})` }} />
-            )}
-          </div>
-
-          {/* Mega step — behind everything */}
-          <div style={{ position: "absolute", top: "clamp(60px,9vw,110px)", right: "clamp(16px,4vw,56px)", zIndex: 1, pointerEvents: "none" }}>
-            <AnimatePresence mode="wait">
-              <motion.span key={mod.step} variants={megaV} initial="enter" animate="center" exit="exit" className="pj-mega">
-                {mod.step}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-
-          {/* Ambient tint (changes per slide) */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={mod.id + "-env"}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 1.2 }}
-              style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}
-            >
-              <div style={{ position: "absolute", width: 680, height: 680, borderRadius: "50%", filter: "blur(110px)", background: `radial-gradient(circle,${mod.color}18,transparent 65%)`, top: -200, right: -150 }} />
-            </motion.div>
-          </AnimatePresence>
-
-          {/* ── Two-column grid ── */}
-          <div
-            className="pj-two-col"
-            style={{
-              position: "relative", zIndex: 10,
-              display: "grid", gridTemplateColumns: "54% 46%",
-              gap: "clamp(2rem,4vw,5rem)",
-              alignItems: "center",
-              maxWidth: 1280, margin: "0 auto",
-            }}
-          >
-
-            {/* ─── LEFT ─── */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={mod.id + "-L"}
-                variants={tabContent}
-                initial="enter" animate="center" exit="exit"
-                style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
-              >
-
-                {/* Eyebrow pill */}
-                <motion.div variants={child} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
-                  <div style={{
-                    display: "inline-flex", alignItems: "center", gap: 7,
-                    padding: "4px 12px 4px 8px", borderRadius: 99,
-                    background: `${mod.colorLt}`, border: `1px solid ${mod.colorBd}`,
-                  }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: mod.color, letterSpacing: "0.08em" }}>
-                      {mod.step} · {mod.name.toUpperCase()}
-                    </span>
-                    <span className="pj-dot-live" style={{ width: 5, height: 5, borderRadius: "50%", background: mod.color }} />
-                  </div>
-                  <span style={{ fontSize: 12, color: MUTED, fontWeight: 500 }}>{mod.eyebrow}</span>
-                </motion.div>
-
-                {/* Headline */}
-                <motion.h1 variants={child} style={{ margin: "0 0 18px", fontFamily: "'Fraunces',serif", fontSize: "clamp(34px,5vw,66px)", fontWeight: 600, lineHeight: 1.04, letterSpacing: "-0.03em", color: INK }}>
-                  {mod.full.split(" ").map((w, i) => {
-                    const isAccent = w === "Analysis" || w === "Discussion" || w === "Preparation" || w === "Interview";
-                    return (
-                      <span key={i} style={{ color: isAccent ? mod.color : INK, fontStyle: isAccent ? "italic" : "normal", marginRight: "0.18em", display: "inline-block" }}>{w}</span>
-                    );
-                  })}
-                </motion.h1>
-
-                {/* Objective */}
-                <motion.p variants={child} style={{ fontSize: "clamp(14px,1.3vw,16px)", color: "#475569", lineHeight: 1.72, maxWidth: 460, marginBottom: 28, fontWeight: 400 }}>
-                  <strong style={{ color: mod.color, fontWeight: 700 }}>Objective:</strong>{" "}{mod.obj}
-                </motion.p>
-
-                {/* Points / Parts */}
-                <motion.div variants={child} style={{ marginBottom: 24, width: "100%" }}>
-                  {mod.content.type === "points" ? (
-                    mod.content.points.map((p, i) => (
-                      <Point key={i} text={p} color={mod.color} lt={mod.colorLt} bd={mod.colorBd} />
-                    ))
-                  ) : (
-                    mod.content.parts.map((pt, pi) => (
-                      <div key={pi} style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: mod.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, marginTop: pi > 0 ? 10 : 0 }}>
-                          {pt.label}
-                        </div>
-                        {pt.items.map((it, ii) => (
-                          <Point key={ii} text={it} color={mod.color} lt={mod.colorLt} bd={mod.colorBd} />
-                        ))}
-                      </div>
-                    ))
-                  )}
-                </motion.div>
-
-                {/* Activity pill */}
-                {mod.activity && (
-                  <motion.div variants={child} style={{
-                    display: "flex", alignItems: "center", gap: 9, padding: "10px 14px",
-                    borderRadius: 10, background: mod.colorLt, border: `1px solid ${mod.colorBd}`, marginBottom: 22,
-                  }}>
-                    <Zap size={13} style={{ color: mod.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12.5, color: mod.color, fontWeight: 700 }}>{mod.activity}</span>
-                  </motion.div>
-                )}
-
-                {/* Outcomes */}
-                <motion.div variants={child} style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 30 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#94a3b8", marginBottom: 2 }}>Outcomes</span>
-                  {mod.outcomes.map((o, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <CheckCircle2 size={15} style={{ color: mod.color, flexShrink: 0 }} strokeWidth={2.2} />
-                      <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{o}</span>
-                    </div>
-                  ))}
-                </motion.div>
-
-                {/* CTAs */}
-                <motion.div variants={child} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-                  <Link href="/services" className="pj-cta-p">
-                    <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      Book Now — ₹4,999
-                      <ArrowRight size={15} />
-                    </span>
-                  </Link>
-                  <Link href="/contact" className="pj-cta-g">
-                    Free discovery call
-                    <ChevronRight size={14} />
-                  </Link>
-                </motion.div>
-
-                {/* Stats row */}
-                <motion.div variants={child} style={{ display: "flex", gap: 0, paddingTop: "1.2rem", borderTop: "1px solid rgba(15,23,42,0.08)" }}>
-                  {[
-                    { val: 5000, sfx: "+", dec: 0, label: "Students coached" },
-                    { val: 94,   sfx: "%", dec: 0, label: "Success rate" },
-                    { val: 4.9,  sfx: "★", dec: 1, label: "Avg rating" },
-                  ].map((s, i) => (
-                    <div key={i} className="pj-stat" style={{ paddingRight: "1.4rem" }}>
-                      <p style={{ fontSize: "clamp(18px,2.2vw,27px)", fontWeight: 800, color: INK, letterSpacing: "-0.03em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                        <Counter to={s.val} suffix={s.sfx} decimals={s.dec} trigger={tick} />
-                      </p>
-                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginTop: 5 }}>{s.label}</p>
-                    </div>
-                  ))}
-                </motion.div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* ─── RIGHT — card ─── */}
-            <div
-              className="pj-card-wrap"
-              style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", perspective: 1400 }}
-              onMouseMove={onMouseMove}
-              onMouseLeave={onMouseLeave}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={mod.id + "-R"}
-                  variants={cardV}
-                  initial="enter" animate="center" exit="exit"
-                  className="pj-card-inner"
-                  style={{ width: "100%", maxWidth: "clamp(280px,36vw,420px)", position: "relative", transformStyle: "preserve-3d", rotateX: rotX, rotateY: rotY }}
-                >
-                  {/* Halo */}
-                  <div className="pj-halo" style={{ inset: -40, background: `radial-gradient(circle,${mod.color}40,transparent 68%)` }} />
-
-                  <motion.div className="pj-glass" style={{ borderRadius: 20, overflow: "hidden", x: tx, y: ty }}>
-                    {/* Accent bar */}
-                    <div style={{ height: 3, background: `linear-gradient(90deg,${mod.color},${mod.colorDk})` }} />
-
-                    {/* Card header */}
-                    <div style={{ padding: "22px 24px 0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                        <div style={{
-                          width: 48, height: 48, borderRadius: 13, flexShrink: 0,
-                          background: mod.colorLt, border: `1px solid ${mod.colorBd}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <mod.icon size={22} style={{ color: mod.color }} />
-                        </div>
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <p style={{ fontSize: 15, fontWeight: 700, color: INK, letterSpacing: "-0.02em" }}>Module {mod.step}</p>
-                            <span className="pj-dot-live" style={{ width: 6, height: 6, borderRadius: "50%", background: mod.color, boxShadow: `0 0 0 3px ${mod.colorLt}` }} />
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                            <span style={{
-                              fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em",
-                              color: mod.color, background: mod.colorLt, border: `1px solid ${mod.colorBd}`,
-                              padding: "2px 8px", borderRadius: 99,
-                            }}>{mod.tag}</span>
-                            <span style={{ fontSize: 11, color: MUTED, display: "flex", alignItems: "center", gap: 3 }}>
-                              <Clock size={10} />{mod.dur}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Highlights */}
-                      <div style={{ marginBottom: 0 }}>
-                        {(mod.content.type === "points" ? mod.content.points : mod.content.parts.flatMap(p => p.items)).slice(0, 4).map((text, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, padding: "9px 0", borderBottom: i < 3 ? "1px solid rgba(15,23,42,0.05)" : "none" }}>
-                            <CheckCircle2 size={14} style={{ color: mod.color, flexShrink: 0, marginTop: 1 }} strokeWidth={2.2} />
-                            <span style={{ fontSize: 12.5, color: "#334155", fontWeight: 500, lineHeight: 1.5 }}>{text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Card footer */}
-                    <div style={{
-                      marginTop: 16, padding: "13px 24px",
-                      background: `${mod.colorLt}`,
-                      borderTop: `1px solid ${mod.colorBd}`,
-                      display: "flex", alignItems: "center", gap: 8,
-                    }}>
-                      <Sparkles size={12} style={{ color: mod.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: mod.colorDk }}>{mod.proof}</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Floater */}
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={mod.id + "-flt"}
-                      variants={floaterV}
-                      initial="enter" animate="center" exit="exit"
-                      className="pj-float pj-floater"
-                      style={{
-                        position: "absolute", bottom: -24, left: -24,
-                        background: "#fff", borderRadius: 14,
-                        padding: "10px 14px",
-                        boxShadow: "0 16px 40px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.05)",
-                        border: `1px solid ${mod.colorBd}`,
-                        display: "flex", alignItems: "center", gap: 10, minWidth: 220, zIndex: 20,
-                      }}
-                    >
-                      <div style={{
-                        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                        background: mod.colorLt, border: `1px solid ${mod.colorBd}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 11, fontWeight: 700, color: mod.color,
-                      }}>
-                        {mod.floater.initials}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.2 }}>{mod.floater.name}</p>
-                        <p style={{ fontSize: 10.5, color: MUTED, fontWeight: 500, marginTop: 1 }}>{mod.floater.win}</p>
-                      </div>
-                      <span style={{ fontSize: 9.5, color: "#94a3b8", fontWeight: 600, flexShrink: 0 }}>{mod.floater.time}</span>
-                    </motion.div>
-                  </AnimatePresence>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* ══ TAB STRIP ══ */}
-          <div style={{
-            maxWidth: 1280, margin: "clamp(2.5rem,5vw,4rem) auto 0",
-            borderTop: "1px solid rgba(15,23,42,0.08)",
-            display: "flex", alignItems: "stretch",
-            position: "relative", zIndex: 10,
-          }}>
-            {/* Play/Pause */}
-            <div style={{ display: "flex", alignItems: "flex-start", paddingTop: 14, paddingRight: 10, flexShrink: 0 }}>
-              <button
-                onClick={() => setPaused(p => !p)}
-                aria-label={paused ? "Resume autoplay" : "Pause autoplay"}
-                style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "rgba(255,255,255,0.8)", border: "1px solid rgba(15,23,42,0.12)",
-                  cursor: "pointer", transition: "all .16s",
-                }}
-              >
-                {paused ? <Play size={11} fill={MUTED} style={{ color: MUTED }} /> : <Pause size={11} style={{ color: MUTED }} />}
-              </button>
+          <div className="pa-wrap" style={{ position: "relative", zIndex: 2 }}>
+            <div className="pa-hero-anim" style={{ animationDelay: "0s", display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 99, padding: "5px 14px", marginBottom: 24, fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: T.blue }}>
+              <Sparkles size={11} />
+              Placement Accelerator Program
             </div>
 
-            {MODULES.map((m, i) => (
-              <button
-                key={m.id}
-                className="pj-tab"
-                onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); goTo(i); }}
-                style={{
-                  borderTopColor: i === active ? BRAND : "rgba(15,23,42,0.09)",
-                  background: i === active ? "rgba(37,99,235,0.04)" : "transparent",
-                }}
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-                  <span
-                    className="pj-tab-chip"
-                    style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      minWidth: 22, height: 18, padding: "0 6px", borderRadius: 5,
-                      fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em",
-                      background: i === active ? m.color : "rgba(15,23,42,0.06)",
-                      color: i === active ? "#fff" : MUTED,
-                      transition: "all .22s",
-                    }}
-                  >
-                    {m.step}
-                  </span>
-                  <span
-                    className="pj-tab-name"
-                    style={{
-                      fontSize: 11, fontWeight: 600, letterSpacing: "0.04em",
-                      textTransform: "uppercase", color: i === active ? INK : "#94a3b8",
-                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                    }}
-                  >
-                    {m.name}
-                  </span>
+            <h1 className="pa-hero-anim" style={{ animationDelay: "0.1s", fontSize: "clamp(40px,6.5vw,84px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.0, marginBottom: 22, maxWidth: 780 }}>
+              <span style={{ display: "block", color: T.ink }}>Your entire</span>
+              <span style={{ display: "block", color: T.blue }}>placement journey.</span>
+              <span style={{ display: "block", color: T.muted, fontWeight: 300 }}>In 5 hours.</span>
+            </h1>
+
+            <p className="pa-hero-anim" style={{ animationDelay: "0.2s", fontSize: "clamp(15px,1.5vw,18px)", color: T.muted, lineHeight: 1.72, maxWidth: 520, marginBottom: 38 }}>
+              From a blank resume to a polished interview performance — 4 structured modules,
+              live practice, and personalised feedback that gives you a clear edge over every
+              other candidate in the room.
+            </p>
+
+            <div className="pa-hero-anim" style={{ animationDelay: "0.28s", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 52 }}>
+              <a href="#pricing" className="pa-cta-btn">
+                View Pricing & Enroll
+                <ArrowRight size={15} />
+              </a>
+              <a href="#modules" className="pa-ghost-btn">
+                Explore modules <ChevronDown size={14} />
+              </a>
+            </div>
+
+            <div className="pa-hero-anim pa-stat-strip" style={{ animationDelay: "0.36s", borderTop: "1px solid rgba(37,99,235,0.10)", paddingTop: "1.4rem" }}>
+              {[
+                { val: "4", label: "Expert-led Modules" },
+                { val: "5 hrs", label: "Total Live Duration" },
+                { val: "1:1", label: "Personalised Feedback" },
+                { val: "94%", label: "Placement Success" },
+              ].map((s) => (
+                <div key={s.label} className="pa-stat">
+                  <p style={{ fontSize: "clamp(20px,2.4vw,30px)", fontWeight: 900, color: T.blue, letterSpacing: "-0.035em", lineHeight: 1 }}>{s.val}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginTop: 5 }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════
+            TICKER
+        ══════════════════════════════════════ */}
+        <div style={{ background: T.blue, padding: "13px 0", overflow: "hidden" }}>
+          <div style={{ display: "flex", whiteSpace: "nowrap" }}>
+            <div className="pa-ticker" style={{ display: "flex", gap: 36, paddingRight: 36 }}>
+              {[
+                "4 Modules", "✦", "5 Hours of Live Prep", "✦", "Resume + GD + Interview + Mock", "✦",
+                "94% Success Rate", "✦", "1:1 Feedback", "✦", "Limited Seats",
+                "4 Modules", "✦", "5 Hours of Live Prep", "✦", "Resume + GD + Interview + Mock", "✦",
+                "94% Success Rate", "✦", "1:1 Feedback", "✦", "Limited Seats",
+              ].map((t, i) => (
+                <span key={i} style={{ fontSize: 11, letterSpacing: "0.07em", textTransform: "uppercase", flexShrink: 0, fontWeight: t === "✦" ? 300 : 700, color: t === "✦" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.88)" }}>
+                  {t}
                 </span>
-                <span className="pj-tab-meta" style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500 }}>{m.dur}</span>
-              </button>
-            ))}
-          </div>
-          <div style={{ height: "clamp(1.5rem,3vw,2.5rem)" }} />
-        </section>
-
-        {/* ══════════ DELIVERABLES ══════════ */}
-        <section style={{ padding: "80px clamp(20px,5vw,60px)", maxWidth: 1100, margin: "0 auto" }}>
-          {/* Section label */}
-          <div
-            ref={deliv.ref}
-            className={`pj-reveal${deliv.vis ? " in" : ""}`}
-            style={{ textAlign: "center", marginBottom: 48 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "center", marginBottom: 10 }}>
-              <div style={{ height: 1, width: 40, background: `linear-gradient(90deg,transparent,${BRAND}40)` }} />
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: BRAND }}>What you take home</span>
-              <div style={{ height: 1, width: 40, background: `linear-gradient(90deg,${BRAND}40,transparent)` }} />
+              ))}
             </div>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: "clamp(24px,4vw,40px)", fontWeight: 600, color: INK, letterSpacing: "-0.02em", marginBottom: 8 }}>
-              Final deliverables
-            </h2>
-            <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
-              Every session ends with tangible outputs — real assets you walk away with.
-            </p>
           </div>
+        </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 14 }}>
-            {DELIVERABLES.map((d, i) => {
-              const DIcon = d.icon;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    background: "#fff", borderRadius: 18, border: "1.5px solid rgba(15,23,42,0.07)",
-                    padding: 22, display: "flex", alignItems: "flex-start", gap: 14,
-                    boxShadow: "0 2px 16px rgba(15,23,42,0.04)",
-                    transition: "transform .25s,box-shadow .25s",
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 28px rgba(15,23,42,0.08)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 16px rgba(15,23,42,0.04)"; }}
-                >
-                  <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: d.lt, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <DIcon size={18} style={{ color: d.color }} />
-                  </div>
-                  <span style={{ fontSize: 13.5, color: "#334155", fontWeight: 500, lineHeight: 1.55, marginTop: 2 }}>{d.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ══════════ MENTORS ══════════ */}
-        <section style={{ padding: "0 clamp(20px,5vw,60px) 80px", maxWidth: 1100, margin: "0 auto" }}>
-          <div
-            ref={mentors.ref}
-            className={`pj-reveal${mentors.vis ? " in" : ""}`}
-            style={{ textAlign: "center", marginBottom: 40 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "center", marginBottom: 10 }}>
-              <div style={{ height: 1, width: 40, background: `linear-gradient(90deg,transparent,${BRAND}40)` }} />
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: BRAND }}>Your Mentors</span>
-              <div style={{ height: 1, width: 40, background: `linear-gradient(90deg,${BRAND}40,transparent)` }} />
-            </div>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: "clamp(24px,4vw,40px)", fontWeight: 600, color: INK, letterSpacing: "-0.02em", marginBottom: 8 }}>
-              Coached by people who know both sides.
-            </h2>
-            <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.6, maxWidth: 480, margin: "0 auto" }}>
-              Neel, Aashish & Seru have been on the interviewer&apos;s chair too — they know exactly what gets you the offer.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
-            {MENTORS.map((m, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "#fff", borderRadius: 22,
-                  border: "1.5px solid rgba(15,23,42,0.07)",
-                  padding: 28, textAlign: "center",
-                  boxShadow: "0 2px 16px rgba(15,23,42,0.04)",
-                  transition: "transform .3s,box-shadow .3s",
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 36px rgba(15,23,42,0.08)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 16px rgba(15,23,42,0.04)"; }}
+        {/* ══════════════════════════════════════
+            MEET YOUR MENTOR
+        ══════════════════════════════════════ */}
+        <section style={{ background: "#f8f7f4", padding: "clamp(64px,8vw,100px) 0", position: "relative", overflow: "hidden" }}>
+          <div className="pa-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle,rgba(37,99,235,0.07) 0%,transparent 65%)", top: -120, right: -100 }} />
+          <div className="pa-wrap" style={{ position: "relative", zIndex: 2 }}>
+            <Reveal>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ textAlign: "center", maxWidth: 760, margin: "0 auto clamp(2.5rem,5vw,4rem)", fontFamily: "'DM Sans',system-ui,sans-serif" }}
               >
-                <div style={{ width: 66, height: 66, borderRadius: "50%", background: m.grd, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 22, fontWeight: 800, color: "#fff", boxShadow: `0 6px 22px ${m.color}35` }}>
-                  {m.name[0]}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,transparent,#2563eb)" }} />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                    <Sparkles size={11} style={{ color: "#2563eb" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>Your Mentor</span>
+                  </div>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
                 </div>
-                <div style={{ height: 3, width: 36, background: m.grd, borderRadius: 2, margin: "0 auto 14px" }} />
-                <h4 style={{ fontSize: 18, fontWeight: 700, color: INK, marginBottom: 5 }}>{m.name}</h4>
-                <p style={{ fontSize: 12.5, color: MUTED, fontWeight: 500, lineHeight: 1.55 }}>{m.role}</p>
-                <div style={{ display: "flex", justifyContent: "center", gap: 3, marginTop: 14 }}>
-                  {[...Array(5)].map((_, si) => (
-                    <Star key={si} size={12} style={{ color: m.color, fill: m.color }} />
-                  ))}
+                <h2 style={{ margin: "0 0 14px", fontSize: "clamp(30px,4.5vw,56px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 700, color: "#0f172a" }}>
+                  Coached by someone who&apos;s{" "}
+                  <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                    been inside.
+                    <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg,#2563eb,#1d4ed8)", transformOrigin: "left", display: "block" }} />
+                  </span>
+                </h2>
+                <p style={{ fontSize: "clamp(14px,1.4vw,16px)", color: "#64748b", lineHeight: 1.65, maxWidth: 560, margin: "0 auto" }}>
+                  Neel Aashish Seru has sat on both sides of the hiring table for 12+ years. He knows exactly what panels write after you leave the room.
+                </p>
+              </motion.div>
+            </Reveal>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: "clamp(2rem,5vw,5rem)", alignItems: "center", maxWidth: 1000, margin: "0 auto" }}
+              className="mentor-grid"
+            >
+              <style>{`@media(max-width:768px){.mentor-grid{grid-template-columns:1fr!important}}`}</style>
+
+              {/* Photo */}
+              <Reveal delay={0.1}>
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <div style={{ position: "relative", width: "100%", maxWidth: 340 }}>
+                    <div style={{ borderRadius: 28, overflow: "hidden", aspectRatio: "3/4", position: "relative", background: "linear-gradient(135deg,#dbeafe,#bfdbfe)", boxShadow: "0 32px 80px rgba(37,99,235,0.18)" }}>
+                      <Image src="/neel-aashish-seru.jpeg" alt="Neel Aashish Seru — Interview Coach" fill className="object-cover object-top" />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, background: "linear-gradient(to top,rgba(15,23,42,0.3),transparent)" }} />
+                    </div>
+                    {/* Floating credential */}
+                    <div style={{ position: "absolute", bottom: -16, right: -16, background: "#fff", borderRadius: 16, padding: "12px 18px", boxShadow: "0 12px 40px rgba(37,99,235,0.15)", border: "1px solid rgba(37,99,235,0.12)", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <BadgeCheck size={20} style={{ color: T.blue }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 800, color: T.ink, lineHeight: 1 }}>94% Success</p>
+                        <p style={{ fontSize: 10, color: T.muted, fontWeight: 500, marginTop: 2 }}>Placement Rate</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              </Reveal>
+
+              {/* Bio */}
+              <Reveal delay={0.15}>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>
+                    12+ years · Both sides of the table
+                  </p>
+                  <h3 style={{ fontSize: "clamp(28px,3.5vw,44px)", fontWeight: 800, letterSpacing: "-0.03em", color: T.ink, lineHeight: 1.1, marginBottom: 16 }}>
+                    Neel Aashish Seru
+                  </h3>
+                  <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.78, marginBottom: 28, maxWidth: 440 }}>
+                    Most rejection emails look the same. But the notes inside that panel room are specific — and avoidable. Neel has 12+ years of experience across Tech Mahindra and IndiaMART, working alongside senior decision-makers and sitting on hiring panels. He knows exactly what interviewers note down when they decide to pass.
+                  </p>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+                    {[
+                      { icon: Award, text: "12+ years inside corporate hiring panels" },
+                      { icon: Users, text: "5,000+ candidates personally coached" },
+                      { icon: TrendingUp, text: "Tech Mahindra & IndiaMART — both sides of the table" },
+                      { icon: ShieldCheck, text: "No scripts, no fluff — only real frameworks" },
+                    ].map(({ icon: Icon, text }) => (
+                      <div key={text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 9, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Icon size={14} style={{ color: T.blue }} />
+                        </div>
+                        <span style={{ fontSize: 14, color: T.soft, fontWeight: 500 }}>{text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Link href="/about" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: T.blue, textDecoration: "none", letterSpacing: "0.01em" }}>
+                    Read the full story <ArrowRight size={13} />
+                  </Link>
+                </div>
+              </Reveal>
+            </div>
           </div>
         </section>
 
-        {/* ══════════ FINAL CTA ══════════ */}
-        <section style={{ padding: "0 clamp(20px,5vw,60px) 100px", maxWidth: 800, margin: "0 auto" }}>
-          <div
-            ref={cta.ref}
-            className={`pj-reveal${cta.vis ? " in" : ""}`}
-          >
-            <div style={{
-              borderRadius: 28, padding: "clamp(40px,6vw,60px) clamp(28px,5vw,52px)",
-              background: `linear-gradient(135deg,${BRAND_D},${BRAND})`,
-              textAlign: "center", position: "relative", overflow: "hidden",
-              boxShadow: "0 24px 72px rgba(37,99,235,0.28)",
-            }}>
-              {/* Texture */}
-              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize: "28px 28px" }} />
-              <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", bottom: -30, left: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        {/* ══════════════════════════════════════
+            JOURNEY STRIP
+        ══════════════════════════════════════ */}
+        <section style={{ background: T.ink, padding: "clamp(28px,4vw,42px) 0", overflow: "hidden" }}>
+          <div className="pa-wrap">
+            <div style={{ display: "flex", alignItems: "center", gap: 0, overflowX: "auto", scrollbarWidth: "none", justifyContent: "center" }}>
+              {[
+                { n: "01", label: "Resume", color: T.green },
+                { n: "→", label: "", color: "#4b5563", isArrow: true },
+                { n: "02", label: "GD", color: T.amber },
+                { n: "→", label: "", color: "#4b5563", isArrow: true },
+                { n: "03", label: "Interview Prep", color: T.blue },
+                { n: "→", label: "", color: "#4b5563", isArrow: true },
+                { n: "04", label: "Mock", color: T.purple },
+                { n: "→", label: "", color: "#4b5563", isArrow: true },
+                { n: "🏆", label: "Offer", color: "#f7c948" },
+              ].map((item, i) => (
+                "isArrow" in item ? (
+                  <span key={i} style={{ fontSize: 18, color: "#374151", flexShrink: 0, padding: "0 10px" }}>→</span>
+                ) : (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0, padding: "0 clamp(12px,2vw,20px)" }}>
+                    <span style={{ fontSize: item.n === "🏆" ? 22 : 13, fontWeight: 800, color: item.color, letterSpacing: "-0.02em" }}>{item.n}</span>
+                    {item.label && (
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                        {item.label}
+                      </span>
+                    )}
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </section>
 
-              <div style={{ position: "relative", zIndex: 1 }}>
-                {/* badge */}
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 14px", borderRadius: 99, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", marginBottom: 20 }}>
-                  <Target size={12} style={{ color: "#bfdbfe" }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#bfdbfe", textTransform: "uppercase", letterSpacing: "0.12em" }}>Ready to get started?</span>
+        {/* ══════════════════════════════════════
+            MODULES
+        ══════════════════════════════════════ */}
+        <section id="modules" style={{ background: "#fff", padding: "clamp(60px,7vw,100px) 0 clamp(40px,5vw,64px)" }}>
+          <div className="pa-wrap">
+            <Reveal>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ textAlign: "center", maxWidth: 760, margin: "0 auto clamp(2.5rem,5vw,4rem)" }}
+              >
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,transparent,#2563eb)" }} />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                    <Sparkles size={11} style={{ color: "#2563eb" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>The Curriculum</span>
+                  </div>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
                 </div>
-
-                <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: "clamp(28px,5vw,48px)", fontWeight: 600, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 14 }}>
-                  Your next offer<br />starts here.
+                <h2 style={{ margin: "0 0 14px", fontSize: "clamp(30px,4.5vw,56px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 700, color: "#0f172a" }}>
+                  4 modules. 1 complete{" "}
+                  <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                    transformation.
+                    <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg,#2563eb,#1d4ed8)", transformOrigin: "left", display: "block" }} />
+                  </span>
                 </h2>
-                <p style={{ fontSize: 15, color: "rgba(191,219,254,0.85)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 12px" }}>
-                  Book the full 4-module Placement Accelerator and walk into every interview with clarity, confidence, and a game plan.
+                <p style={{ fontSize: "clamp(14px,1.4vw,16px)", color: "#64748b", lineHeight: 1.65, maxWidth: 560, margin: "0 auto" }}>
+                  Every session builds on the last — structured so that by the end, you&apos;re interview-ready across every dimension.
                 </p>
-                <p style={{ fontSize: 13, color: "rgba(191,219,254,0.65)", marginBottom: 30 }}>
-                  ₹<s style={{ opacity: 0.6 }}>6,999</s>&nbsp;&nbsp;<strong style={{ color: "#fff", fontSize: 18 }}>₹4,999</strong>&nbsp; incl. GST · 100% satisfaction guarantee
-                </p>
+              </motion.div>
+            </Reveal>
 
-                <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-                  <Link href="/services" className="pj-cta-p" style={{ background: "#fff", color: BRAND_D, boxShadow: "0 4px 20px rgba(0,0,0,0.12)" }}>
-                    <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      Book for ₹4,999 <ArrowRight size={15} />
-                    </span>
-                  </Link>
-                  <Link href="/contact" style={{
-                    display: "inline-flex", alignItems: "center", gap: 7,
-                    padding: "14px 24px", borderRadius: 12,
-                    background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)",
-                    color: "#fff", fontWeight: 600, fontSize: 14, textDecoration: "none",
-                    transition: "background .2s",
-                  }}>
-                    Free discovery call
-                  </Link>
-                </div>
+            <Reveal delay={0.08}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 48, paddingTop: 20, borderTop: "1px solid rgba(37,99,235,0.08)" }}>
+                <Clock size={13} style={{ color: "#94a3b8" }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8" }}>Total programme duration:</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: T.ink }}>300 minutes of live, expert-led sessions</span>
+              </div>
+            </Reveal>
+
+            <div style={{ position: "relative" }}>
+              <div className="pa-spine" />
+              <div className="pa-modules-grid">
+                {MODULES.map((mod, i) => (
+                  <ModuleCard key={mod.num} mod={mod} index={i} />
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-      </main>
+        {/* ══════════════════════════════════════
+            MODULE 3 CALLOUT
+        ══════════════════════════════════════ */}
+        <section style={{ background: T.blue, padding: "clamp(48px,6vw,80px) 0", position: "relative", overflow: "hidden" }}>
+          <div className="pa-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle,rgba(255,255,255,0.06) 0%,transparent 65%)", top: -180, right: -100 }} />
+          <div className="pa-wrap" style={{ position: "relative", zIndex: 2 }}>
+            <Reveal>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "clamp(2rem,5vw,5rem)", alignItems: "center" }}>
+                <div>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 99, padding: "5px 13px", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.85)", marginBottom: 18 }}>
+                    <Star size={10} />
+                    Flagship session — 120 mins
+                  </div>
+                  <h2 style={{ fontSize: "clamp(26px,3.5vw,48px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff", lineHeight: 1.1, marginBottom: 14 }}>
+                    Module 03 is where most candidates<br />
+                    <span style={{ opacity: 0.7, fontWeight: 300 }}>finally click.</span>
+                  </h2>
+                  <p style={{ fontSize: "clamp(13.5px,1.3vw,15.5px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.7, maxWidth: 500 }}>
+                    Our 2-hour Interview Preparation Core is the deepest session — covering introduction mastery, STAR-method answers, and live practice with real-time correction. Most students say this single module shifts their entire mindset.
+                  </p>
+                </div>
+                <div style={{ textAlign: "center", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, padding: "32px 36px", backdropFilter: "blur(12px)", minWidth: 180 }}>
+                  <p style={{ fontSize: "clamp(42px,5vw,64px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 8 }}>120</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.1em", textTransform: "uppercase" }}>minutes of live<br />deep-dive prep</p>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════
+            DELIVERABLES
+        ══════════════════════════════════════ */}
+        <section style={{ background: "#f8f7f4", padding: "clamp(64px,8vw,100px) 0", position: "relative", overflow: "hidden" }}>
+          <div className="pa-wrap" style={{ position: "relative", zIndex: 2 }}>
+            <Reveal>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ textAlign: "center", maxWidth: 760, margin: "0 auto clamp(2.5rem,5vw,4rem)" }}
+              >
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,transparent,#2563eb)" }} />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                    <Sparkles size={11} style={{ color: "#2563eb" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>Final Deliverables</span>
+                  </div>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
+                </div>
+                <h2 style={{ margin: "0 0 14px", fontSize: "clamp(30px,4.5vw,56px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 700, color: "#0f172a" }}>
+                  You leave with{" "}
+                  <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                    everything.
+                    <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg,#2563eb,#1d4ed8)", transformOrigin: "left", display: "block" }} />
+                  </span>
+                </h2>
+                <p style={{ fontSize: "clamp(14px,1.4vw,16px)", color: "#64748b", lineHeight: 1.65, maxWidth: 520, margin: "0 auto" }}>
+                  Not just skills — tangible, documented outputs that you can act on immediately after the programme ends.
+                </p>
+              </motion.div>
+            </Reveal>
+
+            <div className="pa-deliv-grid">
+              {DELIVERABLES.map((d, i) => (
+                <Reveal key={d.label} delay={i * 0.08}>
+                  <div
+                    style={{ background: "#fff", border: "1px solid rgba(37,99,235,0.10)", borderRadius: 18, padding: "26px 22px", height: "100%", boxShadow: "0 4px 20px rgba(37,99,235,0.06)", transition: "box-shadow 0.22s, transform 0.22s" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 36px rgba(37,99,235,0.12)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 20px rgba(37,99,235,0.06)"; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
+                  >
+                    <span style={{ fontSize: 28, display: "block", marginBottom: 14 }}>{d.icon}</span>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: T.ink, lineHeight: 1.3, marginBottom: 6 }}>{d.label}</p>
+                    <p style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 500 }}>{d.sub}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════
+            PRICING
+        ══════════════════════════════════════ */}
+        <section id="pricing" style={{ background: "#fff", padding: "clamp(64px,8vw,100px) 0" }}>
+          <div className="pa-wrap">
+            <Reveal>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ textAlign: "center", maxWidth: 760, margin: "0 auto clamp(2.5rem,5vw,4rem)" }}
+              >
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,transparent,#2563eb)" }} />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+                    <Sparkles size={11} style={{ color: "#2563eb" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>Pricing</span>
+                  </div>
+                  <span style={{ width: "clamp(24px,5vw,40px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
+                </div>
+                <h2 style={{ margin: "0 0 14px", fontSize: "clamp(30px,4.5vw,56px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 700, color: "#0f172a" }}>
+                  One investment.{" "}
+                  <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+                    Career-long returns.
+                    <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg,#2563eb,#1d4ed8)", transformOrigin: "left", display: "block" }} />
+                  </span>
+                </h2>
+                <p style={{ fontSize: "clamp(14px,1.4vw,16px)", color: "#64748b", lineHeight: 1.65, maxWidth: 520, margin: "0 auto" }}>
+                  5 hours of live, expert coaching across 4 modules — everything you need to walk into any interview with full confidence.
+                </p>
+              </motion.div>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div style={{ maxWidth: 760, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="pricing-grid">
+                <style>{`@media(max-width:640px){.pricing-grid{grid-template-columns:1fr!important}}`}</style>
+
+                {/* Main pricing card */}
+                <div style={{ borderRadius: 24, border: "2px solid rgba(37,99,235,0.25)", background: "#fff", overflow: "hidden", boxShadow: "0 20px 60px rgba(37,99,235,0.12)" }}>
+                  <div style={{ height: 5, background: "linear-gradient(90deg,#2563eb,#1d4ed8)" }} />
+                  <div style={{ padding: "28px 28px 32px" }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 99, padding: "4px 12px", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.blue, marginBottom: 16 }}>
+                      <Zap size={10} />
+                      Most Popular
+                    </div>
+                    <h3 style={{ fontSize: 20, fontWeight: 800, color: T.ink, marginBottom: 6 }}>Placement Accelerator</h3>
+                    <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, marginBottom: 20 }}>Complete 4-module programme with personalised 1:1 feedback from Neel.</p>
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontSize: 42, fontWeight: 900, color: T.blue, letterSpacing: "-0.04em", lineHeight: 1 }}>₹4,999</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500, marginBottom: 24 }}>excl. GST · +₹900 (18%)</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                      {["4 live expert-led modules", "5 hours total programme duration", "1:1 personalised feedback", "Resume improvement document", "Interview introduction — finalized", "GD feedback report", "30-day improvement roadmap"].map((f) => (
+                        <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Check size={10} style={{ color: T.blue }} strokeWidth={3} />
+                          </div>
+                          <span style={{ fontSize: 13, color: T.soft, fontWeight: 500 }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href="/select-slot?serviceId=placementAccelerator" className="pa-cta-btn" style={{ width: "100%", justifyContent: "center" }}>
+                      Book My Seat <ArrowRight size={15} />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Why worth it card */}
+                <div style={{ borderRadius: 24, border: "1.5px solid rgba(37,99,235,0.12)", background: "#f8f7f4", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div style={{ padding: "28px 28px 0" }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: T.ink, marginBottom: 20, letterSpacing: "-0.015em" }}>Why it&apos;s worth it</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                      {[
+                        { stat: "94%", label: "of participants receive interview calls within 2 weeks" },
+                        { stat: "5,000+", label: "candidates guided to offers by Neel directly" },
+                        { stat: "★ 4.9", label: "average rating across all sessions" },
+                        { stat: "12+", label: "years of real hiring panel experience" },
+                      ].map(({ stat, label }) => (
+                        <div key={stat} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                          <span style={{ fontSize: 22, fontWeight: 900, color: T.blue, letterSpacing: "-0.03em", lineHeight: 1, flexShrink: 0, minWidth: 56 }}>{stat}</span>
+                          <span style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, paddingTop: 3 }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ padding: "24px 28px 28px" }}>
+                    <div style={{ borderTop: "1px solid rgba(37,99,235,0.10)", paddingTop: 18 }}>
+                      <p style={{ fontSize: 11, color: T.muted, lineHeight: 1.7, fontStyle: "italic" }}>
+                        &ldquo;The resume module alone got me 4 callbacks in 3 days. Module 3 changed my entire approach to interviews.&rdquo;
+                      </p>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: T.ink, marginTop: 8 }}>— Priya M., Campus → TCS</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════
+            TESTIMONIALS
+        ══════════════════════════════════════ */}
+        <section style={{ background: "#f8f7f4", borderTop: "1px solid rgba(37,99,235,0.08)", borderBottom: "1px solid rgba(37,99,235,0.08)", padding: "clamp(40px,5vw,64px) 0" }}>
+          <div className="pa-wrap">
+            <Reveal>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 32, alignItems: "center" }}>
+                {[
+                  { quote: "The resume module alone got me 4 callbacks in 3 days.", name: "Priya M.", role: "Campus → TCS" },
+                  { quote: "GD session was eye-opening. I used to freeze; now I initiate.", name: "Karan D.", role: "Campus → Infosys" },
+                  { quote: "Module 3 changed everything. My answers finally had structure.", name: "Sneha R.", role: "Campus → Wipro" },
+                ].map((t, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "24px 22px", border: "1px solid rgba(37,99,235,0.10)", boxShadow: "0 4px 20px rgba(37,99,235,0.06)" }}>
+                    <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                      {Array.from({ length: 5 }).map((_, si) => (
+                        <Star key={si} size={12} fill={T.amber} style={{ color: T.amber }} />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: 14, color: T.soft, lineHeight: 1.65, fontStyle: "italic", marginBottom: 14 }}>
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: T.ink }}>{t.name}</p>
+                    <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{t.role}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════
+            CTA FOOTER
+        ══════════════════════════════════════ */}
+        <section style={{ background: "#fff", padding: "clamp(72px,9vw,120px) 0", position: "relative", overflow: "hidden" }}>
+          <div className="pa-blob" style={{ width: 560, height: 560, background: "radial-gradient(circle,rgba(37,99,235,0.07) 0%,transparent 65%)", top: -140, right: -80 }} />
+          <div className="pa-blob" style={{ width: 380, height: 380, background: "radial-gradient(circle,rgba(124,58,237,0.05) 0%,transparent 65%)", bottom: -80, left: -60 }} />
+          <div className="pa-grid-bg" />
+
+          <div className="pa-wrap" style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+            <Reveal>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 99, padding: "5px 14px", marginBottom: 24, fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: T.blue }}>
+                <Award size={11} />
+                Limited seats per cohort
+              </div>
+
+              <h2 style={{ fontSize: "clamp(34px,5.5vw,72px)", fontWeight: 900, letterSpacing: "-0.04em", color: T.ink, lineHeight: 1.04, marginBottom: 18 }}>
+                5 hours now.<br />
+                <span style={{ color: T.blue }}>A career, forever.</span>
+              </h2>
+
+              <p style={{ fontSize: "clamp(14px,1.4vw,17px)", color: T.muted, lineHeight: 1.7, maxWidth: 460, margin: "0 auto 40px" }}>
+                Join the Placement Accelerator and walk out with a recruiter-ready resume, GD confidence, interview clarity, and a personalised roadmap — all in one intensive programme.
+              </p>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                <Link href="/select-slot?serviceId=placementAccelerator" className="pa-cta-btn" style={{ fontSize: 15 }}>
+                  Secure my seat — ₹4,999
+                  <ArrowRight size={15} />
+                </Link>
+                <Link href="/contact" className="pa-ghost-btn">
+                  Talk to our team first
+                </Link>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center", marginTop: 28 }}>
+                <TrendingUp size={12} style={{ color: "#94a3b8" }} />
+                <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500 }}>
+                  5,000+ students placed · 94% success rate · ★ 4.9 average rating
+                </span>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <StandardFooter />
+      </div>
     </>
   );
 }

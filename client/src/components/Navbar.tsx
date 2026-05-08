@@ -11,6 +11,7 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
+  { name: "Placement Prep", href: "/placement-prep" },
   { name: "Check Resume Score", href: "/resume-analyzer" },
   { name: "Contact", href: "/contact" },
 ];
@@ -81,10 +82,11 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
             </Link>
 
             {/* ── DESKTOP LINKS ── */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
                 const active = pathname === link.href;
                 const hasFreeBadge = link.name === "Check Resume Score";
+                const hasNewBadge = link.name === "Placement Prep";
                 return (
                   <Link
                     key={link.name}
@@ -103,6 +105,11 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                         Free
                       </span>
                     )}
+                    {hasNewBadge && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-full px-1.5 py-[2px] text-[9px] font-semibold leading-none text-white shadow-sm" style={{ background: "#2563eb" }}>
+                        New
+                      </span>
+                    )}
                     <span className="relative text-center whitespace-nowrap">
                       {link.name}
                     </span>
@@ -118,7 +125,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
             </div>
 
             {/* ── DESKTOP CTA ── */}
-            <div className="hidden md:flex items-center gap-2 shrink-0">
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
               {isLoggedIn ? (
                 <>
                   <Link
@@ -152,7 +159,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
             {/* ── HAMBURGER ── */}
             <button
               onClick={() => setMobileMenu((p) => !p)}
-              className="md:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 rounded-xl"
+              className="lg:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 rounded-xl"
               aria-label="Toggle menu"
             >
               <span
@@ -174,7 +181,7 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
 
       {/* ── MOBILE MENU ── */}
       <div
-        className="fixed inset-0 z-40 md:hidden"
+        className="fixed inset-0 z-40 lg:hidden"
         style={{
           display: isMobileMenuOpen ? "block" : "none",
         }}
@@ -191,9 +198,10 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
 
         {/* panel */}
         <div
-          className="absolute left-4 right-4 overflow-hidden"
+          className="absolute left-4 right-4 overflow-y-auto"
           style={{
             top: `calc(${bannerHeight}px + 76px)`,
+            maxHeight: "calc(100dvh - 100px)",
             background: "rgba(255, 255, 255, 0.97)",
             border: "1px solid rgba(29, 78, 216, 0.14)",
             borderRadius: 18,
@@ -203,9 +211,10 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
         >
           {/* nav links */}
           <div className="p-2 pb-1">
-            {navLinks.map((link, idx) => {
+            {navLinks.map((link) => {
               const active = pathname === link.href;
               const hasFreeBadge = link.name === "Check Resume Score";
+              const hasNewBadge = link.name === "Placement Prep";
               return (
                 <Link
                   key={link.name}
@@ -220,6 +229,11 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
                     {hasFreeBadge && (
                       <span className="inline-flex shrink-0 items-center rounded-full bg-red-600 px-2 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
                         Free
+                      </span>
+                    )}
+                    {hasNewBadge && (
+                      <span className="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm" style={{ background: "#2563eb" }}>
+                        New
                       </span>
                     )}
                     <span
