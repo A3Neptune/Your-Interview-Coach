@@ -15,6 +15,7 @@ interface BookingDetails {
   status: string;
   amount: number;
   paymentStatus: string;
+  sessionType?: string;
   meetingLink?: string;
   mentorId: {
     _id: string;
@@ -30,6 +31,8 @@ interface BookingDetails {
   };
   invoiceNumber?: string;
 }
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function BookingConfirmedContent() {
   const router = useRouter();
@@ -64,8 +67,12 @@ function BookingConfirmedContent() {
         }
       );
 
-      setBooking(response.data.booking);
+      const b = response.data.booking;
+      setBooking(b);
       setIsLoading(false);
+      if (b.sessionType === 'placementAccelerator') {
+        setTimeout(() => router.push('/user-dashboard/bookings'), 3000);
+      }
     } catch (error) {
       toast.error('Failed to load booking details');
       setIsLoading(false);
@@ -130,6 +137,11 @@ function BookingConfirmedContent() {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Booking Confirmed!</h1>
           <p className="text-zinc-400">Your session has been successfully scheduled</p>
+          {booking?.sessionType === 'placementAccelerator' && (
+            <p className="text-blue-400 text-sm mt-2 font-semibold">
+              Redirecting you to your bookings…
+            </p>
+          )}
         </div>
 
         {/* Booking Details Card */}
@@ -149,8 +161,21 @@ function BookingConfirmedContent() {
                   <Calendar className="text-blue-400" size={24} />
                 </div>
                 <div>
-                  <p className="text-zinc-400 text-sm mb-1">Scheduled Date & Time</p>
-                  <p className="text-white font-semibold">{formatDate(booking.scheduledDate)}</p>
+                  <p className="text-zinc-400 text-sm mb-1">
+                    {booking.sessionType === 'placementAccelerator' ? 'Week' : 'Scheduled Date & Time'}
+                  </p>
+                  {booking.sessionType === 'placementAccelerator' ? (() => {
+                    const ws = new Date(booking.scheduledDate);
+                    const we = new Date(ws.getTime() + WEEK_MS);
+                    return (
+                      <p className="text-white font-semibold">
+                        {ws.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} –{' '}
+                        {we.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    );
+                  })() : (
+                    <p className="text-white font-semibold">{formatDate(booking.scheduledDate)}</p>
+                  )}
                 </div>
               </div>
 

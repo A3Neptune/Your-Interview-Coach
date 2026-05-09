@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw } from "lucide-react";
 import { toast } from 'sonner';
 import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
@@ -51,12 +51,17 @@ const SESSION_LABELS: Record<string, string> = {
   placementAccelerator: "Placement Accelerator",
 };
 
+type SessionFilter = "all" | "oneMentorship" | "resumeAnalysis" | "gdGroupDiscussions" | "webinars" | "placementAccelerator";
+
 export default function MentorBookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "cancelled" | "all">("upcoming");
+  const [sessionFilter, setSessionFilter] = useState<SessionFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [markingRefundedId, setMarkingRefundedId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
 
   // Refresh "now" every minute so session status updates without page reload
@@ -119,8 +124,19 @@ export default function MentorBookingsPage() {
     } else {
       list = bookings.filter(b => b.status !== "pending");
     }
+    if (sessionFilter !== "all") {
+      list = list.filter(b => b.sessionType === sessionFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(b =>
+        b.studentId?.name?.toLowerCase().includes(q) ||
+        b.studentId?.email?.toLowerCase().includes(q) ||
+        b.studentId?.mobile?.includes(q)
+      );
+    }
     return list.slice().sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
-  }, [bookings, activeTab, nowMs]);
+  }, [bookings, activeTab, nowMs, sessionFilter, searchQuery]);
 
   const handleCancel = async (bookingId: string) => {
     if (!confirm("Cancel this session? The user will be refunded automatically.")) return;
@@ -133,6 +149,21 @@ export default function MentorBookingsPage() {
       toast.error("Failed to cancel session");
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const handleMarkRefunded = async (bookingId: string) => {
+    const refundId = prompt("Enter Razorpay Refund ID (leave blank if unknown):");
+    if (refundId === null) return; // user pressed Cancel
+    setMarkingRefundedId(bookingId);
+    try {
+      await bookingAPI.markRefunded(bookingId, refundId || undefined);
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, paymentStatus: "refunded" as const, refundId: refundId || `manual_${Date.now()}` } : b));
+      toast.success("Booking marked as refunded");
+    } catch {
+      toast.error("Failed to mark as refunded");
+    } finally {
+      setMarkingRefundedId(null);
     }
   };
 
@@ -170,8 +201,8 @@ export default function MentorBookingsPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 p-1 rounded-xl bg-white/5 border border-white/10">
+        {/* Status Tabs */}
+        <div className="flex gap-1 mb-4 p-1 rounded-xl bg-white/5 border border-white/10">
           {tabs.map(t => (
             <button
               key={t.key}
@@ -188,6 +219,39 @@ export default function MentorBookingsPage() {
               )}
             </button>
           ))}
+        </div>
+
+        {/* Session Type Filter + Search */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex gap-1.5 flex-wrap">
+            {([
+              { key: "all", label: "All Types" },
+              { key: "placementAccelerator", label: "PA" },
+              { key: "oneMentorship", label: "1:1 Mentorship" },
+              { key: "resumeAnalysis", label: "Resume" },
+              { key: "gdGroupDiscussions", label: "GD" },
+              { key: "webinars", label: "Webinar" },
+            ] as const).map(f => (
+              <button
+                key={f.key}
+                onClick={() => setSessionFilter(f.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  sessionFilter === f.key
+                    ? "bg-blue-600 text-white"
+                    : "bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 border border-white/10"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by name, email or phone…"
+            className="sm:ml-auto px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 min-w-0 sm:w-56"
+          />
         </div>
 
         {/* List */}
@@ -300,9 +364,19 @@ export default function MentorBookingsPage() {
                         </div>
                       )}
                       {booking.status === "cancelled" && booking.paymentStatus === "completed" && (
-                        <div className="flex items-center gap-2 text-xs text-amber-400 mb-3">
-                          <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Refund failed — check Razorpay dashboard · ₹{booking.amount}</span>
+                        <div className="flex items-start gap-2 text-xs text-amber-400 mb-3">
+                          <XCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-1.5">
+                            <span>Razorpay may have processed this refund but our DB wasn&apos;t updated. Check Razorpay dashboard · ₹{booking.amount}</span>
+                            <button
+                              onClick={() => handleMarkRefunded(booking._id)}
+                              disabled={markingRefundedId === booking._id}
+                              className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold transition-colors disabled:opacity-50"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              {markingRefundedId === booking._id ? "Saving…" : "Mark as Refunded"}
+                            </button>
+                          </div>
                         </div>
                       )}
 

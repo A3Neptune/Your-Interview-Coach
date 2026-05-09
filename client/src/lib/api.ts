@@ -175,6 +175,10 @@ export const bookingAPI = {
   // Add feedback to booking (mentor)
   addFeedback: (bookingId: string, data: any) =>
     apiClient.put(`/bookings/${bookingId}/feedback`, data),
+
+  // Mark booking as refunded (mentor — for when Razorpay processed but DB missed)
+  markRefunded: (bookingId: string, refundId?: string) =>
+    apiClient.put(`/bookings/${bookingId}/mark-refunded`, { refundId }),
 };
 
 // Payment API

@@ -54,12 +54,17 @@ interface Service {
   };
 }
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const isPA = (b: Booking) => b.sessionType === 'placementAccelerator';
+const paWeekEnded = (b: Booking) => new Date(b.scheduledDate).getTime() + WEEK_MS < Date.now();
+
 interface Booking {
   _id: string;
   title: string;
   scheduledDate: string;
   duration: number;
   status: string;
+  sessionType?: string;
   meetingLink?: string;
   mentorId: { name: string; email: string };
 }
@@ -206,7 +211,7 @@ export default function DashboardPage() {
           });
           const all: Booking[] = bookingsRes.data.bookings || [];
           const upcoming = all
-            .filter((b) => b.status === "confirmed" && new Date(b.scheduledDate) > new Date())
+            .filter((b) => b.status === "confirmed" && (isPA(b) ? !paWeekEnded(b) : new Date(b.scheduledDate) > new Date()))
             .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
             .slice(0, 3);
           setUpcomingBookings(upcoming);
@@ -381,7 +386,7 @@ export default function DashboardPage() {
                       {booking.mentorId.name}
                     </div>
                   </div>
-                  {booking.meetingLink && (
+                  {!isPA(booking) && booking.meetingLink && (
                     <a href={booking.meetingLink} target="_blank" rel="noopener noreferrer" className="mt-auto w-full py-2.5 rounded-xl bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-sm">
                       <ExternalLink className="w-3.5 h-3.5" />
                       JOIN MEETING

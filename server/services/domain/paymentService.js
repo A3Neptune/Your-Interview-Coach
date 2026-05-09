@@ -290,15 +290,22 @@ const verifyAndCompletePayment = async (paymentData, req) => {
       const { placementAcceleratorBookingTemplate } = await import('../../templates/emailTemplates.js');
       const student = booking.studentId;
       if (student?.email) {
-        await sendEmail(
+        const result = await sendEmail(
           student.email,
           'Your Placement Accelerator is Confirmed! 🚀',
           placementAcceleratorBookingTemplate(student.name || 'there', booking.weekLabel || 'To be coordinated')
         );
+        if (!result.success) {
+          console.error(`⚠️ [EMAIL] PA confirmation email failed for booking ${booking._id} | student: ${student.email} | error: ${result.error}`);
+        }
+      } else {
+        console.warn(`⚠️ [EMAIL] Skipped PA confirmation email for booking ${booking._id} — no student email address`);
       }
     } catch (emailErr) {
-      console.error('⚠️ PA booking confirmation email failed:', emailErr.message);
+      console.error(`⚠️ [EMAIL] PA confirmation email threw for booking ${booking._id}:`, emailErr.message);
     }
+  } else {
+    console.log(`ℹ️ [EMAIL] No confirmation email sent for booking ${booking._id} (sessionType: ${booking.sessionType})`);
   }
 
   return booking;

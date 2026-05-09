@@ -509,6 +509,29 @@ const createBooking = async (bookingData, req) => {
     }
   }
 
+  // Prevent duplicate PA booking for the same user if their current week is still active
+  if (sessionType === 'placementAccelerator') {
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
+    const activePA = await Booking.findOne({
+      studentId: userId,
+      sessionType: 'placementAccelerator',
+      $or: [
+        { status: 'confirmed' },
+        { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+      ],
+    }).sort({ scheduledDate: -1 });
+
+    if (activePA) {
+      const weekStillActive = new Date(activePA.scheduledDate).getTime() + WEEK_MS > Date.now();
+      if (weekStillActive) {
+        throw new ConflictError(
+          'You already have an active Placement Accelerator booking. Your mentor must cancel it before you can book again.'
+        );
+      }
+    }
+  }
+
   // Calculate server-side amount
   const serverCalculatedAmount = await calculateBookingAmount(sessionType);
 

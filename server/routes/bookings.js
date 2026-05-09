@@ -29,6 +29,7 @@ router.get('/:bookingId', verifyToken, verifyUser, bookingController.getBookingB
 
 // Mentor-only routes
 router.put('/:bookingId/cancel', verifyToken, verifyMentor, bookingController.cancelBooking);
+router.put('/:bookingId/mark-refunded', verifyToken, verifyMentor, bookingController.markRefunded);
 router.put('/:bookingId/confirm', verifyToken, verifyMentor, bookingController.confirmBooking);
 router.put('/:bookingId/status', verifyToken, bookingController.updateBookingStatus);
 router.put('/:bookingId/feedback', verifyToken, bookingController.addBookingFeedback);

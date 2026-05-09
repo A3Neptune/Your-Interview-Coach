@@ -41,8 +41,9 @@ const getTransporter = () => {
 
 // Send email function
 const sendEmail = async (to, subject, html) => {
+  console.log(`📤 [EMAIL] Attempting → to: ${to} | subject: "${subject}"`);
   try {
-    const transport = getTransporter(); // Get transporter (lazy init)
+    const transport = getTransporter();
 
     const mailOptions = {
       from: `"YourInterviewCoach" <${process.env.EMAIL_FROM}>`,
@@ -52,10 +53,10 @@ const sendEmail = async (to, subject, html) => {
     };
 
     const info = await transport.sendMail(mailOptions);
-    console.log('✅ Email sent successfully to:', to);
+    console.log(`✅ [EMAIL] Sent     → to: ${to} | subject: "${subject}" | messageId: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending email:', error.message);
+    console.error(`❌ [EMAIL] Failed   → to: ${to} | subject: "${subject}" | error: ${error.message}`);
     return { success: false, error: error.message };
   }
 };

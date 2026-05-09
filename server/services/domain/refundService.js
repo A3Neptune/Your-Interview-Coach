@@ -68,72 +68,27 @@ const processRefund = async (bookingId, reason, req) => {
     throw new PaymentError('Cannot refund - no payment ID found');
   }
 
-  try {
-    console.log(`Processing refund for booking ${bookingId}...`);
-    console.log(`Payment ID: ${booking.razorpayPaymentId}, Amount: ${booking.amount}`);
+  console.log(`Processing refund for booking ${bookingId}...`);
+  console.log(`Payment ID: ${booking.razorpayPaymentId}, Amount: ${booking.amount}`);
 
-    // Create refund in Razorpay
-    const refund = await razorpay.payments.refund(booking.razorpayPaymentId, {
+  // ── Step 1: Call Razorpay API (isolated try/catch) ──────────────────────
+  let refund;
+  try {
+    refund = await razorpay.payments.refund(booking.razorpayPaymentId, {
       amount: Math.round(booking.amount * 100), // Convert to paise
       notes: {
         bookingId: bookingId.toString(),
         reason: reason,
       },
     });
-
     console.log('✅ Razorpay refund created:', refund.id);
+  } catch (razorpayError) {
+    console.error('❌ Razorpay refund API call failed:', razorpayError);
 
-    // Update booking payment status
-    booking.paymentStatus = 'refunded';
-    booking.refundId = refund.id;
-    booking.refundedAt = new Date();
-    booking.refundAmount = booking.amount;
-    booking.refundReason = reason;
-    await booking.save();
+    const isInvalidPayment = razorpayError.error?.description?.includes('does not exist')
+      || razorpayError.message?.includes('does not exist');
 
-    // Update payment record
-    await Payment.updateOne(
-      { razorpayPaymentId: booking.razorpayPaymentId },
-      {
-        $set: {
-          status: 'refunded',
-          refundId: refund.id,
-          refundAmount: booking.amount,
-          refundedAt: new Date(),
-        },
-      }
-    );
-
-    // Log audit trail
-    await AuditLogService.logBookingAction(
-      req,
-      'BOOKING_CANCELLED',
-      booking._id,
-      {
-        refundId: refund.id,
-        refundAmount: booking.amount,
-        reason: reason,
-      },
-      'SUCCESS',
-      null
-    );
-
-    console.log(`✅ Refund processed successfully for booking ${bookingId}`);
-
-    return {
-      success: true,
-      refundId: refund.id,
-      amount: booking.amount,
-      status: refund.status,
-      message: 'Refund processed successfully',
-    };
-  } catch (error) {
-    console.error('❌ Refund processing failed:', error);
-
-    const isInvalidPayment = error.error?.description?.includes('does not exist')
-      || error.message?.includes('does not exist');
-
-    // If payment ID doesn't exist in Razorpay (test/fixture data), mark as refunded to avoid stuck state
+    // Payment ID not in Razorpay (test/fixture data) — mark as refunded to avoid stuck state
     if (isInvalidPayment) {
       booking.paymentStatus = 'refunded';
       booking.refundId = 'not_applicable_test_payment';
@@ -148,13 +103,59 @@ const processRefund = async (bookingId, reason, req) => {
       req,
       'BOOKING_CANCELLED',
       booking._id,
-      { refundAttempt: true, error: error.message },
+      { refundAttempt: true, error: razorpayError.message },
       'FAILURE',
-      error.message
+      razorpayError.message
+    ).catch(() => {}); // audit failure must never shadow the real error
+
+    throw new PaymentError(`Refund failed: ${razorpayError.message}`);
+  }
+
+  // ── Step 2: Razorpay succeeded — update DB unconditionally ──────────────
+  // Any error here is a DB/network issue; the money has already been returned
+  // to the customer. Log but never throw so the booking stays consistent.
+  try {
+    booking.paymentStatus = 'refunded';
+    booking.refundId = refund.id;
+    booking.refundedAt = new Date();
+    booking.refundAmount = booking.amount;
+    booking.refundReason = reason;
+    await booking.save();
+
+    await Payment.updateOne(
+      { razorpayPaymentId: booking.razorpayPaymentId },
+      {
+        $set: {
+          status: 'refunded',
+          refundId: refund.id,
+          refundAmount: booking.amount,
+          refundedAt: new Date(),
+        },
+      }
     );
 
-    throw new PaymentError(`Refund failed: ${error.message}`);
+    await AuditLogService.logBookingAction(
+      req,
+      'BOOKING_CANCELLED',
+      booking._id,
+      { refundId: refund.id, refundAmount: booking.amount, reason },
+      'SUCCESS',
+      null
+    );
+
+    console.log(`✅ Refund processed successfully for booking ${bookingId}`);
+  } catch (dbError) {
+    console.error('⚠️ Razorpay refund succeeded but DB update failed — refund ID:', refund.id, dbError.message);
+    // Don't throw: the refund is real. Caller can re-fetch and check paymentStatus.
   }
+
+  return {
+    success: true,
+    refundId: refund.id,
+    amount: booking.amount,
+    status: refund.status,
+    message: 'Refund processed successfully',
+  };
 };
 
 /**

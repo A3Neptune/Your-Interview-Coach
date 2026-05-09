@@ -185,6 +185,34 @@ export const getBookingById = async (req, res) => {
 };
 
 /**
+ * Mark booking as manually refunded (admin only).
+ * Used when Razorpay processed the refund but our DB update failed.
+ * PUT /api/bookings/:bookingId/mark-refunded
+ */
+export const markRefunded = async (req, res) => {
+  try {
+    if (req.user.userType !== 'admin') throw new ForbiddenError('Only mentors can mark refunds');
+    const { bookingId } = req.params;
+    const { refundId } = req.body; // optional Razorpay refund ID
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (booking.status !== 'cancelled') return res.status(400).json({ error: 'Booking must be cancelled first' });
+
+    booking.paymentStatus = 'refunded';
+    booking.refundId = refundId || `manual_${Date.now()}`;
+    booking.refundedAt = new Date();
+    booking.refundAmount = booking.amount;
+    booking.refundReason = 'Manually marked as refunded by mentor';
+    await booking.save();
+
+    res.json({ success: true, booking });
+  } catch (error) {
+    handleControllerError(res, error);
+  }
+};
+
+/**
  * Cancel booking
  * PUT /api/bookings/:bookingId/cancel
  */
@@ -364,6 +392,7 @@ export default {
   getStudentBookings,
   getBookingById,
   cancelBooking,
+  markRefunded,
   confirmBooking,
   updateBookingStatus,
   addBookingFeedback,

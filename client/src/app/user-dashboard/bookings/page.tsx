@@ -7,8 +7,11 @@ import { Calendar, MessageCircle, Clock, DollarSign, ExternalLink, MessageSquare
 import { toast } from 'sonner';
 import axios from 'axios';
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const isPA = (b: Booking) => b.sessionType === 'placementAccelerator';
+const paWeekEnded = (b: Booking) => new Date(b.scheduledDate).getTime() + WEEK_MS < Date.now();
+
 const getWhatsappLink = (booking: Booking) => {
-  // Use mentor's mobile if available, otherwise fall back to default
   const phone = booking.mentorId?.mobile?.replace(/\D/g, '') || "919718713646";
   const msg = `Hi, I enrolled in "${booking.title}" scheduled for ${new Date(booking.scheduledDate).toLocaleDateString('en-IN')}`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
@@ -24,7 +27,8 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   amount: number;
-  sessionType?: string;
+  sessionType: string;
+  weekLabel?: string;
   meetingLink?: string;
   topic?: string;
   mentorId: {
@@ -96,7 +100,6 @@ function UserBookingsContent() {
       setIsLoading(false);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        // Silently handle unauthorized - just show empty state
         setBookings([]);
       } else {
         toast.error('Failed to load bookings');
@@ -148,22 +151,21 @@ function UserBookingsContent() {
   const displayedBookings = showAll ? filteredBookings : filteredBookings.slice(0, 5);
   const hasMoreBookings = filteredBookings.length > 5;
 
+  // Show join button only 10 min before start and hide after session end
+  const canJoinNow = (scheduledDate: string, duration: number, currentTime: number) => {
+    const start = new Date(scheduledDate).getTime();
+    const end = start + duration * 60 * 1000;
+    return currentTime >= start - 10 * 60 * 1000 && currentTime <= end;
+  };
 
-// Show join button only 10 min before start and hide after session end
-const canJoinNow = (scheduledDate: string, duration: number, currentTime: number) => {
-  const start = new Date(scheduledDate).getTime();
-  const end = start + duration * 60 * 1000;
-  return currentTime >= start - 10 * 60 * 1000 && currentTime <= end;
-};
-
-const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
-  const start = new Date(scheduledDate).getTime();
-  const diff = start - currentTime;
-  if (diff <= 0) return null;
-  const mins = Math.ceil(diff / 60000);
-  if (mins > 60) return null; // too far, don't show countdown
-  return `Opens in ${mins} min`;
-};
+  const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
+    const start = new Date(scheduledDate).getTime();
+    const diff = start - currentTime;
+    if (diff <= 0) return null;
+    const mins = Math.ceil(diff / 60000);
+    if (mins > 60) return null;
+    return `Opens in ${mins} min`;
+  };
 
   if (isLoading) {
     return (
@@ -172,6 +174,11 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
       </div>
     );
   }
+
+  // Upcoming = non-cancelled, PA uses week-end logic, others use scheduled date
+  const upcomingList = bookings
+    .filter(b => b.status !== 'cancelled' && (isPA(b) ? !paWeekEnded(b) : new Date(b.scheduledDate) > new Date()))
+    .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
 
   return (
     <div className="space-y-8 sm:space-y-12">
@@ -182,32 +189,38 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
       </div>
 
       {/* Upcoming Sessions Alert */}
-      {bookings.some(b => new Date(b.scheduledDate) > new Date() && b.status !== 'cancelled') && (
-        <div className="bg-gradient-to-r from-blue-100 to-blue-50 border-2 border-blue-300 rounded-2xl p-5 shadow-md">
-          <div className="flex items-start gap-3">
-            <div className="text-3xl">📅</div>
-            <div className="flex-1">
-              <p className="text-slate-900 font-bold text-lg mb-1">
-                {bookings.filter(b => new Date(b.scheduledDate) > new Date() && b.status !== 'cancelled').length} Upcoming Session{bookings.filter(b => new Date(b.scheduledDate) > new Date() && b.status !== 'cancelled').length !== 1 ? 's' : ''}
-              </p>
-              {bookings
-                .filter(b => new Date(b.scheduledDate) > new Date() && b.status !== 'cancelled')
-                .slice(0, 1)
-                .map(b => (
-                  <p key={b._id} className="text-sm text-blue-700 font-semibold">
-                    Next: {new Date(b.scheduledDate).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                ))}
+      {upcomingList.length > 0 && (() => {
+        const next = upcomingList[0];
+        const pa = isPA(next);
+        const nextLabel = pa
+          ? (() => {
+              const ws = new Date(next.scheduledDate);
+              const we = new Date(ws.getTime() + WEEK_MS);
+              return `Week of ${ws.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${we.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            })()
+          : new Date(next.scheduledDate).toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+        return (
+          <div className="bg-gradient-to-r from-blue-100 to-blue-50 border-2 border-blue-300 rounded-2xl p-5 shadow-md">
+            <div className="flex items-start gap-3">
+              <div className="text-3xl">📅</div>
+              <div className="flex-1">
+                <p className="text-slate-900 font-bold text-lg mb-1">
+                  {upcomingList.length} Upcoming Session{upcomingList.length !== 1 ? 's' : ''}
+                </p>
+                <p className="text-sm text-blue-700 font-semibold">
+                  Next: {nextLabel}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Filter Tabs */}
       <div className="flex gap-2 flex-wrap bg-white p-2 rounded-2xl border-2 border-blue-200 shadow-md">
@@ -216,7 +229,7 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
             key={status}
             onClick={() => {
               setFilter(status);
-              setShowAll(false); // Reset to showing only 5 when filter changes
+              setShowAll(false);
             }}
             className={`px-5 py-2.5 rounded-xl font-bold transition-all capitalize text-sm ${filter === status
               ? 'bg-blue-600 text-white shadow-md'
@@ -243,149 +256,174 @@ const getJoinCountdown = (scheduledDate: string, currentTime: number) => {
       ) : (
         <>
           <div className="space-y-4">
-            {displayedBookings.map((booking) => (
-              <div
-                key={booking._id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-blue-300 transition-colors"
-              >
-                {/* Header with Status */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-3xl">{statusIcons[booking.status]}</span>
-                      <h3 className="text-2xl font-bold text-slate-900">{booking.title}</h3>
+            {displayedBookings.map((booking) => {
+              const pa = isPA(booking);
+              const weekEnded = pa && paWeekEnded(booking);
+              return (
+                <div
+                  key={booking._id}
+                  className={`bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-blue-300 transition-colors ${weekEnded ? 'opacity-60' : ''}`}
+                >
+                  {/* Header with Status */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-3xl">{statusIcons[booking.status]}</span>
+                        <h3 className="text-2xl font-bold text-slate-900">{booking.title}</h3>
+                      </div>
+                      {pa && (
+                        <p className="text-xs text-slate-500 font-semibold mb-1">Booked through marketplace</p>
+                      )}
+                      {!pa && booking.description && (
+                        <p className="text-slate-600 text-sm font-medium">{booking.description}</p>
+                      )}
                     </div>
-                    {booking.description && (
-                      <p className="text-slate-600 text-sm font-medium">{booking.description}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${statusColors[booking.status]}`}>
-                      {booking.status}
-                    </span>
-                    <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${paymentStatusColors[booking.paymentStatus]}`}>
-                      {booking.paymentStatus}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 py-5 border-y border-slate-100">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
-                      <Calendar size={20} className="text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Date & Time</p>
-                      <p className="text-sm text-slate-900 font-bold">{formatDate(booking.scheduledDate)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-100">
-                      <Clock size={20} className="text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Duration</p>
-                      <p className="text-sm text-slate-900 font-bold">{booking.duration} mins</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${statusColors[booking.status]}`}>
+                        {booking.status}
+                      </span>
+                      <span className={`px-4 py-2 rounded-xl text-xs font-bold border ${paymentStatusColors[booking.paymentStatus]}`}>
+                        {booking.paymentStatus}
+                      </span>
+                      {weekEnded && (
+                        <span className="px-4 py-2 rounded-xl text-xs font-bold border bg-zinc-50 text-zinc-500 border-zinc-200">
+                          Week ended
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100">
-                      <User size={20} className="text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Mentor</p>
-                      <p className="text-sm text-slate-900 font-bold">{booking.mentorId?.fullName || booking.mentorId?.name || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                      <DollarSign size={20} className="text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Amount</p>
-                      <p className="text-sm text-slate-900 font-bold">₹{booking.amount}</p>
-                    </div>
-                  </div>
-
-                  {booking.sessionType === 'webinars' && booking.topic && (
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 py-5 border-y border-slate-100">
                     <div className="flex items-start gap-3">
-                      <div className="p-2.5 rounded-xl bg-cyan-50 border border-cyan-100">
-                        <span className="text-xl">📌</span>
+                      <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+                        <Calendar size={20} className="text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Topic</p>
-                        <p className="text-sm text-slate-900 font-bold">{booking.topic}</p>
+                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">
+                          {pa ? 'Week' : 'Date & Time'}
+                        </p>
+                        {pa ? (() => {
+                          const ws = new Date(booking.scheduledDate);
+                          const we = new Date(ws.getTime() + WEEK_MS);
+                          return (
+                            <p className="text-sm text-slate-900 font-bold">
+                              {ws.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} –{' '}
+                              {we.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
+                          );
+                        })() : (
+                          <p className="text-sm text-slate-900 font-bold">{formatDate(booking.scheduledDate)}</p>
+                        )}
                       </div>
                     </div>
-                  )}
+
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-100">
+                        <Clock size={20} className="text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Duration</p>
+                        <p className="text-sm text-slate-900 font-bold">{booking.duration} mins</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100">
+                        <User size={20} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Mentor</p>
+                        <p className="text-sm text-slate-900 font-bold">{booking.mentorId?.fullName || booking.mentorId?.name || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                        <DollarSign size={20} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Amount</p>
+                        <p className="text-sm text-slate-900 font-bold">₹{booking.amount}</p>
+                      </div>
+                    </div>
+
+                    {booking.sessionType === 'webinars' && booking.topic && (
+                      <div className="flex items-start gap-3">
+                        <div className="p-2.5 rounded-xl bg-cyan-50 border border-cyan-100">
+                          <span className="text-xl">📌</span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">Topic</p>
+                          <p className="text-sm text-slate-900 font-bold">{booking.topic}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions — PA bookings have no join button (schedule via email) */}
+                  <div className="flex flex-wrap gap-3">
+                    {!pa && booking.status === 'confirmed' && (() => {
+                      const joinable = canJoinNow(booking.scheduledDate, booking.duration, now);
+                      const countdown = getJoinCountdown(booking.scheduledDate, now);
+                      const jitsiRoom = booking.sessionType === 'webinars'
+                        ? `yic-webinar-${booking.mentorId?._id || booking.mentorId}-${new Date(booking.scheduledDate).getTime()}`
+                        : `yic-session-${booking._id}`;
+                      const sessionLink = booking.meetingLink || `https://meet.jit.si/${jitsiRoom}`;
+                      const endTime = new Date(new Date(booking.scheduledDate).getTime() + booking.duration * 60000);
+                      const expired = now > endTime.getTime();
+
+                      if (expired) return (
+                        <span className="flex items-center gap-2 px-5 py-2.5 bg-zinc-100 text-zinc-400 text-sm font-semibold rounded-xl border border-zinc-200">
+                          Session Ended
+                        </span>
+                      );
+
+                      if (joinable) return (
+                        <a
+                          href={sessionLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg animate-pulse"
+                        >
+                          <ExternalLink size={18} />
+                          Join Jitsi Session
+                        </a>
+                      );
+
+                      if (countdown) return (
+                        <span className="flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 text-sm font-semibold rounded-xl border border-amber-200">
+                          🕐 {countdown}
+                        </span>
+                      );
+                      return null;
+                    })()}
+
+                    <a
+                      href={getWhatsappLink(booking)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                    >
+                      <MessageCircle size={18} />
+                      WhatsApp Mentor
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setNotes(booking.studentNotes || '');
+                        setShowNotes(true);
+                      }}
+                      className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-bold rounded-xl transition-all"
+                    >
+                      <MessageSquare size={18} />
+                      Notes
+                    </button>
+                  </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap gap-3">
-                  {booking.status === 'confirmed' && (() => {
-                    const joinable = canJoinNow(booking.scheduledDate, booking.duration, now);
-                    const countdown = getJoinCountdown(booking.scheduledDate, now);
-                    const jitsiRoom = booking.sessionType === 'webinars'
-                      ? `yic-webinar-${booking.mentorId?._id || booking.mentorId}-${new Date(booking.scheduledDate).getTime()}`
-                      : `yic-session-${booking._id}`;
-                    const sessionLink = booking.meetingLink || `https://meet.jit.si/${jitsiRoom}`;
-                    const endTime = new Date(new Date(booking.scheduledDate).getTime() + booking.duration * 60000);
-                    const expired = now > endTime.getTime();
-
-                    if (expired) return (
-                      <span className="flex items-center gap-2 px-5 py-2.5 bg-zinc-100 text-zinc-400 text-sm font-semibold rounded-xl border border-zinc-200">
-                        Session Ended
-                      </span>
-                    );
-
-                    if (joinable) return (
-                      <a
-                        href={sessionLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg animate-pulse"
-                      >
-                        <ExternalLink size={18} />
-                        Join Jitsi Session
-                      </a>
-                    );
-
-                    if (countdown) return (
-                      <span className="flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 text-sm font-semibold rounded-xl border border-amber-200">
-                        🕐 {countdown}
-                      </span>
-                    );
-                    return null;
-                  })()}
-
-                  <a
-                    href={getWhatsappLink(booking)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
-                  >
-                    <MessageCircle size={18} />
-                    WhatsApp Mentor
-                  </a>
-
-                  <button
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setNotes(booking.studentNotes || '');
-                      setShowNotes(true);
-                    }}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-bold rounded-xl transition-all"
-                  >
-                    <MessageSquare size={18} />
-                    Notes
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* View More/Less Button */}
