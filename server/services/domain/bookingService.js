@@ -462,7 +462,7 @@ const validateSlotBooking = (mentor, scheduledDate, duration) => {
  * Create booking
  */
 const createBooking = async (bookingData, req) => {
-  const { userId, mentorId, sessionType, title, description, scheduledDate, duration, resumeFile } = bookingData;
+  const { userId, mentorId, sessionType, title, description, scheduledDate, duration, resumeFile, weekLabel } = bookingData;
 
   // Check mentor exists
   const mentor = await User.findById(mentorId);
@@ -481,7 +481,8 @@ const createBooking = async (bookingData, req) => {
   // Validate slot legitimacy
   if (sessionType === 'webinars') {
     validateWebinarSlot(mentor, scheduledDate);
-  } else {
+  } else if (sessionType !== 'placementAccelerator') {
+    // placementAccelerator uses a week-range booking — no specific slot to validate
     validateSlotBooking(mentor, scheduledDate, duration);
   }
 
@@ -511,19 +512,21 @@ const createBooking = async (bookingData, req) => {
   // Calculate server-side amount
   const serverCalculatedAmount = await calculateBookingAmount(sessionType);
 
-  // Check conflicts with existing bookings
-  const conflict = await checkBookingConflict(mentorId, scheduledDate, duration, sessionType);
-  if (conflict.isFull) {
-    const reason = sessionType === 'webinars' ? 'Webinar is full' : 'Time slot not available';
-    await AuditLogService.logBookingAction(
-      req,
-      'BOOKING_CREATED',
-      userId,
-      { sessionType, mentorId, serverCalculatedAmount },
-      'FAILURE',
-      reason
-    );
-    throw new ConflictError(reason);
+  // Check conflicts with existing bookings (skip for placementAccelerator — week-range booking)
+  if (sessionType !== 'placementAccelerator') {
+    const conflict = await checkBookingConflict(mentorId, scheduledDate, duration, sessionType);
+    if (conflict.isFull) {
+      const reason = sessionType === 'webinars' ? 'Webinar is full' : 'Time slot not available';
+      await AuditLogService.logBookingAction(
+        req,
+        'BOOKING_CREATED',
+        userId,
+        { sessionType, mentorId, serverCalculatedAmount },
+        'FAILURE',
+        reason
+      );
+      throw new ConflictError(reason);
+    }
   }
 
   // Calculate amount with GST (18%)
@@ -544,6 +547,7 @@ const createBooking = async (bookingData, req) => {
     status: 'pending',
     paymentStatus: 'pending',
     paymentRequired: true,
+    weekLabel: sessionType === 'placementAccelerator' ? (weekLabel || null) : null,
     resumeFile: sessionType === 'resumeAnalysis' && resumeFile?.url
       ? {
           url: resumeFile.url,
@@ -850,6 +854,7 @@ const getMentorAllBookings = async (mentorId, { sessionType, page = 1, limit = 1
       mockInterview: ['oneMentorship', 'mockInterview', 'mock-interview', 'interviewPrep'],
       liveWebinar: ['webinars', 'liveWebinar', 'live-webinar'],
       gdGroupDiscussions: ['gdGroupDiscussions', 'groupDiscussion', 'gd-practice'],
+      placementPrep: ['placementAccelerator', 'placement-accelerator', 'placementPrep'],
     };
 
     const dbValues = sessionTypeMapping[sessionType];

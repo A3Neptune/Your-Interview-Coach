@@ -594,13 +594,107 @@ const forgotPasswordTemplate = (userName, resetToken) => {
   `;
 };
 
+const placementAcceleratorBookingTemplate = (userName, weekLabel) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #18181b; background: #fafafa; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06); }
+        .header { background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%); color: white; padding: 48px 32px; text-align: center; }
+        .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .header p { font-size: 16px; font-weight: 300; opacity: 0.9; }
+        .content { background: white; padding: 40px 32px; }
+        .content h2 { font-size: 24px; font-weight: 600; margin-bottom: 16px; color: #18181b; }
+        .content p { font-size: 16px; color: #52525b; margin-bottom: 16px; line-height: 1.7; }
+        .info-box { background: #eff6ff; border-left: 4px solid #1a56db; border-radius: 8px; padding: 24px; margin: 24px 0; }
+        .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #dbeafe; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; color: #1e3a5f; min-width: 130px; font-size: 14px; }
+        .info-value { color: #1d4ed8; font-size: 14px; font-weight: 500; }
+        .whatsapp-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center; }
+        .whatsapp-box p { color: #166534; margin: 0; font-weight: 500; font-size: 15px; }
+        .whatsapp-box .icon { font-size: 32px; margin-bottom: 8px; }
+        .button { display: inline-block; padding: 14px 32px; background: #1a56db; color: white !important; text-decoration: none; border-radius: 8px; margin: 24px 0; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(26,86,219,.3); }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e4e4e7, transparent); margin: 32px 0; }
+        .footer { background: #fafafa; text-align: center; padding: 32px; color: #71717a; font-size: 13px; line-height: 1.8; }
+        .footer strong { color: #52525b; }
+        @media only screen and (max-width: 600px) {
+          .container { border-radius: 0; }
+          .header { padding: 32px 24px; }
+          .content { padding: 32px 24px; }
+          .header h1 { font-size: 28px; }
+          .info-row { flex-direction: column; }
+          .info-label { margin-bottom: 4px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚀 You're In!</h1>
+          <p>Your Placement Accelerator is confirmed</p>
+        </div>
+        <div class="content">
+          <h2>Hi ${userName},</h2>
+          <p>Great news — your <strong>Placement Accelerator</strong> booking is confirmed and payment has been received. You're one step closer to landing your dream role!</p>
+
+          <div class="info-box">
+            <div class="info-row">
+              <span class="info-label">📦 Session</span>
+              <span class="info-value">Placement Accelerator</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">📅 Preferred Week</span>
+              <span class="info-value">${weekLabel}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">🗓 Schedule</span>
+              <span class="info-value">Coordinated via WhatsApp after booking</span>
+            </div>
+          </div>
+
+          <div class="whatsapp-box">
+            <div class="icon">💬</div>
+            <p><strong>What's next?</strong> Our team will reach out to you on WhatsApp within 24 hours to confirm the exact session schedule for your preferred week.</p>
+          </div>
+
+          <p>In the meantime, you can view your booking details any time from your dashboard.</p>
+
+          <center>
+            <a href="${process.env.CLIENT_URL}/dashboard/bookings" class="button">View My Bookings →</a>
+          </center>
+
+          <div class="divider"></div>
+
+          <p style="font-size: 14px; color: #71717a;">Have questions? Just reply to this email and our team will be happy to help.</p>
+          <p style="margin-top: 24px; font-weight: 500; color: #18181b;">Best regards,<br>The YourInterviewCoach Team</p>
+        </div>
+        <div class="footer">
+          <p><strong>YourInterviewCoach</strong></p>
+          <p>&copy; ${new Date().getFullYear()} YourInterviewCoach. All rights reserved.</p>
+          <p style="margin-top: 12px;">You're receiving this because you booked a session with us.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
 export {
   welcomeEmailTemplate,
   loginNotificationTemplate,
   forgotPasswordTemplate,
+  placementAcceleratorBookingTemplate,
 };
 export default {
   welcomeEmailTemplate,
   loginNotificationTemplate,
   forgotPasswordTemplate,
+  placementAcceleratorBookingTemplate,
 };

@@ -81,6 +81,24 @@ const DEFAULT_SERVICES = [
     support: 'WhatsApp',
     access: 'Single',
   },
+  {
+    id: 'placementAccelerator',
+    name: 'Placement Accelerator',
+    price: 4999,
+    duration: '300 mins',
+    title: 'Complete Placement Programme',
+    value: '4-module intensive coaching: resume to mock interview',
+    points: [
+      'Resume Analysis & Positioning',
+      'Group Discussion Mastery',
+      'Interview Preparation – Core',
+      'Mock Interview + Feedback',
+      '1:1 Personalised Feedback',
+    ],
+    level: 'Intensive',
+    support: 'WhatsApp',
+    access: 'Single',
+  },
 ];
 
 /**
@@ -132,7 +150,7 @@ const migrateServiceData = async (pricingSection) => {
   // Robustly ensure tiered GD plans exist and old one is gone
   const currentIds = pricingSection.services.map(s => s.id);
   const gdTierIds = ['gd-starter', 'gd-popular', 'gd-value'];
-  
+
   gdTierIds.forEach(id => {
     if (!currentIds.includes(id)) {
       const plan = DEFAULT_SERVICES.find(s => s.id === id);
@@ -142,6 +160,15 @@ const migrateServiceData = async (pricingSection) => {
       }
     }
   });
+
+  // Ensure placementAccelerator exists
+  if (!currentIds.includes('placementAccelerator')) {
+    const plan = DEFAULT_SERVICES.find(s => s.id === 'placementAccelerator');
+    if (plan) {
+      pricingSection.services.push(plan);
+      needsUpdate = true;
+    }
+  }
 
   // Remove legacy ID if present
   if (currentIds.includes('gdGroupDiscussions')) {

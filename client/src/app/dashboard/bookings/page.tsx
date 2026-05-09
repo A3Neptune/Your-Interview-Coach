@@ -21,11 +21,16 @@ interface Booking {
   duration: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   meetingLink?: string;
+  weekLabel?: string;
   feedback?: {
     rating: number;
     comment: string;
   };
 }
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const isPA = (b: Booking) => b.sessionType === 'placementAccelerator';
+const paWeekEnded = (b: Booking) => new Date(b.scheduledDate).getTime() + WEEK_MS < Date.now();
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -65,13 +70,17 @@ export default function BookingsPage() {
 
     switch (activeTab) {
       case 'upcoming':
-        return bookings.filter(
-          (b) => new Date(b.scheduledDate) > now && b.status !== 'cancelled'
-        );
+        return bookings.filter((b) => {
+          if (b.status === 'cancelled') return false;
+          if (isPA(b)) return !paWeekEnded(b);
+          return new Date(b.scheduledDate) > now;
+        });
       case 'completed':
-        return bookings.filter(
-          (b) => b.status === 'completed' || (new Date(b.scheduledDate) < now && b.status !== 'cancelled')
-        );
+        return bookings.filter((b) => {
+          if (b.status === 'cancelled') return false;
+          if (isPA(b)) return paWeekEnded(b) || b.status === 'completed';
+          return b.status === 'completed' || new Date(b.scheduledDate) < now;
+        });
       default:
         return bookings;
     }
@@ -105,29 +114,26 @@ export default function BookingsPage() {
   };
 
   const BookingCard = ({ booking }: { booking: Booking }) => {
+    const pa = isPA(booking);
+    const weekEnded = pa && paWeekEnded(booking);
+    const weekEnd = pa ? new Date(new Date(booking.scheduledDate).getTime() + WEEK_MS) : null;
+    const weekStart = pa ? new Date(booking.scheduledDate) : null;
+    const displayWeekLabel = booking.weekLabel ||
+      (pa && weekStart && weekEnd
+        ? `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : '');
+
     const bookingDate = new Date(booking.scheduledDate);
-    const formattedDate = bookingDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const formattedTime = bookingDate.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const formattedDate = bookingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formattedTime = bookingDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 space-y-4">
+      <div className={`rounded-2xl border border-white/10 backdrop-blur-md p-6 space-y-4 ${weekEnded ? 'bg-white/[0.02] opacity-70' : 'bg-white/5'}`}>
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4 flex-1">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-              {booking.mentorId.name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2)}
+              {booking.mentorId.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-white">{booking.title}</h3>
@@ -135,69 +141,93 @@ export default function BookingsPage() {
               <p className="text-xs text-zinc-600">{booking.mentorId.designation}</p>
             </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(booking.status)}`}>
-            {booking.status}
-          </span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(booking.status)}`}>
+              {booking.status}
+            </span>
+            {weekEnded && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-500/20 text-zinc-400">
+                Week ended
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Details */}
         <div className="space-y-2 pt-4 border-t border-white/10">
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <Calendar className="w-4 h-4 text-blue-400" />
-            <span>{formattedDate}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <Clock className="w-4 h-4 text-blue-400" />
-            <span>{formattedTime} • {booking.duration} minutes</span>
-          </div>
+          {pa ? (
+            <>
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span>Week of {displayWeekLabel}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Clock className="w-4 h-4 text-blue-400" />
+                <span>{weekEnded ? 'Week completed' : 'Schedule confirmed via email'}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span>{formattedDate}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Clock className="w-4 h-4 text-blue-400" />
+                <span>{formattedTime} • {booking.duration} minutes</span>
+              </div>
+            </>
+          )}
           <div className="text-sm text-zinc-400 capitalize">
             <span className="inline-block px-2 py-1 rounded bg-white/5 text-xs">
-              {booking.sessionType.replace('-', ' ')}
+              {pa ? 'Placement Accelerator' : booking.sessionType.replace('-', ' ')}
             </span>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-white/10">
-          <Link
-            href={`/dashboard/bookings/${booking._id}`}
-            className="flex-1 px-4 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium transition-colors text-center"
-          >
-            View Details
-          </Link>
-          {booking.status === 'confirmed' && booking.meetingLink && (
-            <a
-              href={booking.meetingLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors"
+        {/* Actions — PA bookings are view-only (schedule via email) */}
+        {!pa && (
+          <div className="flex gap-3 pt-4 border-t border-white/10">
+            <Link
+              href={`/dashboard/bookings/${booking._id}`}
+              className="flex-1 px-4 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium transition-colors text-center"
             >
-              Join Meeting
-            </a>
-          )}
-          {booking.status === 'pending' && (
-            <>
-              <Link
-                href={`/dashboard/bookings/${booking._id}/payment`}
-                className="flex-1 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-colors text-center"
+              View Details
+            </Link>
+            {booking.status === 'confirmed' && booking.meetingLink && (
+              <a
+                href={booking.meetingLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors"
               >
-                Pay Now
-              </Link>
-              <button
-                onClick={() => handleCancel(booking._id)}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-colors"
-              >
-                Cancel
-              </button>
-            </>
-          )}
-          {booking.status === 'completed' && booking.feedback?.rating && (
-            <div className="flex-1 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Rated: {booking.feedback.rating}/5
-            </div>
-          )}
-        </div>
+                Join Meeting
+              </a>
+            )}
+            {booking.status === 'pending' && (
+              <>
+                <Link
+                  href={`/dashboard/bookings/${booking._id}/payment`}
+                  className="flex-1 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-colors text-center"
+                >
+                  Pay Now
+                </Link>
+                <button
+                  onClick={() => handleCancel(booking._id)}
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            {booking.status === 'completed' && booking.feedback?.rating && (
+              <div className="flex-1 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 text-sm font-medium flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Rated: {booking.feedback.rating}/5
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };

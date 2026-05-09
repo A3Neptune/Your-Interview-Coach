@@ -283,6 +283,24 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   await booking.populate('mentorId', 'name email');
   await booking.populate('studentId', 'name email');
 
+  // Send PA booking confirmation email (non-blocking)
+  if (booking.sessionType === 'placementAccelerator') {
+    try {
+      const { sendEmail } = await import('../emailService.js');
+      const { placementAcceleratorBookingTemplate } = await import('../../templates/emailTemplates.js');
+      const student = booking.studentId;
+      if (student?.email) {
+        await sendEmail(
+          student.email,
+          'Your Placement Accelerator is Confirmed! 🚀',
+          placementAcceleratorBookingTemplate(student.name || 'there', booking.weekLabel || 'To be coordinated')
+        );
+      }
+    } catch (emailErr) {
+      console.error('⚠️ PA booking confirmation email failed:', emailErr.message);
+    }
+  }
+
   return booking;
 };
 

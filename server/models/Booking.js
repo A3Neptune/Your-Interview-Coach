@@ -152,6 +152,11 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Placement accelerator: human-readable week range (e.g. "May 11 – May 17, 2026")
+    weekLabel: {
+      type: String,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

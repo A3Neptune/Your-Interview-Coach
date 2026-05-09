@@ -5,7 +5,7 @@
 import PricingSection from '../models/PricingSection.js';
 
 // Must match Booking model enum and PricingSection service IDs
-const VALID_SESSION_TYPES = ['oneMentorship', 'resumeAnalysis', 'gdGroupDiscussions', 'webinars'];
+const VALID_SESSION_TYPES = ['oneMentorship', 'resumeAnalysis', 'gdGroupDiscussions', 'webinars', 'placementAccelerator'];
 
 export const validateBookingInput = (req, res, next) => {
   try {

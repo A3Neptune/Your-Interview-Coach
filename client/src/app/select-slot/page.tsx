@@ -67,6 +67,7 @@ function fmtDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+
 function SelectSlotContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,12 +95,12 @@ function SelectSlotContent() {
   const serviceId = searchParams.get("serviceId");
 
   useEffect(() => {
-    if (selectedDate && timeSelectionRef.current && serviceId !== 'webinars') {
+    if (selectedDate && timeSelectionRef.current && serviceId !== 'webinars' && serviceId !== 'placementAccelerator') {
       setTimeout(() => {
         timeSelectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 350);
     }
-    if (selectedDate && serviceId !== 'webinars') {
+    if (selectedDate && serviceId !== 'webinars' && serviceId !== 'placementAccelerator') {
       setAvailableSlots([]);
       setSlotsLoading(true);
       fetchSlotsForDate(selectedDate);
@@ -291,7 +292,11 @@ function SelectSlotContent() {
         mentorRes.status === "fulfilled"
           ? mentorRes.value.data.mentors[0]?.availabilitySettings?.blockedDates ?? []
           : [];
-      prefetchMonthSlots(new Date(), resolvedDaysOff, resolvedBlocked);
+      if (serviceId !== 'placementAccelerator') {
+        prefetchMonthSlots(new Date(), resolvedDaysOff, resolvedBlocked);
+      } else {
+        setCalendarReady(true);
+      }
     } catch {
       toast.error("Failed to load availability");
       setIsLoading(false);
@@ -340,6 +345,39 @@ function SelectSlotContent() {
     daysInMonth:    new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate(),
     firstDayOfMonth: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay(),
   }), [currentMonth]);
+
+  // Upcoming Mon-Sun weeks for placementAccelerator week card selector
+  const upcomingWeeks = useMemo(() => {
+    if (serviceId !== 'placementAccelerator') return [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const day = today.getDay();
+    // Mon–Wed (day 1-3): go back to this Monday (≥3 working days still ahead)
+    // Thu–Sat (day 4-6): jump to next Monday (fewer than 3 working days left)
+    // Sunday (day 0): jump to next Monday (current week nearly over)
+    const daysToMonday = day >= 1 && day <= 3 ? 1 - day : day === 0 ? 1 : 8 - day;
+    const firstMonday = new Date(today);
+    firstMonday.setDate(firstMonday.getDate() + daysToMonday);
+    const isThisWeek = day >= 1 && day <= 3;
+    const weeks: { startISO: string; label: string; monthLabel: string }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const start = new Date(firstMonday); start.setDate(start.getDate() + i * 7);
+      const end = new Date(start); end.setDate(end.getDate() + 6);
+      const rangeLabel = `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+      weeks.push({
+        startISO: fmtDate(start),
+        label: i === 0 && isThisWeek ? `This Week · ${rangeLabel}` : rangeLabel,
+        monthLabel: start.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      });
+    }
+    return weeks;
+  }, [serviceId]);
+
+  const selectedWeekLabel = useMemo(() => {
+    if (serviceId !== 'placementAccelerator' || !selectedDate) return '';
+    const monday = new Date(`${selectedDate}T12:00:00`);
+    const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+    return `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+  }, [selectedDate, serviceId]);
 
   const getDayStatus = (day: number): DayStatus => {
     const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
@@ -466,7 +504,7 @@ function SelectSlotContent() {
           <div className="text-5xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Service Not Found</h1>
           <p className="text-slate-500 mb-6 text-sm">
-            We couldn't find the service you were looking for.
+            We couldn&apos;t find the service you were looking for.
           </p>
           <button
             onClick={() => router.push("/")}
@@ -589,11 +627,15 @@ function SelectSlotContent() {
                   ? (!selectedDate
                       ? "Pick a live webinar session below to book your spot"
                       : "✅ All set! Review your selection and proceed to payment")
-                  : !selectedDate
-                    ? "Step 1 of 2 — Pick a date that works for you"
-                    : !selectedTime
-                      ? "Step 2 of 2 — Now choose a time slot"
-                      : "✅ All set! Review your selection and proceed to payment"}
+                  : serviceId === 'placementAccelerator'
+                    ? (!selectedDate
+                        ? "Pick a preferred week — we'll coordinate the exact schedule with you after booking"
+                        : "✅ Week selected! Review and proceed to payment")
+                    : !selectedDate
+                      ? "Step 1 of 2 — Pick a date that works for you"
+                      : !selectedTime
+                        ? "Step 2 of 2 — Now choose a time slot"
+                        : "✅ All set! Review your selection and proceed to payment"}
               </p>
             </div>
 
@@ -622,43 +664,51 @@ function SelectSlotContent() {
                 <p
                   className={`text-xs font-bold leading-none mb-0.5 ${selectedDate ? "text-green-700" : "text-blue-700"}`}
                 >
-                  {selectedDate ? "Date Selected" : "Select Date"}
+                  {selectedDate
+                    ? (serviceId === 'placementAccelerator' ? "Week Selected" : "Date Selected")
+                    : (serviceId === 'placementAccelerator' ? "Select Week" : "Select Date")}
                 </p>
                 {selectedDate && (
                   <p className="text-[11px] text-green-600 leading-none">
-                    {new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {serviceId === 'placementAccelerator'
+                      ? selectedWeekLabel
+                      : new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
                   </p>
                 )}
               </div>
             </div>
 
-            <ChevronRight size={15} className="text-slate-300 shrink-0" />
+            {serviceId !== 'placementAccelerator' && (
+              <>
+                <ChevronRight size={15} className="text-slate-300 shrink-0" />
 
-            <div
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl flex-1 transition-all ${selectedTime ? "bg-green-50" : selectedDate ? "bg-blue-50" : "bg-slate-50"}`}
-            >
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${selectedTime ? "bg-green-500 text-white" : selectedDate ? "bg-blue-500 text-white" : "bg-slate-300 text-white"}`}
-              >
-                {selectedTime ? <Check size={13} strokeWidth={3} /> : "2"}
-              </div>
-              <div>
-                <p
-                  className={`text-xs font-bold leading-none mb-0.5 ${selectedTime ? "text-green-700" : selectedDate ? "text-blue-700" : "text-slate-400"}`}
+                <div
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl flex-1 transition-all ${selectedTime ? "bg-green-50" : selectedDate ? "bg-blue-50" : "bg-slate-50"}`}
                 >
-                  {selectedTime ? "Time Selected" : "Select Time"}
-                </p>
-                {selectedTime && (
-                  <p className="text-[11px] text-green-600 leading-none">
-                    {getSlotDisplay(selectedTime)}
-                  </p>
-                )}
-              </div>
-            </div>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${selectedTime ? "bg-green-500 text-white" : selectedDate ? "bg-blue-500 text-white" : "bg-slate-300 text-white"}`}
+                  >
+                    {selectedTime ? <Check size={13} strokeWidth={3} /> : "2"}
+                  </div>
+                  <div>
+                    <p
+                      className={`text-xs font-bold leading-none mb-0.5 ${selectedTime ? "text-green-700" : selectedDate ? "text-blue-700" : "text-slate-400"}`}
+                    >
+                      {selectedTime ? "Time Selected" : "Select Time"}
+                    </p>
+                    {selectedTime && (
+                      <p className="text-[11px] text-green-600 leading-none">
+                        {getSlotDisplay(selectedTime)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
 
         </motion.div>
@@ -755,7 +805,7 @@ function SelectSlotContent() {
                 {service.points?.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-slate-100">
                     <p className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold mb-2">
-                      What's included
+                      What&apos;s included
                     </p>
                     <div className="space-y-1.5">
                       {service.points.map((point: string, idx: number) => (
@@ -806,7 +856,8 @@ function SelectSlotContent() {
 
               {/* Booking Summary */}
               <AnimatePresence>
-                {formattedDateTime && (
+                {/* Placement Accelerator: week summary */}
+                {serviceId === 'placementAccelerator' && selectedDate && (
                   <motion.div
                     initial={{ opacity: 0, y: 12, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -818,22 +869,51 @@ function SelectSlotContent() {
                       <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                         <Check size={11} className="text-white" strokeWidth={3} />
                       </div>
-                      <p className="text-xs font-bold text-green-700 uppercase tracking-wide">
-                        Your Selection
-                      </p>
+                      <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Your Selection</p>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
                         <span className="text-slate-500">Session</span>
-                        <span className="font-semibold text-slate-800 text-right max-w-[130px] truncate">
-                          {service.name}
-                        </span>
+                        <span className="font-semibold text-slate-800 text-right max-w-[130px] truncate">{service.name}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-slate-500 shrink-0">Week</span>
+                        <span className="font-semibold text-slate-800 text-right">{selectedWeekLabel}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-slate-500 shrink-0">Schedule</span>
+                        <span className="font-semibold text-blue-600 text-right text-[11px]">Confirmed via email</span>
+                      </div>
+                      <div className="pt-2 mt-1 border-t border-green-200 flex justify-between">
+                        <span className="font-semibold text-slate-700">Total (incl. GST)</span>
+                        <span className="font-black text-blue-600 text-sm">₹{Math.round(discountedPrice * 1.18)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                {/* Other services: date + time summary */}
+                {formattedDateTime && serviceId !== 'placementAccelerator' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <Check size={11} className="text-white" strokeWidth={3} />
+                      </div>
+                      <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Your Selection</p>
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Session</span>
+                        <span className="font-semibold text-slate-800 text-right max-w-[130px] truncate">{service.name}</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <span className="text-slate-500 shrink-0">Date</span>
-                        <span className="font-semibold text-slate-800 text-right">
-                          {formattedDateTime.date}
-                        </span>
+                        <span className="font-semibold text-slate-800 text-right">{formattedDateTime.date}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Time</span>
@@ -845,9 +925,7 @@ function SelectSlotContent() {
                       </div>
                       <div className="pt-2 mt-1 border-t border-green-200 flex justify-between">
                         <span className="font-semibold text-slate-700">Total (incl. GST)</span>
-                        <span className="font-black text-blue-600 text-sm">
-                          ₹{Math.round(discountedPrice * 1.18)}
-                        </span>
+                        <span className="font-black text-blue-600 text-sm">₹{Math.round(discountedPrice * 1.18)}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -999,8 +1077,91 @@ function SelectSlotContent() {
               </motion.div>
             )}
 
-            {/* ── Calendar Card (non-webinar services) ─────────────────────── */}
-            {serviceId !== 'webinars' && <>
+            {/* ── Week Card Selector (placementAccelerator only) ────────────── */}
+            {serviceId === 'placementAccelerator' && (
+              <motion.div
+                className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
+                variants={ITEM_VARIANTS}
+              >
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Calendar size={16} className="text-blue-500" />
+                    Select a Preferred Week
+                  </h3>
+                  {selectedDate && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => { setSelectedDate(""); setSelectedTime(""); }}
+                      className="text-[11px] text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-1 transition"
+                    >
+                      Clear <span className="text-slate-300">×</span>
+                    </motion.button>
+                  )}
+                </div>
+                <div className="p-5">
+                  <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                    Choose a week that works for you. After payment, we&apos;ll email you with the exact session schedule coordinated with your mentor.
+                  </p>
+                  <div className="space-y-3">
+                    {upcomingWeeks.map((week, idx) => {
+                      const isSelected = selectedDate === week.startISO;
+                      return (
+                        <motion.button
+                          key={week.startISO}
+                          onClick={() => {
+                            if (isSelected) { setSelectedDate(""); setSelectedTime(""); }
+                            else { setSelectedDate(week.startISO); setSelectedTime(""); }
+                          }}
+                          className={`w-full rounded-2xl p-4 text-left transition-all border-2 ${
+                            isSelected
+                              ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
+                              : "bg-white text-slate-800 border-slate-100 hover:border-blue-200 hover:shadow-sm"
+                          }`}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className={`font-bold text-base leading-snug ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                {week.label}
+                              </p>
+                              <p className={`text-xs mt-0.5 ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
+                                Mon – Sun · {week.monthLabel}
+                              </p>
+                            </div>
+                            {isSelected ? (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0"
+                              >
+                                <Check size={14} className="text-blue-600" strokeWidth={3} />
+                              </motion.div>
+                            ) : (
+                              <ChevronRight size={16} className="text-slate-300 shrink-0" />
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  {upcomingWeeks.length === 0 && (
+                    <div className="py-10 text-center text-slate-400">
+                      <div className="text-4xl mb-3">📅</div>
+                      <p className="text-sm font-medium">No upcoming weeks available.</p>
+                      <p className="text-xs mt-1">Please contact us to schedule.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Calendar Card (non-webinar, non-placementAccelerator) ─────── */}
+            {serviceId !== 'webinars' && serviceId !== 'placementAccelerator' && (
             <motion.div
               className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
               variants={ITEM_VARIANTS}
@@ -1111,9 +1272,10 @@ function SelectSlotContent() {
                 </div>
               </div>
             </motion.div>
+            )}
 
-            {/* ── Time Slot Card ─────────────────────────────────────────────── */}
-            <AnimatePresence mode="wait">
+            {/* ── Time Slot Card (non-webinar, non-placementAccelerator) ──────── */}
+            {serviceId !== 'webinars' && serviceId !== 'placementAccelerator' && <AnimatePresence mode="wait">
               {selectedDate && (
                 <motion.div
                   ref={timeSelectionRef}
@@ -1283,8 +1445,7 @@ function SelectSlotContent() {
                   </div>
                 </motion.div>
               )}
-            </AnimatePresence>
-            </>}
+            </AnimatePresence>}
 
             {/* ── Action Bar ────────────────────────────────────────────────── */}
             <motion.div
@@ -1304,16 +1465,16 @@ function SelectSlotContent() {
               </motion.button>
 
               <AnimatePresence mode="wait">
-                {selectedDate && selectedTime ? (
+                {(serviceId === 'placementAccelerator' ? !!selectedDate : (selectedDate && selectedTime)) ? (
                   <motion.button
                     key="proceed"
                     onClick={() => {
                       const slotData = encodeURIComponent(
-                        JSON.stringify({
-                          date: selectedDate,
-                          time: selectedTime,
-                          duration: slotDuration,
-                        }),
+                        JSON.stringify(
+                          serviceId === 'placementAccelerator'
+                            ? { date: selectedDate, time: "09:00", duration: 300, weekLabel: selectedWeekLabel, isWeekSlot: true }
+                            : { date: selectedDate, time: selectedTime, duration: slotDuration }
+                        ),
                       );
                       router.push(`/checkout?serviceId=${serviceId}&slot=${slotData}`);
                     }}
@@ -1345,7 +1506,9 @@ function SelectSlotContent() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    {!selectedDate ? "Select a date to continue" : "Select a time slot to continue"}
+                    {!selectedDate
+                      ? (serviceId === 'placementAccelerator' ? "Select a week to continue" : "Select a date to continue")
+                      : "Select a time slot to continue"}
                   </motion.div>
                 )}
               </AnimatePresence>

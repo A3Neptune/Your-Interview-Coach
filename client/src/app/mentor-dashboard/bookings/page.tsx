@@ -29,7 +29,10 @@ interface Booking {
   refundId?: string;
   refundAmount?: number;
   refundedAt?: string;
+  weekLabel?: string;
 }
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getJitsiLink = (booking: { _id: string; sessionType?: string; mentorId?: any; scheduledDate?: string }) => {
   if (booking.sessionType === 'webinars') {
@@ -45,6 +48,7 @@ const SESSION_LABELS: Record<string, string> = {
   resumeAnalysis: "Resume Review",
   gdGroupDiscussions: "GD Practice",
   webinars: "Webinar",
+  placementAccelerator: "Placement Accelerator",
 };
 
 export default function MentorBookingsPage() {
@@ -82,26 +86,41 @@ export default function MentorBookingsPage() {
 
   const nowMs = now;
 
+  const isUpcomingBooking = (b: Booking) => {
+    if (b.status !== "confirmed") return false;
+    if (b.sessionType === "placementAccelerator")
+      return new Date(b.scheduledDate).getTime() + WEEK_MS > nowMs;
+    return new Date(b.scheduledDate).getTime() + b.duration * 60000 > nowMs;
+  };
+
+  const isCompletedBooking = (b: Booking) => {
+    if (b.status === "completed") return true;
+    if (b.status !== "confirmed") return false;
+    if (b.sessionType === "placementAccelerator")
+      return new Date(b.scheduledDate).getTime() + WEEK_MS <= nowMs;
+    return new Date(b.scheduledDate).getTime() + b.duration * 60000 <= nowMs;
+  };
+
   const stats = useMemo(() => ({
-    upcoming:  bookings.filter(b => b.status === "confirmed" && new Date(b.scheduledDate).getTime() + b.duration * 60000 > nowMs).length,
-    completed: bookings.filter(b => b.status === "completed" || (b.status === "confirmed" && new Date(b.scheduledDate).getTime() + b.duration * 60000 <= nowMs)).length,
+    upcoming:  bookings.filter(isUpcomingBooking).length,
+    completed: bookings.filter(isCompletedBooking).length,
     cancelled: bookings.filter(b => b.status === "cancelled").length,
     total:     bookings.filter(b => b.status !== "pending").length,
-  }), [bookings]);
+  }), [bookings, nowMs]);
 
   const filtered = useMemo(() => {
     let list: Booking[];
     if (activeTab === "upcoming") {
-      list = bookings.filter(b => b.status === "confirmed" && new Date(b.scheduledDate).getTime() + b.duration * 60000 > nowMs);
+      list = bookings.filter(isUpcomingBooking);
     } else if (activeTab === "completed") {
-      list = bookings.filter(b => b.status === "completed" || (b.status === "confirmed" && new Date(b.scheduledDate).getTime() + b.duration * 60000 <= nowMs));
+      list = bookings.filter(isCompletedBooking);
     } else if (activeTab === "cancelled") {
       list = bookings.filter(b => b.status === "cancelled");
     } else {
       list = bookings.filter(b => b.status !== "pending");
     }
     return list.slice().sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
-  }, [bookings, activeTab]);
+  }, [bookings, activeTab, nowMs]);
 
   const handleCancel = async (bookingId: string) => {
     if (!confirm("Cancel this session? The user will be refunded automatically.")) return;
@@ -182,8 +201,14 @@ export default function MentorBookingsPage() {
             {filtered.map(booking => {
               const date = new Date(booking.scheduledDate);
               const sessionLink = booking.meetingLink || getJitsiLink(booking);
-              const isUpcoming = booking.status === "confirmed" && date.getTime() + booking.duration * 60000 > nowMs;
+              const isUpcoming = isUpcomingBooking(booking);
               const isRealRefund = booking.refundId && !booking.refundId.startsWith("manual_") && !booking.refundId.startsWith("not_applicable");
+              const pa = booking.sessionType === "placementAccelerator";
+              const weekEnd = pa ? new Date(date.getTime() + WEEK_MS) : null;
+              const displayWeekLabel = booking.weekLabel ||
+                (pa && weekEnd
+                  ? `${date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                  : "");
 
               return (
                 <div key={booking._id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -217,16 +242,25 @@ export default function MentorBookingsPage() {
                         {SESSION_LABELS[booking.sessionType] || booking.sessionType}
                       </p>
 
-                      {/* Row 3: date/time/duration */}
+                      {/* Row 3: date/time/duration (or week range for PA) */}
                       <div className="flex flex-wrap gap-3 text-xs text-zinc-500 mb-3">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {date.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {date.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })} · {booking.duration} min
-                        </span>
+                        {pa ? (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Week of {displayWeekLabel}
+                          </span>
+                        ) : (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {date.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {date.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })} · {booking.duration} min
+                            </span>
+                          </>
+                        )}
                         {booking.amount != null && (
                           <span className="text-zinc-500">₹{booking.amount}</span>
                         )}
@@ -274,7 +308,7 @@ export default function MentorBookingsPage() {
 
                       {/* Actions */}
                       <div className="flex gap-2">
-                        {isUpcoming && (
+                        {isUpcoming && !pa && (
                           <a
                             href={sessionLink}
                             target="_blank"
@@ -350,15 +384,20 @@ export default function MentorBookingsPage() {
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="w-4 h-4 text-zinc-500 flex-shrink-0" />
                 <span className="text-zinc-300">
-                  {SESSION_LABELS[profileBooking.sessionType] || profileBooking.sessionType} · {new Date(profileBooking.scheduledDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+                  {SESSION_LABELS[profileBooking.sessionType] || profileBooking.sessionType}
+                  {profileBooking.sessionType === "placementAccelerator"
+                    ? ` · Week of ${profileBooking.weekLabel || new Date(profileBooking.scheduledDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}`
+                    : ` · ${new Date(profileBooking.scheduledDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}`}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Clock className="w-4 h-4 text-zinc-500 flex-shrink-0" />
-                <span className="text-zinc-300">
-                  {new Date(profileBooking.scheduledDate).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })} · {profileBooking.duration} min
-                </span>
-              </div>
+              {profileBooking.sessionType !== "placementAccelerator" && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                  <span className="text-zinc-300">
+                    {new Date(profileBooking.scheduledDate).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })} · {profileBooking.duration} min
+                  </span>
+                </div>
+              )}
               {profileBooking.amount != null && (
                 <div className="flex items-center gap-3 text-sm">
                   <User className="w-4 h-4 text-zinc-500 flex-shrink-0" />

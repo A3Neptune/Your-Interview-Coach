@@ -722,6 +722,12 @@ function CheckoutContent() {
   /* ── Slot display ─────────────────────────────── */
   const slotDisplay = (() => {
     if (!selectedSlot) return { date: '', time: '' };
+    if (selectedSlot.isWeekSlot) {
+      return {
+        date: `Week of ${selectedSlot.weekLabel}`,
+        time: 'Schedule coordinated after booking',
+      };
+    }
     const dateStr = new Date(`${selectedSlot.date}T${selectedSlot.time}`).toLocaleDateString('en-US', {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
     });
@@ -788,7 +794,7 @@ function CheckoutContent() {
 
         const bookingRes = await axios.post(
           `${API_URL}/bookings`,
-          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes, resumeFile },
+          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes, resumeFile, ...(selectedSlot.isWeekSlot ? { weekLabel: selectedSlot.weekLabel } : {}) },
           { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
         );
         bookingId = bookingRes.data.booking._id;
@@ -824,7 +830,7 @@ function CheckoutContent() {
                 localStorage.removeItem('resume_analysis_file');
               }
               toast.success('Booking confirmed!');
-              setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
+              setTimeout(() => router.push('/dashboard/bookings'), 2000);
             } else {
               toast.error('Payment verification failed'); setIsProcessing(false);
             }
@@ -856,14 +862,21 @@ function CheckoutContent() {
 
   /* ── Success screen ───────────────────────────── */
   if (paymentDone) {
+    const isPA = serviceId === 'placementAccelerator';
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#fff' }}>
         <div className="text-center max-w-sm" style={{ animation: 'scaleIn .4s ease' }}>
           <div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#1a56db,#3b82f6)', boxShadow: '0 12px 40px rgba(26,86,219,.3)' }}>
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
-          <h2 className="checkout-title text-3xl font-bold text-slate-900 mb-2" style={{ fontFamily: "'Fraunces', serif" }}>Booking Confirmed!</h2>
-          <p className="text-slate-500 text-sm">Redirecting to your bookings…</p>
+          <h2 className="checkout-title text-3xl font-bold text-slate-900 mb-3" style={{ fontFamily: "'Fraunces', serif" }}>Booking Confirmed!</h2>
+          {isPA ? (
+            <div className="space-y-2 text-left bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-4">
+              <p className="text-sm text-slate-700 font-medium">✅ A confirmation email has been sent to you.</p>
+              <p className="text-sm text-slate-700 font-medium">💬 Our team will reach out to you on <strong>WhatsApp</strong> to coordinate the exact session schedule.</p>
+            </div>
+          ) : null}
+          <p className="text-slate-400 text-sm">Redirecting to your bookings…</p>
         </div>
       </div>
     );
