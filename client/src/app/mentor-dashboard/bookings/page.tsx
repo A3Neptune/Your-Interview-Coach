@@ -3,11 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-<<<<<<< Updated upstream
-import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw, FileDown } from "lucide-react";
-=======
 import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw, FileDown, Users, ChevronDown, ChevronUp } from "lucide-react";
->>>>>>> Stashed changes
 import { toast } from 'sonner';
 import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
@@ -546,10 +542,7 @@ export default function MentorBookingsPage() {
                         </div>
                       )}
 
-<<<<<<< Updated upstream
                       {/* Actions */}
-=======
->>>>>>> Stashed changes
                       <div className="flex gap-2 flex-wrap">
                         {isUpcoming && !pa && (
                           <a href={sessionLink} target="_blank" rel="noopener noreferrer"
@@ -558,7 +551,6 @@ export default function MentorBookingsPage() {
                           </a>
                         )}
                         {booking.resumeFile?.url && (
-<<<<<<< Updated upstream
                           <a
                             href={booking.resumeFile.url}
                             target="_blank"
@@ -567,11 +559,6 @@ export default function MentorBookingsPage() {
                           >
                             <FileDown className="w-3.5 h-3.5" />
                             Download Resume
-=======
-                          <a href={booking.resumeFile.url} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-400 text-xs font-semibold transition-colors">
-                            <FileDown className="w-3.5 h-3.5" /> Download Resume
->>>>>>> Stashed changes
                           </a>
                         )}
                         {isUpcoming && (
