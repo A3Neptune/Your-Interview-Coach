@@ -5,7 +5,6 @@
 
 import Booking from '../../models/Booking.js';
 import User from '../../models/User.js';
-import Payment from '../../models/Payment.js';
 import PricingSection from '../../models/PricingSection.js';
 import {  ValidationError, NotFoundError, ConflictError  } from '../../utils/errors.js';
 import AuditLogService from '../AuditLogService.js';
@@ -648,6 +647,22 @@ const getMentorStudentsList = async (mentorId) => {
  * Get bookings for student
  */
 const getStudentBookings = async (studentId, filters = {}) => {
+  // Auto-complete any confirmed sessions whose time has fully elapsed
+  const now = new Date();
+  await Booking.updateMany(
+    {
+      studentId,
+      status: 'confirmed',
+      $expr: {
+        $lt: [
+          { $add: ['$scheduledDate', { $multiply: ['$duration', 60_000] }] },
+          now,
+        ],
+      },
+    },
+    { $set: { status: 'completed', completedAt: now } }
+  );
+
   const query = { studentId, ...filters };
   const bookings = await Booking.find(query)
     .populate('mentorId', 'name email designation company profileImage')
@@ -765,17 +780,21 @@ const confirmBooking = async (bookingId, req) => {
       //   2. If this is the first student being confirmed → try Zoom, fallback to Jitsi.
       // "Same slot" = same mentorId + same scheduledDate (exact value stored by booking creation).
 
+      // Normalise to minute boundary — same for every booking at this slot regardless of ms drift
+      const slotTime = new Date(booking.scheduledDate);
+      slotTime.setSeconds(0, 0);
+      const slotMs = slotTime.getTime();
+
       const slotSibling = await Booking.findOne({
         _id:          { $ne: booking._id },
         mentorId:     booking.mentorId,
-        scheduledDate: booking.scheduledDate,
+        scheduledDate: { $gte: new Date(slotMs - 60_000), $lte: new Date(slotMs + 60_000) },
         sessionType:  'webinars',
         status:       'confirmed',
         meetingLink:  { $exists: true, $nin: [null, ''] },
       }).select('meetingLink meetingId').lean();
 
       if (slotSibling?.meetingLink) {
-        // Subsequent student — copy the shared link already created for this slot
         booking.meetingLink = slotSibling.meetingLink;
         if (slotSibling.meetingId) booking.meetingId = slotSibling.meetingId;
         console.log(`✅ Webinar slot link reused for booking ${booking._id}:`, booking.meetingLink);
@@ -789,22 +808,26 @@ const confirmBooking = async (bookingId, req) => {
             duration: booking.duration,
             bookingId: booking._id.toString(),
           });
-          booking.meetingLink = meeting.joinUrl;
-          booking.meetingId   = meeting.meetingId;
-          created = true;
-          console.log(`✅ Zoom meeting created for webinar slot (booking ${booking._id}):`, meeting.joinUrl);
+          // Only accept a real Zoom meeting — zoomService returns provider:'jitsi' (per-booking)
+          // when Zoom is not configured, which must NOT be used for webinars (breaks shared link)
+          if (meeting.provider === 'zoom') {
+            booking.meetingLink = meeting.joinUrl;
+            booking.meetingId   = meeting.meetingId;
+            created = true;
+            console.log(`✅ Zoom meeting created for webinar slot (booking ${booking._id}):`, meeting.joinUrl);
+          }
         } catch {
           // Zoom not configured or failed — use deterministic Jitsi room
         }
 
         if (!created) {
-          const slotTime = new Date(booking.scheduledDate);
-          slotTime.setSeconds(0, 0);
-          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotTime.getTime()}`;
+          // Deterministic — slotMs encodes the exact slot so different slots always differ
+          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotMs}`;
           console.log(`ℹ️ Jitsi fallback assigned for webinar slot (booking ${booking._id}):`, booking.meetingLink);
         }
       }
     } else {
+      // 1:1 sessions (GD, mock, CV, etc.) — dedicated link per booking
       try {
         const { default: zoomService } = await import('../../utils/zoomService.js');
         const meeting = await zoomService.create1on1Meeting({
@@ -816,8 +839,8 @@ const confirmBooking = async (bookingId, req) => {
         booking.meetingId = meeting.meetingId;
         console.log('✅ Zoom meeting created for booking:', meeting.joinUrl);
       } catch (error) {
-        console.error('Failed to create Zoom meeting:', error);
-        // Continue without Zoom link - don't block confirmation
+        console.error('Failed to create Zoom meeting, using Jitsi fallback:', error.message);
+        booking.meetingLink = `https://meet.jit.si/yic-session-${booking._id}`;
       }
     }
   }

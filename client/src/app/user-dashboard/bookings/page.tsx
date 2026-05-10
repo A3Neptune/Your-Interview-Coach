@@ -67,32 +67,73 @@ const PAY_STYLES: Record<string, string> = {
   refunded:  'bg-purple-50 text-purple-700',
 };
 
-function Shimmer({ className = '' }: { className?: string }) {
+function Shimmer({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={`relative overflow-hidden bg-slate-100 rounded-lg ${className}`}>
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+    <div className={`relative overflow-hidden bg-slate-100 rounded-lg ${className}`} style={style}>
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     </div>
   );
 }
 
-function CardSkeleton() {
+function CardSkeleton({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <Shimmer className="h-5 w-24 rounded-full" />
-        <Shimmer className="h-5 w-16 rounded-full" />
+    <div
+      className="rounded-2xl border border-slate-100 bg-white p-6"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {/* header row */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+        <div className="flex-1 space-y-2">
+          <Shimmer className="h-5 w-2/3 rounded-md" />
+          <Shimmer className="h-3.5 w-1/2 rounded-md" />
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Shimmer className="h-6 w-20 rounded-full" />
+          <Shimmer className="h-6 w-20 rounded-full" />
+        </div>
       </div>
-      <Shimmer className="h-6 w-3/4" />
-      <div className="grid grid-cols-2 gap-3">
-        <Shimmer className="h-12 rounded-xl" />
-        <Shimmer className="h-12 rounded-xl" />
-        <Shimmer className="h-12 rounded-xl" />
-        <Shimmer className="h-12 rounded-xl" />
+
+      {/* detail grid — mirrors 4 icon+text blocks */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-y border-slate-100 mb-5">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="flex items-start gap-2.5">
+            <Shimmer className="w-8 h-8 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-1.5 pt-0.5">
+              <Shimmer className="h-2.5 w-12 rounded" />
+              <Shimmer className="h-3.5 w-20 rounded" />
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="flex gap-3 pt-2">
-        <Shimmer className="h-10 w-36 rounded-xl" />
-        <Shimmer className="h-10 w-36 rounded-xl" />
+
+      {/* action buttons */}
+      <div className="flex gap-2.5">
+        <Shimmer className="h-9 w-32 rounded-xl" />
+        <Shimmer className="h-9 w-36 rounded-xl" />
+        <Shimmer className="h-9 w-24 rounded-xl" />
       </div>
+    </div>
+  );
+}
+
+function BannerSkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-5 flex items-center gap-4">
+      <Shimmer className="w-11 h-11 rounded-xl shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Shimmer className="h-4 w-40 rounded-md" />
+        <Shimmer className="h-3 w-56 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+function FilterSkeleton() {
+  return (
+    <div className="flex gap-1.5 bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm w-fit">
+      {[80, 64, 80, 80, 72].map((w, i) => (
+        <Shimmer key={i} className="h-8 rounded-lg" style={{ width: w }} />
+      ))}
     </div>
   );
 }
@@ -238,7 +279,9 @@ function UserBookingsContent() {
       {/* Cards */}
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
+          <BannerSkeleton />
+          <FilterSkeleton />
+          {[0, 120, 240].map((delay, i) => <CardSkeleton key={i} delay={delay} />)}
         </div>
       ) : filteredBookings.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-14 text-center space-y-4">

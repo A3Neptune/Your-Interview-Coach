@@ -241,11 +241,16 @@ const verifyAndCompletePayment = async (paymentData, req) => {
   // Generate meeting link — wrapped so any failure never blocks payment completion
   if (!booking.meetingLink) {
     if (booking.sessionType === 'webinars') {
-      // Webinars: all students on the same slot share ONE link
+      // Webinars: every student on the SAME slot shares ONE link; different slots get different links.
+      // Normalise to minute boundary so tiny ms differences between bookings don't break the match.
+      const slotTime = new Date(booking.scheduledDate);
+      slotTime.setSeconds(0, 0);
+      const slotMs = slotTime.getTime();
+
       const slotSibling = await Booking.findOne({
         _id:           { $ne: booking._id },
         mentorId:      booking.mentorId,
-        scheduledDate: booking.scheduledDate,
+        scheduledDate: { $gte: new Date(slotMs - 60_000), $lte: new Date(slotMs + 60_000) },
         sessionType:   'webinars',
         status:        'confirmed',
         meetingLink:   { $exists: true, $nin: [null, ''] },
@@ -265,7 +270,6 @@ const verifyAndCompletePayment = async (paymentData, req) => {
             duration:  booking.duration,
             bookingId: booking._id.toString(),
           });
-          // Only use a Zoom link (not the Jitsi fallback that generates per-booking IDs)
           if (meeting.provider === 'zoom') {
             booking.meetingLink = meeting.joinUrl;
             booking.meetingId   = meeting.meetingId;
@@ -275,9 +279,8 @@ const verifyAndCompletePayment = async (paymentData, req) => {
         } catch { /* fall through to Jitsi */ }
 
         if (!created) {
-          const slotTime = new Date(booking.scheduledDate);
-          slotTime.setSeconds(0, 0);
-          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotTime.getTime()}`;
+          // Deterministic — slotMs encodes the exact slot so different slots always differ
+          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotMs}`;
           console.log(`ℹ️ Jitsi deterministic link assigned (payment, booking ${booking._id}):`, booking.meetingLink);
         }
       }

@@ -68,6 +68,136 @@ function fmtDate(date: Date): string {
 }
 
 
+// ── Skeleton primitives ──────────────────────────────────────────────────────
+
+const SHIMMER_CSS = "@keyframes shimmer { 100% { transform: translateX(100%); } }";
+
+function Sh({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div className={`relative overflow-hidden bg-slate-100 rounded-lg ${className}`} style={style}>
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+    </div>
+  );
+}
+
+function CalendarGridSkeleton() {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-5">
+        <Sh className="w-8 h-8 rounded-lg" />
+        <Sh className="w-36 h-5 rounded-md" />
+        <Sh className="w-8 h-8 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-7 mb-1">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Sh key={i} className="h-4 mx-0.5 rounded" />
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <Sh key={i} className="aspect-square rounded-xl" style={{ animationDelay: `${i * 20}ms` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SlotsSkeleton() {
+  return (
+    <div className="space-y-7">
+      {[6, 4].map((count, g) => (
+        <div key={g} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Sh className="w-7 h-7 rounded-lg" />
+            <Sh className="h-4 w-20 rounded" />
+            <Sh className="h-5 w-14 rounded-full ml-auto" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {Array.from({ length: count }).map((_, i) => (
+              <Sh key={i} className="h-[52px] rounded-xl" style={{ animationDelay: `${(g * 6 + i) * 35}ms` }} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4">
+      <style>{SHIMMER_CSS}</style>
+      <div className="max-w-5xl mx-auto">
+        {/* header area */}
+        <div className="mb-8 space-y-5">
+          <Sh className="h-5 w-28 rounded-md" />
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="space-y-2">
+              <Sh className="h-9 w-56 rounded-md" />
+              <Sh className="h-4 w-48 rounded" />
+            </div>
+            <Sh className="h-9 w-52 rounded-xl" />
+          </div>
+          <Sh className="h-14 w-full rounded-2xl" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-7">
+          {/* sidebar */}
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4">
+              <Sh className="h-3.5 w-20 rounded" />
+              <Sh className="h-6 w-3/4 rounded-md" />
+              <Sh className="h-4 w-1/2 rounded" />
+              <div className="bg-slate-50 rounded-xl p-3 space-y-3 border border-slate-100">
+                <div className="flex justify-between">
+                  <Sh className="h-4 w-16 rounded" />
+                  <Sh className="h-4 w-12 rounded" />
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <Sh className="h-3.5 w-10 rounded" />
+                  <Sh className="h-8 w-20 rounded-lg" />
+                </div>
+              </div>
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                {[1, 2, 3].map(i => <Sh key={i} className="h-3.5 rounded" />)}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+              <Sh className="h-3.5 w-20 rounded" />
+              <div className="flex items-center gap-3">
+                <Sh className="w-11 h-11 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Sh className="h-4 w-3/4 rounded" />
+                  <Sh className="h-3 w-1/2 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* calendar */}
+          <div className="space-y-6">
+            <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+                <Sh className="w-4 h-4 rounded" />
+                <Sh className="h-4 w-28 rounded-md" />
+              </div>
+              <div className="p-5">
+                <CalendarGridSkeleton />
+              </div>
+            </div>
+            <div className="sticky bottom-4 flex gap-3 p-3.5 bg-white/95 rounded-2xl border border-slate-100 shadow-lg">
+              <Sh className="h-12 w-24 rounded-xl" />
+              <Sh className="h-12 flex-1 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function SelectSlotContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -489,12 +619,7 @@ function SelectSlotContent() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 gap-3">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <p className="text-slate-500 text-sm font-medium">Loading booking details…</p>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (!service) {
@@ -597,6 +722,7 @@ function SelectSlotContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-8 px-4">
+      <style>{SHIMMER_CSS}</style>
       <div className="max-w-5xl mx-auto">
         {/* ── Back + Header ─────────────────────────────────────────────────── */}
         <motion.div className="mb-8" variants={CONTAINER_VARIANTS} initial="hidden" animate="visible">
@@ -1241,9 +1367,8 @@ function SelectSlotContent() {
 
                   {/* Skeleton overlay while prefetch runs */}
                   {!calendarReady && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] rounded-xl flex flex-col items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-                      <p className="text-xs text-slate-400 font-medium">Checking availability…</p>
+                    <div className="absolute inset-0 bg-white rounded-xl p-1">
+                      <CalendarGridSkeleton />
                     </div>
                   )}
                 </div>
@@ -1303,18 +1428,7 @@ function SelectSlotContent() {
 
                   <div className="p-5">
                     {slotsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-14 gap-3">
-                        <Loader2 className="w-7 h-7 animate-spin text-blue-400" />
-                        <p className="text-sm text-slate-500 font-medium">
-                          Finding available slots for{" "}
-                          {new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", {
-                            weekday: "long",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                          …
-                        </p>
-                      </div>
+                      <SlotsSkeleton />
                     ) : timeGroups.length === 0 ? (
                       <motion.div
                         className="flex flex-col items-center justify-center py-12 gap-4 text-center"
