@@ -67,6 +67,14 @@ const pricingSectionSchema = new mongoose.Schema(
           type: String,
           default: 'Multiple',
         },
+        memberCount: {
+          type: Number,
+          default: null,
+        },
+        pricePerMember: {
+          type: Number,
+          default: null,
+        },
         // Discount fields
         discount: {
           type: {

@@ -103,7 +103,7 @@ function GdBookingContent() {
             setIsLoading(false);
             return;
           }
-        } catch {}
+        } catch { }
 
         setMembers(getEmptyMembers(found.memberCount));
       } catch {
@@ -254,7 +254,7 @@ function GdBookingContent() {
               {members.map((member, index) => (
                 <div
                   key={index}
-                  className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4"
+                  className="rounded-2xl border border-blue-500 p-4"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-black text-slate-800">

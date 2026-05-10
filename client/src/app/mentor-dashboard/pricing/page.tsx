@@ -79,6 +79,7 @@ export default function MentorPricingPage() {
       };
     }[]
   >([]);
+  const [isGdPlan, setIsGdPlan] = useState(false);
   const [newService, setNewService] = useState<Partial<Service>>({
     name: "",
     price: 0,
@@ -89,6 +90,8 @@ export default function MentorPricingPage() {
     level: "",
     support: "",
     access: "",
+    memberCount: null,
+    pricePerMember: null,
   });
 
   useEffect(() => {
@@ -113,13 +116,21 @@ export default function MentorPricingPage() {
 
   const handleFieldChange = (serviceId: string, field: string, value: any) => {
     setServices(
-      services.map((s) =>
-        s.id === serviceId
-          ? field === "points"
-            ? { ...s, points: value }
-            : { ...s, [field]: value }
-          : s,
-      ),
+      services.map((s) => {
+        if (s.id !== serviceId) return s;
+        let updated = field === "points"
+          ? { ...s, points: value }
+          : { ...s, [field]: value };
+        
+        if (s.id?.startsWith("gd-")) {
+          const mCount = field === "memberCount" ? value : s.memberCount;
+          const pPerMem = field === "pricePerMember" ? value : s.pricePerMember;
+          if (mCount && pPerMem) {
+            updated.price = mCount * pPerMem;
+          }
+        }
+        return updated;
+      }),
     );
   };
 
@@ -239,8 +250,9 @@ export default function MentorPricingPage() {
 
       setIsSaving(true);
 
-      // Create unique ID from name
-      const serviceId = newService.name.toLowerCase().replace(/\s+/g, "-");
+      // Create unique ID from name, prefixing with 'gd-' if it's a GD plan
+      const cleanSlug = newService.name.toLowerCase().replace(/\s+/g, "-");
+      const serviceId = isGdPlan ? (cleanSlug.startsWith("gd-") ? cleanSlug : `gd-${cleanSlug}`) : cleanSlug;
 
       const serviceData = {
         ...newService,
@@ -252,6 +264,7 @@ export default function MentorPricingPage() {
 
       toast.success("Service created successfully!");
       setShowCreateModal(false);
+      setIsGdPlan(false);
       setNewService({
         name: "",
         price: 0,
@@ -262,6 +275,8 @@ export default function MentorPricingPage() {
         level: "",
         support: "",
         access: "",
+        memberCount: null,
+        pricePerMember: null,
       });
 
       // Refresh services
@@ -271,7 +286,7 @@ export default function MentorPricingPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [newService]);
+  }, [newService, isGdPlan]);
 
   const handleDeleteService = useCallback(async (serviceId: string) => {
     try {
@@ -1007,51 +1022,106 @@ export default function MentorPricingPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Level
-                  </label>
-                  <input
-                    type="text"
-                    value={newService.level}
-                    onChange={(e) =>
-                      setNewService({ ...newService, level: e.target.value })
-                    }
-                    placeholder="Premium"
-                    className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Level
+                </label>
+                <input
+                  type="text"
+                  value={newService.level}
+                  onChange={(e) =>
+                    setNewService({ ...newService, level: e.target.value })
+                  }
+                  placeholder="Premium"
+                  className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Support
-                  </label>
+              {/* GD Plan Toggle */}
+              <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 space-y-4">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
-                    type="text"
-                    value={newService.support}
-                    onChange={(e) =>
-                      setNewService({ ...newService, support: e.target.value })
-                    }
-                    placeholder="24/7"
-                    className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
+                    type="checkbox"
+                    checked={isGdPlan}
+                    onChange={(e) => {
+                      setIsGdPlan(e.target.checked);
+                      if (!e.target.checked) {
+                        setNewService({
+                          ...newService,
+                          memberCount: null,
+                          pricePerMember: null,
+                        });
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-purple-500/30 text-purple-600 focus:ring-purple-500"
                   />
-                </div>
+                  <span className="text-sm font-semibold text-purple-300">
+                    Is this a Group Discussion (GD) Plan?
+                  </span>
+                </label>
 
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Access
-                  </label>
-                  <input
-                    type="text"
-                    value={newService.access}
-                    onChange={(e) =>
-                      setNewService({ ...newService, access: e.target.value })
-                    }
-                    placeholder="Unlimited"
-                    className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
+                {isGdPlan && (
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-purple-400 mb-2">
+                        Team Size (Members)
+                      </label>
+                      <input
+                        type="number"
+                        value={newService.memberCount || ""}
+                        min={2}
+                        max={20}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-", "."].includes(e.key) &&
+                          e.preventDefault()
+                        }
+                        onChange={(e) => {
+                          const mCount = e.target.value === "" ? null : Math.abs(parseInt(e.target.value)) || null;
+                          const pPerMem = newService.pricePerMember;
+                          const computedPrice = mCount && pPerMem ? mCount * pPerMem : newService.price;
+                          setNewService({
+                            ...newService,
+                            memberCount: mCount,
+                            price: computedPrice,
+                          });
+                        }}
+                        placeholder="e.g., 4"
+                        className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-purple-500/30 text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-purple-400 mb-2">
+                        Price Per Member (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={newService.pricePerMember || ""}
+                        min={0}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-", "."].includes(e.key) &&
+                          e.preventDefault()
+                        }
+                        onChange={(e) => {
+                          const pPerMem = e.target.value === "" ? null : Math.abs(parseInt(e.target.value)) || null;
+                          const mCount = newService.memberCount;
+                          const computedPrice = mCount && pPerMem ? mCount * pPerMem : newService.price;
+                          setNewService({
+                            ...newService,
+                            pricePerMember: pPerMem,
+                            price: computedPrice,
+                          });
+                        }}
+                        placeholder="e.g., 199"
+                        className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-purple-500/30 text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none text-sm"
+                      />
+                    </div>
+                    {newService.memberCount && newService.pricePerMember && (
+                      <p className="col-span-2 text-xs text-purple-400">
+                        Total Price is automatically calculated as: {newService.memberCount} × ₹{newService.pricePerMember} = ₹{newService.memberCount * newService.pricePerMember}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -1260,48 +1330,18 @@ export default function MentorPricingPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-white mb-2">
-                      Level
-                    </label>
-                    <input
-                      type="text"
-                      value={service.level}
-                      onChange={(e) =>
-                        handleFieldChange(service.id, "level", e.target.value)
-                      }
-                      className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-white mb-2">
-                      Support
-                    </label>
-                    <input
-                      type="text"
-                      value={service.support}
-                      onChange={(e) =>
-                        handleFieldChange(service.id, "support", e.target.value)
-                      }
-                      className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-white mb-2">
-                      Access
-                    </label>
-                    <input
-                      type="text"
-                      value={service.access}
-                      onChange={(e) =>
-                        handleFieldChange(service.id, "access", e.target.value)
-                      }
-                      className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Level
+                  </label>
+                  <input
+                    type="text"
+                    value={service.level}
+                    onChange={(e) =>
+                      handleFieldChange(service.id, "level", e.target.value)
+                    }
+                    className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:border-blue-500 focus:outline-none"
+                  />
                 </div>
 
                 <button
@@ -1342,7 +1382,7 @@ export default function MentorPricingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
                   <div>
                     <p className="text-zinc-400">Price</p>
                     <p className="text-white font-bold">₹{service.price}</p>
@@ -1355,21 +1395,23 @@ export default function MentorPricingPage() {
                     <p className="text-zinc-400">Level</p>
                     <p className="text-white font-bold">{service.level}</p>
                   </div>
-                  <div>
-                    <p className="text-zinc-400">Support</p>
-                    <p className="text-white font-bold">{service.support}</p>
-                  </div>
                 </div>
 
                 {/* GD-specific info in view mode */}
-                {service.id?.startsWith("gd-") && (service as any).memberCount && (
+                {service.id?.startsWith("gd-") && (
                   <div className="mt-3 flex items-center gap-3">
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/20">
                       GD Plan
                     </span>
-                    <span className="text-sm text-zinc-300">
-                      {(service as any).memberCount} members × ₹{(service as any).pricePerMember}/member
-                    </span>
+                    {(service as any).memberCount ? (
+                      <span className="text-sm text-zinc-300">
+                        {(service as any).memberCount} members × ₹{(service as any).pricePerMember}/member
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        ⚠️ Incomplete config: Edit to set Team Size & Per-member Price!
+                      </span>
+                    )}
                   </div>
                 )}
 

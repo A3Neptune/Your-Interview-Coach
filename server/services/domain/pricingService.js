@@ -56,6 +56,8 @@ const DEFAULT_SERVICES = [
     level: 'Starter',
     support: 'WhatsApp',
     access: 'Single',
+    memberCount: 4,
+    pricePerMember: 199,
   },
   {
     id: 'gd-popular',
@@ -68,6 +70,8 @@ const DEFAULT_SERVICES = [
     level: 'Popular',
     support: 'WhatsApp',
     access: 'Single',
+    memberCount: 6,
+    pricePerMember: 169,
   },
   {
     id: 'gd-value',
@@ -80,6 +84,8 @@ const DEFAULT_SERVICES = [
     level: 'Value',
     support: 'WhatsApp',
     access: 'Single',
+    memberCount: 10,
+    pricePerMember: 99,
   },
   {
     id: 'placementAccelerator',
@@ -176,47 +182,43 @@ const migrateServiceData = async (pricingSection) => {
     needsUpdate = true;
   }
 
-  pricingSection.services = pricingSection.services.map((service) => {
+  pricingSection.services.forEach((service) => {
     const serviceNameLower = service.name.toLowerCase();
-    let standardId = service.id;
-    let standardizedService = { ...service._doc || service };
-
+    
     // Map old IDs to standardized ones
     if (serviceNameLower.includes('1:1') || serviceNameLower.includes('mentorship')) {
       if (service.id !== 'oneMentorship') {
-        standardId = 'oneMentorship';
+        service.id = 'oneMentorship';
         needsUpdate = true;
       }
     } else if (serviceNameLower.includes('webinar')) {
       if (service.id !== 'webinars') {
-        standardId = 'webinars';
+        service.id = 'webinars';
         needsUpdate = true;
       }
     } else if (serviceNameLower.includes('resume') || serviceNameLower.includes('cv')) {
       if (service.id !== 'resumeAnalysis') {
-        standardId = 'resumeAnalysis';
+        service.id = 'resumeAnalysis';
         needsUpdate = true;
       }
     }
 
     // Fill missing fields from defaults
-    const defaultData = serviceDataMap[standardId];
+    const defaultData = serviceDataMap[service.id];
     if (defaultData) {
-      const fieldsToFill = ['duration', 'title', 'value', 'level', 'support', 'access'];
+      const fieldsToFill = ['duration', 'title', 'value', 'level', 'support', 'access', 'memberCount', 'pricePerMember'];
       fieldsToFill.forEach(field => {
-        if (!standardizedService[field] || standardizedService[field] === '') {
-          standardizedService[field] = defaultData[field];
+        if (defaultData[field] !== undefined && (service[field] === undefined || service[field] === null || service[field] === '')) {
+          service[field] = defaultData[field];
           needsUpdate = true;
         }
       });
 
-      if (!standardizedService.points || standardizedService.points.length === 0) {
-        standardizedService.points = defaultData.points;
+      if (!service.points || service.points.length === 0) {
+        service.points = defaultData.points;
         needsUpdate = true;
       }
     }
-
-    return { ...standardizedService, id: standardId };
   });
 
   if (needsUpdate) {
@@ -292,7 +294,7 @@ const updateService = async (serviceId, serviceData) => {
   // Only update non-discount fields — discount has its own endpoint
   const { discount: _omit, ...fields } = serviceData;
   const setPayload = {};
-  const allowed = ['name', 'price', 'duration', 'title', 'value', 'points', 'level', 'support', 'access'];
+  const allowed = ['name', 'price', 'duration', 'title', 'value', 'points', 'level', 'support', 'access', 'memberCount', 'pricePerMember'];
   for (const key of allowed) {
     if (fields[key] !== undefined) {
       setPayload[`services.$.${key}`] = fields[key];

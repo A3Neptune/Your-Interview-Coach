@@ -1,6 +1,7 @@
 import GDBooking from '../models/GDBooking.js';
 import User from '../models/User.js';
 import PricingSection from '../models/PricingSection.js';
+import { getPricingSection } from '../services/domain/pricingService.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { handleControllerError } from '../utils/errorHandler.js';
@@ -10,7 +11,7 @@ import { handleControllerError } from '../utils/errorHandler.js';
  * Falls back to hardcoded defaults if none exist in DB.
  */
 async function getGDPlansFromDB() {
-  const pricingSection = await PricingSection.findOne({ isGlobal: true });
+  const pricingSection = await getPricingSection();
   if (!pricingSection) return {};
 
   const gdServices = pricingSection.services.filter(s => s.id && s.id.startsWith('gd-'));
