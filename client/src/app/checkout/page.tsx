@@ -639,14 +639,31 @@ function CheckoutContent() {
     }
   };
 
-  const getResumeAnalysisFile = () => {
-    if (serviceId !== 'resumeAnalysis') return null;
-    try {
-      const resumeFile = JSON.parse(localStorage.getItem('resume_analysis_file') || 'null');
-      return resumeFile?.url && resumeFile?.publicId ? resumeFile : null;
-    } catch {
-      return null;
+  const getResumeFileForBooking = () => {
+    if (serviceId === 'resumeAnalysis') {
+      try {
+        const resumeFile = JSON.parse(localStorage.getItem('resume_analysis_file') || 'null');
+        return resumeFile?.url && resumeFile?.publicId ? resumeFile : null;
+      } catch {
+        return null;
+      }
     }
+    if (serviceId === 'oneMentorship') {
+      try {
+        const resumeFile = JSON.parse(localStorage.getItem('one_mentorship_file') || 'null');
+        return resumeFile?.url && resumeFile?.publicId ? resumeFile : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const getStudentNotesForBooking = () => {
+    if (serviceId === 'oneMentorship') {
+      return localStorage.getItem('one_mentorship_notes') || '';
+    }
+    return '';
   };
 
   useEffect(() => {
@@ -665,8 +682,14 @@ function CheckoutContent() {
       return;
     }
 
-    if (serviceId === 'resumeAnalysis' && !getResumeAnalysisFile()) {
+    if (serviceId === 'resumeAnalysis' && !getResumeFileForBooking()) {
       toast.error('Please upload your resume before booking Resume Analysis.');
+      router.replace('/services');
+      return;
+    }
+
+    if (serviceId === 'oneMentorship' && !getResumeFileForBooking()) {
+      toast.error('Please upload your resume and details before booking a Mock Interview.');
       router.replace('/services');
       return;
     }
@@ -784,9 +807,10 @@ function CheckoutContent() {
         if (!mid) { toast.error('No mentor available'); setIsProcessing(false); return; }
 
         const durationMinutes = selectedSlot.duration || 60;
-        const resumeFile = serviceId === 'resumeAnalysis' ? getResumeAnalysisFile() : null;
-        if (serviceId === 'resumeAnalysis' && !resumeFile) {
-          toast.error('Please upload your resume before booking Resume Analysis.');
+        const resumeFile = getResumeFileForBooking();
+        const studentNotes = getStudentNotesForBooking();
+        if ((serviceId === 'resumeAnalysis' || serviceId === 'oneMentorship') && !resumeFile) {
+          toast.error('Please upload your resume first.');
           setIsProcessing(false);
           router.replace('/services');
           return;
@@ -794,7 +818,17 @@ function CheckoutContent() {
 
         const bookingRes = await axios.post(
           `${API_URL}/bookings`,
-          { mentorId: mid, sessionType: serviceId, title: `${service.name} Session`, description: 'Booked through marketplace', scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, duration: durationMinutes, resumeFile, ...(selectedSlot.isWeekSlot ? { weekLabel: selectedSlot.weekLabel } : {}) },
+          { 
+            mentorId: mid, 
+            sessionType: serviceId, 
+            title: `${service.name} Session`, 
+            description: 'Booked through marketplace', 
+            scheduledDate: `${selectedSlot.date}T${selectedSlot.time}:00+05:30`, 
+            duration: durationMinutes, 
+            resumeFile, 
+            studentNotes,
+            ...(selectedSlot.isWeekSlot ? { weekLabel: selectedSlot.weekLabel } : {}) 
+          },
           { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
         );
         bookingId = bookingRes.data.booking._id;
@@ -828,6 +862,10 @@ function CheckoutContent() {
               }
               if (serviceId === 'resumeAnalysis') {
                 localStorage.removeItem('resume_analysis_file');
+              }
+              if (serviceId === 'oneMentorship') {
+                localStorage.removeItem('one_mentorship_file');
+                localStorage.removeItem('one_mentorship_notes');
               }
               toast.success('Booking confirmed!');
               setTimeout(() => router.push('/dashboard/bookings'), 2000);

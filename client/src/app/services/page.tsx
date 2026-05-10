@@ -110,6 +110,7 @@ const faqs = [
 export default function ServicesPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [uploadServiceId, setUploadServiceId] = useState<"resumeAnalysis" | "oneMentorship">("resumeAnalysis");
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const { data: pricingData } = useSWR(
@@ -621,10 +622,11 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     <Link
-                      href={s.id === "resumeAnalysis" ? "#" : s.href}
+                      href={(s.id === "resumeAnalysis" || s.id === "oneMentorship") ? "#" : s.href}
                       onClick={(event) => {
-                        if (s.id === "resumeAnalysis") {
+                        if (s.id === "resumeAnalysis" || s.id === "oneMentorship") {
                           event.preventDefault();
+                          setUploadServiceId(s.id);
                           setShowResumeUpload(true);
                         }
                       }}
@@ -1034,6 +1036,7 @@ export default function ServicesPage() {
       <ResumeBookingUploadDialog
         isOpen={showResumeUpload}
         onClose={() => setShowResumeUpload(false)}
+        serviceId={uploadServiceId}
       />
     </main>
   );

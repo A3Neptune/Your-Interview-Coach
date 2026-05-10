@@ -28,12 +28,14 @@ const fetcher = async (url: string) => {
 
 export default function PricingSection() {
   const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [uploadServiceId, setUploadServiceId] = useState<"resumeAnalysis" | "oneMentorship">("resumeAnalysis");
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const router = useRouter();
 
   const handleBook = (serviceId: string) => {
-    if (serviceId === "resumeAnalysis") {
+    if (serviceId === "resumeAnalysis" || serviceId === "oneMentorship") {
+      setUploadServiceId(serviceId);
       setShowResumeUpload(true);
       return;
     }
@@ -503,6 +505,7 @@ export default function PricingSection() {
       <ResumeBookingUploadDialog
         isOpen={showResumeUpload}
         onClose={() => setShowResumeUpload(false)}
+        serviceId={uploadServiceId}
       />
     </>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw, FileDown } from "lucide-react";
 import { toast } from 'sonner';
 import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
@@ -30,6 +30,10 @@ interface Booking {
   refundAmount?: number;
   refundedAt?: string;
   weekLabel?: string;
+  resumeFile?: {
+    url: string;
+    originalName?: string;
+  };
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -381,7 +385,7 @@ export default function MentorBookingsPage() {
                       )}
 
                       {/* Actions */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         {isUpcoming && !pa && (
                           <a
                             href={sessionLink}
@@ -390,6 +394,17 @@ export default function MentorBookingsPage() {
                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
                           >
                             <Video className="w-3.5 h-3.5" /> Join Session
+                          </a>
+                        )}
+                        {booking.resumeFile?.url && (
+                          <a
+                            href={booking.resumeFile.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-400 text-xs font-semibold transition-colors"
+                          >
+                            <FileDown className="w-3.5 h-3.5" />
+                            Download Resume
                           </a>
                         )}
                         {isUpcoming && (
@@ -485,6 +500,27 @@ export default function MentorBookingsPage() {
               <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-zinc-400">
                 <p className="text-zinc-500 mb-1 font-semibold uppercase tracking-wide">Notes</p>
                 "{profileBooking.studentNotes}"
+              </div>
+            )}
+
+            {/* Resume */}
+            {profileBooking.resumeFile?.url && (
+              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-xs flex justify-between items-center text-zinc-400">
+                <div className="min-w-0 flex-1 mr-3">
+                  <p className="text-zinc-500 mb-0.5 font-semibold uppercase tracking-wide">Resume</p>
+                  <p className="text-[11px] text-zinc-400 truncate">
+                    {profileBooking.resumeFile.originalName || "resume.pdf"}
+                  </p>
+                </div>
+                <a
+                  href={profileBooking.resumeFile.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-500/25 transition font-semibold shrink-0 text-[11px]"
+                >
+                  <FileDown size={13} />
+                  Download
+                </a>
               </div>
             )}
           </div>

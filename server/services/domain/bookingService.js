@@ -462,7 +462,7 @@ const validateSlotBooking = (mentor, scheduledDate, duration) => {
  * Create booking
  */
 const createBooking = async (bookingData, req) => {
-  const { userId, mentorId, sessionType, title, description, scheduledDate, duration, resumeFile, weekLabel } = bookingData;
+  const { userId, mentorId, sessionType, title, description, scheduledDate, duration, resumeFile, weekLabel, studentNotes } = bookingData;
 
   // Check mentor exists
   const mentor = await User.findById(mentorId);
@@ -564,6 +564,7 @@ const createBooking = async (bookingData, req) => {
     sessionType,
     title: title || `${sessionType} with ${mentor.name}`,
     description,
+    studentNotes: studentNotes || '',
     scheduledDate: new Date(scheduledDate),
     duration,
     amount: totalAmount,
@@ -571,7 +572,7 @@ const createBooking = async (bookingData, req) => {
     paymentStatus: 'pending',
     paymentRequired: true,
     weekLabel: sessionType === 'placementAccelerator' ? (weekLabel || null) : null,
-    resumeFile: sessionType === 'resumeAnalysis' && resumeFile?.url
+    resumeFile: (sessionType === 'resumeAnalysis' || sessionType === 'oneMentorship') && resumeFile?.url
       ? {
           url: resumeFile.url,
           publicId: resumeFile.publicId || null,

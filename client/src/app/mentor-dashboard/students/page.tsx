@@ -436,6 +436,9 @@ export default function StudentsPage() {
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
+                  Notes/Agenda
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
                   Resume
                 </th>
               </tr>
@@ -576,9 +579,20 @@ export default function StudentsPage() {
                         </span>
                       </td>
 
+                      {/* Student Notes/Agenda */}
+                      <td className="px-6 py-4 max-w-[200px]">
+                        {booking.studentNotes ? (
+                          <p className="text-xs text-zinc-300 line-clamp-2" title={booking.studentNotes}>
+                            {booking.studentNotes}
+                          </p>
+                        ) : (
+                          <span className="text-xs text-zinc-600">—</span>
+                        )}
+                      </td>
+
                       {/* Resume Download */}
                       <td className="px-6 py-4">
-                        {isResumeAnalysis && resumeUrl ? (
+                        {(isResumeAnalysis || normalizedType === "mockInterview") && resumeUrl ? (
                           <a
                             href={resumeUrl}
                             target="_blank"
@@ -588,7 +602,7 @@ export default function StudentsPage() {
                             <FileDown size={14} />
                             Download
                           </a>
-                        ) : isResumeAnalysis ? (
+                        ) : (isResumeAnalysis || normalizedType === "mockInterview") ? (
                           <span className="text-xs text-zinc-500 italic">
                             No resume
                           </span>

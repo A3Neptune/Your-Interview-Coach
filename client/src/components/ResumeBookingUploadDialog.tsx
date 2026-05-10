@@ -17,6 +17,7 @@ type UploadedResume = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  serviceId?: "resumeAnalysis" | "oneMentorship";
 };
 
 const ALLOWED_TYPES = [
@@ -25,10 +26,11 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export default function ResumeBookingUploadDialog({ isOpen, onClose }: Props) {
+export default function ResumeBookingUploadDialog({ isOpen, onClose, serviceId = "resumeAnalysis" }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [notes, setNotes] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
   if (!isOpen) return null;
@@ -52,9 +54,14 @@ export default function ResumeBookingUploadDialog({ isOpen, onClose }: Props) {
       return;
     }
 
+    if (serviceId === "oneMentorship" && !notes.trim()) {
+      toast.error("Please describe your goals or struggles so the mentor can prepare.");
+      return;
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
-      const redirect = encodeURIComponent("/services");
+      const redirect = encodeURIComponent(serviceId === "oneMentorship" ? "/services" : "/services");
       router.push(`/login?redirect=${redirect}`);
       return;
     }
@@ -72,13 +79,25 @@ export default function ResumeBookingUploadDialog({ isOpen, onClose }: Props) {
       });
 
       const uploaded: UploadedResume = res.data.data;
-      localStorage.setItem(
-        "resume_analysis_file",
-        JSON.stringify({ ...uploaded, uploadedAt: Date.now() }),
-      );
-      toast.success("Resume uploaded. Choose your slot now.");
-      onClose();
-      router.push("/select-slot?serviceId=resumeAnalysis");
+
+      if (serviceId === "oneMentorship") {
+        localStorage.setItem(
+          "one_mentorship_file",
+          JSON.stringify({ ...uploaded, uploadedAt: Date.now() }),
+        );
+        localStorage.setItem("one_mentorship_notes", notes.trim());
+        toast.success("Resume and details saved. Choose your slot now.");
+        onClose();
+        router.push("/select-slot?serviceId=oneMentorship");
+      } else {
+        localStorage.setItem(
+          "resume_analysis_file",
+          JSON.stringify({ ...uploaded, uploadedAt: Date.now() }),
+        );
+        toast.success("Resume uploaded. Choose your slot now.");
+        onClose();
+        router.push("/select-slot?serviceId=resumeAnalysis");
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to upload resume.");
     } finally {
@@ -100,9 +119,13 @@ export default function ResumeBookingUploadDialog({ isOpen, onClose }: Props) {
             <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FileText className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-black">Upload your resume</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Add your resume first, then select a slot for the analysis session.
+            <h2 className="text-xl font-black">
+              {serviceId === "oneMentorship" ? "Prepare for your Mock Interview" : "Upload your resume"}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500 font-medium">
+              {serviceId === "oneMentorship"
+                ? "Provide your resume and key context so the mentor knows your goals and can prepare standard/custom questions."
+                : "Add your resume first, then select a slot for the analysis session."}
             </p>
           </div>
           <button
@@ -114,19 +137,45 @@ export default function ResumeBookingUploadDialog({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="mb-4 flex min-h-[132px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/60 px-4 py-5 text-center transition hover:border-blue-300 hover:bg-blue-50 disabled:opacity-60"
-        >
-          <Upload className="mb-3 h-7 w-7 text-blue-600" />
-          <span className="text-sm font-bold text-slate-800">
-            {file ? file.name : "Select resume file"}
-          </span>
-          <span className="mt-1 text-xs text-slate-500">
-            PDF, DOC, or DOCX up to 10MB
-          </span>
-        </button>
+        {serviceId === "oneMentorship" && (
+          <div className="mb-4">
+            <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+              Interview Agenda & Struggles *
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={isUploading}
+              placeholder="What are you struggling with? What roles/companies are you targeting? (e.g. mock interview for SDE role at Google, struggling with behavior or confidence)"
+              rows={3}
+              className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:bg-slate-50"
+            />
+            <div className="mt-1 flex justify-between text-[10px] text-slate-400 font-semibold">
+              <span>Tell the mentor what to focus on</span>
+              <span>{notes.length} chars</span>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+            {serviceId === "oneMentorship" ? "Upload Resume (Required) *" : "Your Resume *"}
+          </label>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex min-h-[120px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/60 px-4 py-4 text-center transition hover:border-blue-300 hover:bg-blue-50 disabled:opacity-60"
+          >
+            <Upload className="mb-2 h-6 w-6 text-blue-600" />
+            <span className="text-sm font-bold text-slate-800 line-clamp-1">
+              {file ? file.name : "Select resume file"}
+            </span>
+            <span className="mt-1 text-[11px] text-slate-500">
+              PDF, DOC, or DOCX up to 10MB
+            </span>
+          </button>
+        </div>
+
         <input
           ref={fileInputRef}
           type="file"
