@@ -868,7 +868,7 @@ function CheckoutContent() {
                 localStorage.removeItem('one_mentorship_notes');
               }
               toast.success('Booking confirmed!');
-              setTimeout(() => router.push('/dashboard/bookings'), 2000);
+              setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
             } else {
               toast.error('Payment verification failed'); setIsProcessing(false);
             }

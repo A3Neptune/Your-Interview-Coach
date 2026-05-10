@@ -177,9 +177,15 @@ export default function DashboardPage() {
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [uploadServiceId, setUploadServiceId] = useState<"resumeAnalysis" | "oneMentorship">("resumeAnalysis");
   const [mounted, setMounted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -233,6 +239,25 @@ export default function DashboardPage() {
     return user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  const canJoinNow = (scheduledDate: string, duration: number) => {
+    const now = currentTime;
+    const start = new Date(scheduledDate).getTime();
+    const end = start + duration * 60 * 1000;
+    if (isNaN(start)) return false;
+    return now >= start - 10 * 60 * 1000 && now <= end;
+  };
+
+  const getJoinCountdown = (scheduledDate: string) => {
+    const now = currentTime;
+    const start = new Date(scheduledDate).getTime();
+    if (isNaN(start)) return null;
+    const diff = start - now;
+    if (diff <= 0) return null;
+    const mins = Math.ceil(diff / 60000);
+    if (mins > 60) return null;
+    return `Opens in ${mins} min`;
+  };
+
   const getDiscountedPrice = (service: Service) => {
     if (!service.discount?.isActive || service.discount.type === "none")
       return { original: service.price, discounted: service.price, saving: 0 };
@@ -264,9 +289,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap");
         @keyframes shimmer { 100% { transform: translateX(100%); } }
       `}</style>
 
@@ -350,52 +375,129 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Upcoming Sessions ──────────────────────────────────────────── */}
-        {upcomingBookings.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        {!isLoading && (
+          <div className="space-y-5">
+            {/* Section header */}
+            <div className="flex items-end justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Upcoming Sessions</h2>
-                <p className="text-slate-500 text-sm">Your confirmed mentorship slots</p>
+                <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
+                  Upcoming Sessions
+                </h2>
+                <p className="text-slate-400 text-sm mt-0.5">Your confirmed mentorship slots</p>
               </div>
-              <Link href="/user-dashboard/bookings" className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
-                VIEW ALL <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              {upcomingBookings.length > 0 && (
+                <Link
+                  href="/user-dashboard/bookings"
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-4 decoration-blue-200 hover:decoration-blue-500 flex items-center gap-1 transition-colors"
+                >
+                  View all bookings <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
             </div>
 
-            <div className="grid md:grid-cols-3 gap-5">
-              {upcomingBookings.map((booking) => (
-                <div key={booking._id} className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-md transition-all flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wide">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Confirmed
+            {upcomingBookings.length === 0 ? (
+              /* ── Empty state ── */
+              <div className="relative rounded-2xl overflow-hidden border border-slate-100 bg-white shadow-sm">
+                {/* subtle top accent line */}
+                <div className="h-1 w-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600" />
+
+                <div className="flex flex-col items-center justify-center py-14 px-6 text-center gap-5">
+                  {/* icon circle */}
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+                      <Calendar className="w-9 h-9 text-blue-400" />
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Sparkles className="w-3.5 h-3.5 text-slate-400" />
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full">{booking.duration} MIN</span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 leading-snug">{booking.title}</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                      {mounted ? new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : ""}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Clock className="w-3.5 h-3.5 text-blue-500" />
-                      {mounted ? new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <User className="w-3.5 h-3.5 text-blue-500" />
-                      {booking.mentorId.name}
-                    </div>
+
+                  {/* copy */}
+                  <div className="space-y-1.5 max-w-xs">
+                    <p className="text-slate-800 font-semibold text-base">No upcoming sessions</p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      You don&apos;t have any confirmed sessions scheduled yet.
+                    </p>
                   </div>
-                  {!isPA(booking) && booking.meetingLink && (
-                    <a href={booking.meetingLink} target="_blank" rel="noopener noreferrer" className="mt-auto w-full py-2.5 rounded-xl bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-sm">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      JOIN MEETING
-                    </a>
-                  )}
+
+                  {/* CTA */}
+                  <Link
+                    href="/user-dashboard/bookings"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-4 decoration-blue-200 hover:decoration-blue-500 transition-colors"
+                  >
+                    View all bookings <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-3 gap-5">
+                  {upcomingBookings.map((booking) => {
+                    const joinable = canJoinNow(booking.scheduledDate, booking.duration);
+                    const countdown = getJoinCountdown(booking.scheduledDate);
+                    return (
+                      <div key={booking._id} className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden">
+                        {/* card colour accent */}
+                        <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+                        <div className="p-5 flex flex-col gap-4 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wide">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Confirmed
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">
+                              {booking.duration} min
+                            </span>
+                          </div>
+
+                          <h3 className="text-sm font-semibold text-slate-900 leading-snug">{booking.title}</h3>
+
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                              {mounted ? new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : ""}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                              {mounted ? new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <User className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                              Mentor — {booking.mentorId.name}
+                            </div>
+                          </div>
+
+                          {!isPA(booking) && booking.meetingLink && (
+                            joinable ? (
+                              <a
+                                href={booking.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-auto w-full py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Join Meeting
+                              </a>
+                            ) : countdown ? (
+                              <div className="mt-auto w-full py-2.5 rounded-xl bg-amber-50 text-amber-600 text-xs font-medium flex items-center justify-center gap-2 border border-amber-100">
+                                <Clock className="w-3.5 h-3.5" />
+                                {countdown}
+                              </div>
+                            ) : (
+                              <div className="mt-auto w-full py-2.5 rounded-xl bg-slate-50 text-slate-400 text-xs font-medium flex items-center justify-center gap-2 border border-slate-100">
+                                <Clock className="w-3.5 h-3.5" />
+                                Link active 10 min before
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </>
+            )}
           </div>
         )}
 

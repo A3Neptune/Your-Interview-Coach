@@ -34,7 +34,7 @@ const SLIDES = [
     headLight: "knowing exactly what's coming.",
     sub: "Sit across from coaches who've been on the hiring side. You get a full interview simulation, a written debrief, and a clear map of what to fix — before your actual round.",
     cta: { label: "Book your mock", href: "/mock-interview" },
-    ghost: { label: "See how it works", href: "/how-it-works" },
+    ghost: { label: "Book your mock", href: "/services" },
     floater: { avatar: "RS", name: "Rahul S.", action: "landed offer at Infosys", time: "2 h ago" },
     cardTitle: "Your Mock Session",
     cardMeta: "60 min · Recorded · Debrief in 24 h",
@@ -57,7 +57,7 @@ const SLIDES = [
     headLight: "will finally get read.",
     sub: "If recruiters aren't calling back, they never reached your skills. We rebuild yours from scratch — ATS-proof, impact-first, aimed at the roles you actually want.",
     cta: { label: "Start my review", href: "/resume" },
-    ghost: { label: "See before & after", href: "/resume-samples" },
+    ghost: { label: "Start my review", href: "/services" },
     floater: { avatar: "AP", name: "Ananya P.", action: "got 3 callbacks in a week", time: "yesterday" },
     cardTitle: "Your Resume Rebuild",
     cardMeta: "48-hr turnaround · 2 revision rounds",
@@ -80,7 +80,7 @@ const SLIDES = [
     headLight: "and be heard.",
     sub: "GDs aren't about the loudest — they're about the clearest. Learn to enter in the first 30 seconds, steer the group, and leave with the panel remembering your name.",
     cta: { label: "Join a live batch", href: "/group-discussion" },
-    ghost: { label: "View upcoming batches", href: "/schedule" },
+    ghost: { label: "Join a live batch", href: "/services" },
     floater: { avatar: "MK", name: "Meera K.", action: "cleared campus GD round", time: "3 days ago" },
     cardTitle: "Your GD Practice Round",
     cardMeta: "6–8 peers · Expert moderator",
@@ -103,7 +103,7 @@ const SLIDES = [
     headLight: "from the people hiring.",
     sub: "Every Friday, hiring managers share what actually moves the needle in their rooms. No script, no gated content — you ask, they answer, live.",
     cta: { label: "Reserve my seat", href: "/webinars" },
-    ghost: { label: "Browse replays", href: "/library" },
+    ghost: { label: "Reserve my seat", href: "/services" },
     floater: { avatar: "VT", name: "Vikram T.", action: "attended 4 webinars, placed", time: "this week" },
     cardTitle: "Friday Live Webinar",
     cardMeta: "Free · Replay access for 30 days",
@@ -126,7 +126,7 @@ const SLIDES = [
     headLight: "before campus season opens.",
     sub: "Aptitude, coding, HR, technical — one structured track covers every round. Weekly checkpoints make sure you never fall behind, and mock tests tell you where you actually stand.",
     cta: { label: "Start placement prep", href: "/placement-prep" },
-    ghost: { label: "See the 8-week roadmap", href: "/placement-prep#roadmap" },
+    ghost: { label: "Start placement prep", href: "/services" },
     floater: { avatar: "NS", name: "Neha S.", action: "cracked 4 offers this season", time: "last week" },
     cardTitle: "Your Placement Track",
     cardMeta: "8-week program · Weekly checkpoints",
@@ -204,6 +204,41 @@ const stepV = {
 };
 
 /* ─────────────────────────────────────────────────────────
+   STATIC CSS — plain string (no interpolation) to prevent hydration mismatch
+───────────────────────────────────────────────────────── */
+const HC_CSS =
+"@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,300;1,9..40,400;1,9..40,500;1,9..40,600;1,9..40,700&display=swap');" +
+".hc-section{--brand:#2563eb;--brand-deep:#1d4ed8;--ink:#0f172a;--muted:#64748b;--rule:rgba(15,23,42,0.08);--paper:#F8F6F1;--paper-soft:#f5f2ec}" +
+"@keyframes hcBarFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}" +
+".hc-bar{height:100%;transform-origin:left;animation:hcBarFill 6500ms linear forwards;border-radius:0 2px 2px 0}" +
+"@keyframes hcHaloPulse{0%,100%{opacity:0.45;transform:scale(1)}50%{opacity:0.75;transform:scale(1.05)}}" +
+".hc-halo{position:absolute;inset:-50px;z-index:-1;border-radius:50%;filter:blur(70px);animation:hcHaloPulse 5s ease-in-out infinite;pointer-events:none}" +
+"@keyframes hcFloatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}" +
+".hc-floater-wrap{animation:hcFloatBob 4s ease-in-out infinite}" +
+"@keyframes hcLiveDot{0%,100%{opacity:1}50%{opacity:0.35}}" +
+".hc-live-dot{animation:hcLiveDot 1.8s ease-in-out infinite}" +
+"@keyframes hcShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}" +
+".hc-cta-p{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;font-family:inherit;letter-spacing:-0.005em;background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);box-shadow:0 10px 24px rgba(59,130,246,0.28),0 2px 6px rgba(37,99,235,0.18);transition:transform 0.18s,box-shadow 0.22s;position:relative;overflow:hidden}" +
+".hc-cta-p::before{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.28) 50%,transparent 70%);background-size:200% 100%;animation:hcShimmer 3.4s ease-in-out infinite;pointer-events:none}" +
+".hc-cta-p:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(59,130,246,0.38),0 4px 10px rgba(37,99,235,0.24)}" +
+".hc-cta-p:active{transform:translateY(0)}" +
+".ga{transition:transform 0.18s;display:inline-flex}" +
+".hc-tab{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;border:none;border-top:2px solid transparent;cursor:pointer;background:transparent;transition:border-color 0.22s,background 0.22s,color 0.22s;font-family:inherit;text-align:left}" +
+".hc-tab:hover{background:rgba(59,130,246,0.04)}" +
+".hc-hl{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(15,23,42,0.05)}" +
+".hc-hl:last-child{border-bottom:none}" +
+".hc-pp{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(15,23,42,0.12);background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);cursor:pointer;transition:all 0.16s;flex-shrink:0}" +
+".hc-pp:hover{background:#fff;border-color:#2563eb;color:#2563eb}" +
+".hc-stat+.hc-stat{border-left:1px solid var(--rule);padding-left:1.4rem}" +
+".hc-glass{background:rgba(255,255,255,0.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(59,130,246,0.14);box-shadow:0 1px 0 rgba(255,255,255,0.8) inset,0 24px 60px -18px rgba(15,23,42,0.18),0 6px 20px rgba(59,130,246,0.08)}" +
+".hc-word{display:inline-block;margin-right:0.22em;will-change:transform,opacity,filter}" +
+".hc-mega-step{font-family:'DM Sans',system-ui,sans-serif;font-weight:800;font-size:clamp(120px,16vw,220px);line-height:0.82;letter-spacing:-0.07em;color:rgba(37,99,235,0.18);pointer-events:none;user-select:none;white-space:nowrap;display:block}" +
+".hc-tab-step{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;padding:0 5px;border-radius:5px;font-size:9.5px;font-weight:700;letter-spacing:0.04em;font-variant-numeric:tabular-nums;flex-shrink:0}" +
+"@media(max-width:960px){.hc-grid{grid-template-columns:1fr!important;gap:2.5rem!important}.hc-right{justify-content:center!important}.hc-right-card{max-width:420px!important}.hc-mega-step{font-size:clamp(120px,26vw,200px)!important;top:30px!important;right:0!important}}" +
+"@media(max-width:640px){.hc-tab{padding:10px 6px 8px;gap:5px}.hc-tab-inner{flex-direction:column!important;align-items:flex-start!important;gap:5px!important}.hc-tab-label{font-size:9px!important;letter-spacing:0.03em!important}.hc-tab-meta{display:none!important}.hc-mega-step{font-size:clamp(96px,28vw,160px)!important;top:24px!important;right:0!important;color:rgba(37,99,235,0.16)!important}.hc-head-row{font-size:clamp(32px,9vw,48px)!important}.hc-eyebrow-row{flex-wrap:wrap!important;gap:8px!important}.hc-eyebrow-sub{display:none!important}.hc-cta-p{padding:12px 20px!important;font-size:13.5px!important}.hc-stats .hc-stat{padding-right:1.1rem!important}.hc-stats .hc-stat+.hc-stat{padding-left:1.1rem!important}.hc-floater{left:50%!important;transform:translateX(-50%)!important;bottom:-32px!important;min-width:240px!important}}" +
+"@media(max-width:440px){.hc-tab-label{display:none!important}.hc-tab-step{min-width:30px!important;height:24px!important;font-size:11px!important}.hc-head-row{font-size:clamp(28px,9.5vw,42px)!important}.hc-sub{font-size:13.5px!important}.hc-cta-row{gap:12px!important}.hc-stats p:first-child{font-size:18px!important}}";
+
+/* ─────────────────────────────────────────────────────────
    COMPONENT
 ───────────────────────────────────────────────────────── */
 export default function HeroCarousel() {
@@ -248,221 +283,8 @@ export default function HeroCarousel() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,300;1,9..40,400;1,9..40,500;1,9..40,600;1,9..40,700&display=swap');
-
-        .hc-section {
-          --brand: ${BRAND};
-          --brand-deep: ${BRAND_DEEP};
-          --ink: ${INK};
-          --muted: ${MUTED};
-          --rule: rgba(15,23,42,0.08);
-          --paper: ${PAPER};
-          --paper-soft: #f5f2ec;
-        }
-
-        @keyframes hcBarFill {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-        .hc-bar {
-          height: 100%;
-          transform-origin: left;
-          animation: hcBarFill ${DURATION}ms linear forwards;
-          border-radius: 0 2px 2px 0;
-        }
-
-        @keyframes hcHaloPulse {
-          0%, 100% { opacity: 0.45; transform: scale(1); }
-          50%      { opacity: 0.75; transform: scale(1.05); }
-        }
-        .hc-halo {
-          position: absolute; inset: -50px; z-index: -1;
-          border-radius: 50%;
-          filter: blur(70px);
-          animation: hcHaloPulse 5s ease-in-out infinite;
-          pointer-events: none;
-        }
-
-        @keyframes hcFloatBob {
-          0%, 100% { transform: translateY(0); }
-          50%      { transform: translateY(-6px); }
-        }
-        .hc-floater-wrap { animation: hcFloatBob 4s ease-in-out infinite; }
-
-        @keyframes hcLiveDot {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.35; }
-        }
-        .hc-live-dot { animation: hcLiveDot 1.8s ease-in-out infinite; }
-
-        @keyframes hcShimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-
-        .hc-cta-p {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 14px 26px; border-radius: 10px;
-          font-size: 14px; font-weight: 600; color: #fff;
-          text-decoration: none; font-family: inherit;
-          letter-spacing: -0.005em;
-          background: linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DEEP} 100%);
-          box-shadow: 0 10px 24px rgba(59,130,246,0.28), 0 2px 6px rgba(37,99,235,0.18);
-          transition: transform 0.18s, box-shadow 0.22s;
-          position: relative; overflow: hidden;
-        }
-        .hc-cta-p::before {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
-          background-size: 200% 100%;
-          animation: hcShimmer 3.4s ease-in-out infinite;
-          pointer-events: none;
-        }
-        .hc-cta-p:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(59,130,246,0.38), 0 4px 10px rgba(37,99,235,0.24); }
-        .hc-cta-p:active { transform: translateY(0); }
-
-        .hc-cta-g {
-          display: inline-flex; align-items: center; gap: 6px;
-          font-size: 13px; font-weight: 500; color: ${MUTED};
-          background: none; border: none; cursor: pointer;
-          text-decoration: none; font-family: inherit;
-          transition: color 0.18s;
-        }
-        .hc-cta-g:hover { color: var(--ink); }
-        .hc-cta-g:hover .ga { transform: translateX(3px); }
-        .ga { transition: transform 0.18s; display: inline-flex; }
-
-        .hc-tab {
-          flex: 1; min-width: 0;
-          display: flex; flex-direction: column; gap: 4px;
-          padding: 14px 14px 12px;
-          border: none; border-top: 2px solid transparent;
-          cursor: pointer; background: transparent;
-          transition: border-color 0.22s, background 0.22s, color 0.22s;
-          font-family: inherit;
-          text-align: left;
-        }
-        .hc-tab:hover { background: rgba(59,130,246,0.04); }
-
-        .hc-hl {
-          display: flex; align-items: flex-start; gap: 10px;
-          padding: 9px 0;
-          border-bottom: 1px solid rgba(15,23,42,0.05);
-        }
-        .hc-hl:last-child { border-bottom: none; }
-
-        .hc-pp {
-          width: 34px; height: 34px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          border: 1px solid rgba(15,23,42,0.12);
-          background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
-          cursor: pointer; transition: all 0.16s; flex-shrink: 0;
-        }
-        .hc-pp:hover { background: #fff; border-color: ${BRAND}; color: ${BRAND}; }
-
-        .hc-stat + .hc-stat {
-          border-left: 1px solid var(--rule);
-          padding-left: 1.4rem;
-        }
-
-        .hc-glass {
-          background: rgba(255,255,255,0.72);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(59,130,246,0.14);
-          box-shadow:
-            0 1px 0 rgba(255,255,255,0.8) inset,
-            0 24px 60px -18px rgba(15,23,42,0.18),
-            0 6px 20px rgba(59,130,246,0.08);
-        }
-
-        .hc-word { display: inline-block; margin-right: 0.22em; will-change: transform, opacity, filter; }
-
-        .hc-mega-step {
-          font-family: 'DM Sans', system-ui, sans-serif;
-          font-weight: 800;
-          font-size: clamp(120px, 16vw, 220px);
-          line-height: 0.82;
-          letter-spacing: -0.07em;
-          color: rgba(37,99,235,0.18);
-          pointer-events: none;
-          user-select: none;
-          white-space: nowrap;
-          display: block;
-        }
-
-        /* Service tab step-number chip — always visible */
-        .hc-tab-step {
-          display: inline-flex;
-          align-items: center; justify-content: center;
-          min-width: 22px; height: 18px;
-          padding: 0 5px;
-          border-radius: 5px;
-          font-size: 9.5px; font-weight: 700;
-          letter-spacing: 0.04em;
-          font-variant-numeric: tabular-nums;
-          flex-shrink: 0;
-        }
-
-        /* ── Tablet and below: stack layout, keep card visible ── */
-        @media (max-width: 960px) {
-          .hc-grid {
-            grid-template-columns: 1fr !important;
-            gap: 2.5rem !important;
-          }
-          .hc-right {
-            justify-content: center !important;
-          }
-          .hc-right-card {
-            max-width: 420px !important;
-          }
-          .hc-mega-step {
-            font-size: clamp(120px, 26vw, 200px) !important;
-            top: 30px !important;
-            right: 0 !important;
-          }
-        }
-
-        /* ── Mobile: tighter type and padding ── */
-        @media (max-width: 640px) {
-          .hc-tab {
-            padding: 10px 6px 8px;
-            gap: 5px;
-          }
-          .hc-tab-inner { flex-direction: column !important; align-items: flex-start !important; gap: 5px !important; }
-          .hc-tab-label { font-size: 9px !important; letter-spacing: 0.03em !important; }
-          .hc-tab-meta  { display: none !important; }
-          .hc-mega-step {
-            font-size: clamp(96px, 28vw, 160px) !important;
-            top: 24px !important;
-            right: 0 !important;
-            color: rgba(37,99,235,0.16) !important;
-          }
-          .hc-head-row { font-size: clamp(32px, 9vw, 48px) !important; }
-          .hc-eyebrow-row { flex-wrap: wrap !important; gap: 8px !important; }
-          .hc-eyebrow-sub { display: none !important; }
-          .hc-cta-p { padding: 12px 20px !important; font-size: 13.5px !important; }
-          .hc-stats .hc-stat { padding-right: 1.1rem !important; }
-          .hc-stats .hc-stat + .hc-stat { padding-left: 1.1rem !important; }
-          .hc-floater {
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            bottom: -32px !important;
-            min-width: 240px !important;
-          }
-        }
-
-        /* ── Small mobile: hide tab labels, keep step chips only ── */
-        @media (max-width: 440px) {
-          .hc-tab-label { display: none !important; }
-          .hc-tab-step  { min-width: 30px !important; height: 24px !important; font-size: 11px !important; }
-          .hc-head-row  { font-size: clamp(28px, 9.5vw, 42px) !important; }
-          .hc-sub       { font-size: 13.5px !important; }
-          .hc-cta-row   { gap: 12px !important; }
-          .hc-stats p:first-child { font-size: 18px !important; }
-        }
-      `}</style>
+      {/* eslint-disable-next-line react/no-danger */}
+      <style suppressHydrationWarning dangerouslySetInnerHTML={{ __html: HC_CSS }} />
 
       <section
         className="hc-section"
@@ -664,18 +486,13 @@ export default function HeroCarousel() {
                   {slide.sub}
                 </motion.p>
 
-                {/* CTAs */}
-                <motion.div variants={itemV} style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginBottom: 36 }}>
-                  <Link href={slide.cta.href} className="hc-cta-p">
+                {/* CTA */}
+                <motion.div variants={itemV} style={{ display: "flex", alignItems: "center", marginBottom: 36 }}>
+                  <Link href={slide.ghost.href} className="hc-cta-p">
                     <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      {slide.cta.label}
+                      {slide.ghost.label}
                       <ArrowRight size={14} />
                     </span>
-                  </Link>
-                  <Link href={slide.ghost.href} className="hc-cta-g">
-                    <Play size={10} fill="currentColor" className="ga" />
-                    {slide.ghost.label}
-                    <ArrowRight size={12} className="ga" />
                   </Link>
                 </motion.div>
 

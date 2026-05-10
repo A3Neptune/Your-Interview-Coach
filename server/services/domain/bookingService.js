@@ -756,21 +756,69 @@ const confirmBooking = async (bookingId, req) => {
   booking.status = 'confirmed';
   booking.confirmedAt = new Date();
 
-  // Create Zoom meeting if not exists
+  // Assign meeting link
   if (!booking.meetingLink) {
-    try {
-      const { default: zoomService } = await import('../../utils/zoomService.js');
-      const meeting = await zoomService.create1on1Meeting({
-        title: booking.title,
-        duration: booking.duration,
-        bookingId: booking._id.toString(),
-      });
-      booking.meetingLink = meeting.joinUrl;
-      booking.meetingId = meeting.meetingId;
-      console.log('✅ Zoom meeting created for booking:', meeting.joinUrl);
-    } catch (error) {
-      console.error('Failed to create Zoom meeting:', error);
-      // Continue without Zoom link - don't block confirmation
+    if (booking.sessionType === 'webinars') {
+      // Webinars are group sessions — every student on the same slot must share ONE link
+      // (whether Zoom or Jitsi). Strategy:
+      //   1. Look for any already-confirmed booking on the same slot that has a link → reuse it.
+      //   2. If this is the first student being confirmed → try Zoom, fallback to Jitsi.
+      // "Same slot" = same mentorId + same scheduledDate (exact value stored by booking creation).
+
+      const slotSibling = await Booking.findOne({
+        _id:          { $ne: booking._id },
+        mentorId:     booking.mentorId,
+        scheduledDate: booking.scheduledDate,
+        sessionType:  'webinars',
+        status:       'confirmed',
+        meetingLink:  { $exists: true, $nin: [null, ''] },
+      }).select('meetingLink meetingId').lean();
+
+      if (slotSibling?.meetingLink) {
+        // Subsequent student — copy the shared link already created for this slot
+        booking.meetingLink = slotSibling.meetingLink;
+        if (slotSibling.meetingId) booking.meetingId = slotSibling.meetingId;
+        console.log(`✅ Webinar slot link reused for booking ${booking._id}:`, booking.meetingLink);
+      } else {
+        // First student confirmed on this slot — create the room
+        let created = false;
+        try {
+          const { default: zoomService } = await import('../../utils/zoomService.js');
+          const meeting = await zoomService.create1on1Meeting({
+            title:    booking.title,
+            duration: booking.duration,
+            bookingId: booking._id.toString(),
+          });
+          booking.meetingLink = meeting.joinUrl;
+          booking.meetingId   = meeting.meetingId;
+          created = true;
+          console.log(`✅ Zoom meeting created for webinar slot (booking ${booking._id}):`, meeting.joinUrl);
+        } catch {
+          // Zoom not configured or failed — use deterministic Jitsi room
+        }
+
+        if (!created) {
+          const slotTime = new Date(booking.scheduledDate);
+          slotTime.setSeconds(0, 0);
+          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotTime.getTime()}`;
+          console.log(`ℹ️ Jitsi fallback assigned for webinar slot (booking ${booking._id}):`, booking.meetingLink);
+        }
+      }
+    } else {
+      try {
+        const { default: zoomService } = await import('../../utils/zoomService.js');
+        const meeting = await zoomService.create1on1Meeting({
+          title: booking.title,
+          duration: booking.duration,
+          bookingId: booking._id.toString(),
+        });
+        booking.meetingLink = meeting.joinUrl;
+        booking.meetingId = meeting.meetingId;
+        console.log('✅ Zoom meeting created for booking:', meeting.joinUrl);
+      } catch (error) {
+        console.error('Failed to create Zoom meeting:', error);
+        // Continue without Zoom link - don't block confirmation
+      }
     }
   }
 

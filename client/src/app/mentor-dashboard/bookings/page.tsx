@@ -3,7 +3,11 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+<<<<<<< Updated upstream
 import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw, FileDown } from "lucide-react";
+=======
+import { ArrowLeft, Calendar, Clock, Video, CheckCircle2, XCircle, Phone, Mail, X, User, RefreshCw, FileDown, Users, ChevronDown, ChevronUp } from "lucide-react";
+>>>>>>> Stashed changes
 import { toast } from 'sonner';
 import { authAPI, bookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
@@ -66,6 +70,7 @@ export default function MentorBookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [markingRefundedId, setMarkingRefundedId] = useState<string | null>(null);
+  const [expandedSlots, setExpandedSlots] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(Date.now());
 
   // Refresh "now" every minute so session status updates without page reload
@@ -141,6 +146,48 @@ export default function MentorBookingsPage() {
     }
     return list.slice().sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
   }, [bookings, activeTab, nowMs, sessionFilter, searchQuery]);
+
+  // Build mixed display list: webinar bookings are grouped into one item per slot;
+  // all other session types remain as individual items. Everything sorted by date.
+  const displayItems = useMemo(() => {
+    const webinarMap = new Map<string, Booking[]>();
+    const individuals: Booking[] = [];
+
+    for (const b of filtered) {
+      if (b.sessionType === 'webinars') {
+        const key = b.scheduledDate;
+        if (!webinarMap.has(key)) webinarMap.set(key, []);
+        webinarMap.get(key)!.push(b);
+      } else {
+        individuals.push(b);
+      }
+    }
+
+    const slotItems = Array.from(webinarMap.entries()).map(([key, bookings]) => ({
+      type: 'webinar-slot' as const,
+      key,
+      scheduledDate: key,
+      bookings,
+    }));
+
+    const individualItems = individuals.map(b => ({
+      type: 'individual' as const,
+      key: b._id,
+      scheduledDate: b.scheduledDate,
+      booking: b,
+    }));
+
+    return [...slotItems, ...individualItems].sort(
+      (a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+    );
+  }, [filtered]);
+
+  const toggleSlot = (key: string) =>
+    setExpandedSlots(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   const handleCancel = async (bookingId: string) => {
     if (!confirm("Cancel this session? The user will be refunded automatically.")) return;
@@ -259,14 +306,143 @@ export default function MentorBookingsPage() {
         </div>
 
         {/* List */}
-        {filtered.length === 0 ? (
+        {displayItems.length === 0 ? (
           <div className="text-center py-20 text-zinc-600">
             <Calendar className="w-10 h-10 mx-auto mb-3 opacity-40" />
             <p>No {activeTab} sessions</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map(booking => {
+            {displayItems.map(item => {
+
+              /* ── Webinar slot card ─────────────────────────────────────── */
+              if (item.type === 'webinar-slot') {
+                const { key, bookings: slotBookings } = item;
+                const first = slotBookings[0];
+                const slotDate = new Date(first.scheduledDate);
+                const isExpanded = expandedSlots.has(key);
+                const sharedLink = first.meetingLink || getJitsiLink(first);
+                const isUpcomingSlot = slotBookings.some(isUpcomingBooking);
+
+                return (
+                  <div key={key} className="rounded-2xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+                    {/* Slot header */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 uppercase tracking-wide">
+                              Webinar
+                            </span>
+                          </div>
+                          <p className="font-semibold text-white text-sm truncate">{first.title}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-400 shrink-0">
+                          <Users className="w-3.5 h-3.5 text-violet-400" />
+                          <span className="font-semibold text-violet-300">{slotBookings.length}</span>
+                          <span>registered</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 text-xs text-zinc-500 mb-4">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {slotDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {slotDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} · {first.duration} min
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {isUpcomingSlot && (
+                          <a
+                            href={sharedLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+                          >
+                            <Video className="w-3.5 h-3.5" /> Join Session
+                          </a>
+                        )}
+                        <button
+                          onClick={() => toggleSlot(key)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-xs font-semibold transition-colors"
+                        >
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          {isExpanded ? "Hide" : "Show"} Participants ({slotBookings.length})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Participant list (expandable) */}
+                    {isExpanded && (
+                      <div className="border-t border-white/5 divide-y divide-white/5">
+                        {slotBookings.map(b => {
+                          const isUpcoming = isUpcomingBooking(b);
+                          const isRealRefund = b.refundId && !b.refundId.startsWith("manual_") && !b.refundId.startsWith("not_applicable");
+                          return (
+                            <div key={b._id} className="px-5 py-3 flex items-center justify-between gap-3">
+                              <button
+                                onClick={() => setProfileBooking(b)}
+                                className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                  {getInitials(b)}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-white truncate">{getStudentName(b)}</p>
+                                  <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500 mt-0.5">
+                                    {b.studentId?.email && <span>{b.studentId.email}</span>}
+                                    {b.studentId?.mobile && <span>{b.studentId.mobile}</span>}
+                                  </div>
+                                </div>
+                              </button>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  b.status === "confirmed" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" :
+                                  b.status === "cancelled" ? "text-red-400 bg-red-500/10 border-red-500/30" :
+                                  "text-blue-400 bg-blue-500/10 border-blue-500/30"
+                                }`}>
+                                  {b.status}
+                                </span>
+                                {b.status === "cancelled" && b.paymentStatus === "completed" && (
+                                  <button
+                                    onClick={() => handleMarkRefunded(b._id)}
+                                    disabled={markingRefundedId === b._id}
+                                    className="text-[10px] px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-semibold transition-colors disabled:opacity-50"
+                                  >
+                                    {markingRefundedId === b._id ? "…" : "Mark Refunded"}
+                                  </button>
+                                )}
+                                {b.status === "cancelled" && b.paymentStatus === "refunded" && (
+                                  <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                                    <CheckCircle2 className="w-3 h-3" /> Refunded
+                                  </span>
+                                )}
+                                {isUpcoming && b.status === "confirmed" && (
+                                  <button
+                                    onClick={() => handleCancel(b._id)}
+                                    disabled={cancellingId === b._id}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-semibold transition-colors disabled:opacity-50"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                    {cancellingId === b._id ? "…" : "Cancel"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              /* ── Individual booking card (all non-webinar types) ───────── */
+              const { booking } = item;
               const date = new Date(booking.scheduledDate);
               const sessionLink = booking.meetingLink || getJitsiLink(booking);
               const isUpcoming = isUpcomingBooking(booking);
@@ -281,7 +457,6 @@ export default function MentorBookingsPage() {
               return (
                 <div key={booking._id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                   <div className="flex items-start gap-4">
-                    {/* Avatar — click to view profile */}
                     <button
                       onClick={() => setProfileBooking(booking)}
                       className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 hover:ring-2 hover:ring-indigo-400 transition-all"
@@ -290,9 +465,7 @@ export default function MentorBookingsPage() {
                       {getInitials(booking)}
                     </button>
 
-                    {/* Main info */}
                     <div className="flex-1 min-w-0">
-                      {/* Row 1: name + status */}
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <p className="font-semibold text-white truncate">{getStudentName(booking)}</p>
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
@@ -305,12 +478,10 @@ export default function MentorBookingsPage() {
                         </span>
                       </div>
 
-                      {/* Row 2: session type */}
                       <p className="text-xs text-zinc-400 mb-3">
                         {SESSION_LABELS[booking.sessionType] || booking.sessionType}
                       </p>
 
-                      {/* Row 3: date/time/duration (or week range for PA) */}
                       <div className="flex flex-wrap gap-3 text-xs text-zinc-500 mb-3">
                         {pa ? (
                           <span className="flex items-center gap-1">
@@ -329,33 +500,24 @@ export default function MentorBookingsPage() {
                             </span>
                           </>
                         )}
-                        {booking.amount != null && (
-                          <span className="text-zinc-500">₹{booking.amount}</span>
-                        )}
+                        {booking.amount != null && <span>₹{booking.amount}</span>}
                       </div>
 
-                      {/* Row 4: contact */}
                       <div className="flex flex-wrap gap-3 text-xs text-zinc-500 mb-4">
                         {booking.studentId?.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />{booking.studentId.email}
-                          </span>
+                          <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{booking.studentId.email}</span>
                         )}
                         {booking.studentId?.mobile && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />{booking.studentId.mobile}
-                          </span>
+                          <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{booking.studentId.mobile}</span>
                         )}
                       </div>
 
-                      {/* Student notes */}
                       {booking.studentNotes && (
                         <p className="text-xs text-zinc-400 bg-white/5 rounded-lg px-3 py-2 mb-4 border border-white/5">
-                          "{booking.studentNotes}"
+                          &quot;{booking.studentNotes}&quot;
                         </p>
                       )}
 
-                      {/* Refund info (cancelled) */}
                       {booking.status === "cancelled" && booking.paymentStatus === "refunded" && (
                         <div className="flex items-center gap-2 text-xs text-emerald-400 mb-3">
                           <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
@@ -384,19 +546,19 @@ export default function MentorBookingsPage() {
                         </div>
                       )}
 
+<<<<<<< Updated upstream
                       {/* Actions */}
+=======
+>>>>>>> Stashed changes
                       <div className="flex gap-2 flex-wrap">
                         {isUpcoming && !pa && (
-                          <a
-                            href={sessionLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
-                          >
+                          <a href={sessionLink} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors">
                             <Video className="w-3.5 h-3.5" /> Join Session
                           </a>
                         )}
                         {booking.resumeFile?.url && (
+<<<<<<< Updated upstream
                           <a
                             href={booking.resumeFile.url}
                             target="_blank"
@@ -405,14 +567,16 @@ export default function MentorBookingsPage() {
                           >
                             <FileDown className="w-3.5 h-3.5" />
                             Download Resume
+=======
+                          <a href={booking.resumeFile.url} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-400 text-xs font-semibold transition-colors">
+                            <FileDown className="w-3.5 h-3.5" /> Download Resume
+>>>>>>> Stashed changes
                           </a>
                         )}
                         {isUpcoming && (
-                          <button
-                            onClick={() => handleCancel(booking._id)}
-                            disabled={cancellingId === booking._id}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-semibold transition-colors disabled:opacity-50"
-                          >
+                          <button onClick={() => handleCancel(booking._id)} disabled={cancellingId === booking._id}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-semibold transition-colors disabled:opacity-50">
                             <XCircle className="w-3.5 h-3.5" />
                             {cancellingId === booking._id ? "Cancelling…" : "Cancel & Refund"}
                           </button>
