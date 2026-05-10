@@ -251,7 +251,8 @@ export default function DashboardPage() {
     const now = currentTime;
     const start = new Date(scheduledDate).getTime();
     if (isNaN(start)) return null;
-    const diff = start - now;
+    const joinWindowStart = start - 10 * 60 * 1000;
+    const diff = joinWindowStart - now;
     if (diff <= 0) return null;
     const mins = Math.ceil(diff / 60000);
     if (mins > 60) return null;
@@ -467,7 +468,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          {!isPA(booking) && booking.meetingLink && (
+                          {booking.meetingLink && (
                             joinable ? (
                               <a
                                 href={booking.meetingLink}

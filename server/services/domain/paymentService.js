@@ -240,20 +240,62 @@ const verifyAndCompletePayment = async (paymentData, req) => {
 
   // Generate meeting link — wrapped so any failure never blocks payment completion
   if (!booking.meetingLink) {
-    try {
-      const { default: zoomService } = await import('../../utils/zoomService.js');
-      const meeting = await zoomService.create1on1Meeting({
-        title: booking.title,
-        duration: booking.duration,
-        bookingId: booking._id.toString(),
-      });
-      booking.meetingLink = meeting.joinUrl;
-      booking.meetingId = meeting.meetingId;
-      console.log(`✅ Meeting link generated (${meeting.provider}):`, meeting.joinUrl);
-    } catch (meetingErr) {
-      // Fallback to Jitsi so payment is never blocked
-      booking.meetingLink = `https://meet.jit.si/yic-session-${booking._id}`;
-      console.error('⚠️ Meeting link generation failed — using Jitsi fallback:', meetingErr.message);
+    if (booking.sessionType === 'webinars') {
+      // Webinars: all students on the same slot share ONE link
+      const slotSibling = await Booking.findOne({
+        _id:           { $ne: booking._id },
+        mentorId:      booking.mentorId,
+        scheduledDate: booking.scheduledDate,
+        sessionType:   'webinars',
+        status:        'confirmed',
+        meetingLink:   { $exists: true, $nin: [null, ''] },
+      }).select('meetingLink meetingId').lean();
+
+      if (slotSibling?.meetingLink) {
+        booking.meetingLink = slotSibling.meetingLink;
+        if (slotSibling.meetingId) booking.meetingId = slotSibling.meetingId;
+        console.log(`✅ Webinar slot link reused (payment) for booking ${booking._id}:`, booking.meetingLink);
+      } else {
+        // First student on this slot — create the room
+        let created = false;
+        try {
+          const { default: zoomService } = await import('../../utils/zoomService.js');
+          const meeting = await zoomService.create1on1Meeting({
+            title:     booking.title,
+            duration:  booking.duration,
+            bookingId: booking._id.toString(),
+          });
+          // Only use a Zoom link (not the Jitsi fallback that generates per-booking IDs)
+          if (meeting.provider === 'zoom') {
+            booking.meetingLink = meeting.joinUrl;
+            booking.meetingId   = meeting.meetingId;
+            created = true;
+            console.log(`✅ Zoom meeting created for webinar slot (payment, booking ${booking._id}):`, meeting.joinUrl);
+          }
+        } catch { /* fall through to Jitsi */ }
+
+        if (!created) {
+          const slotTime = new Date(booking.scheduledDate);
+          slotTime.setSeconds(0, 0);
+          booking.meetingLink = `https://meet.jit.si/yic-webinar-${booking.mentorId}-${slotTime.getTime()}`;
+          console.log(`ℹ️ Jitsi deterministic link assigned (payment, booking ${booking._id}):`, booking.meetingLink);
+        }
+      }
+    } else {
+      try {
+        const { default: zoomService } = await import('../../utils/zoomService.js');
+        const meeting = await zoomService.create1on1Meeting({
+          title:     booking.title,
+          duration:  booking.duration,
+          bookingId: booking._id.toString(),
+        });
+        booking.meetingLink = meeting.joinUrl;
+        booking.meetingId   = meeting.meetingId;
+        console.log(`✅ Meeting link generated (${meeting.provider}):`, meeting.joinUrl);
+      } catch (meetingErr) {
+        booking.meetingLink = `https://meet.jit.si/yic-session-${booking._id}`;
+        console.error('⚠️ Meeting link generation failed — using Jitsi fallback:', meetingErr.message);
+      }
     }
   }
 

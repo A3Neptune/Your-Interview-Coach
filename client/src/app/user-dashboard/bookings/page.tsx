@@ -160,7 +160,8 @@ function UserBookingsContent() {
 
   const getJoinCountdown = (scheduledDate: string) => {
     const start = new Date(scheduledDate).getTime();
-    const diff = start - now;
+    const joinWindowStart = start - 10 * 60 * 1000;
+    const diff = joinWindowStart - now;
     if (diff <= 0) return null;
     const mins = Math.ceil(diff / 60000);
     if (mins > 60) return null;
@@ -375,7 +376,7 @@ function UserBookingsContent() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2.5">
-                    {!pa && booking.status === 'confirmed' && (() => {
+                    {booking.status === 'confirmed' && (() => {
                       if (expired) return (
                         <span className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-400 text-[11px] font-bold border border-slate-100 cursor-not-allowed">
                           <Clock className="w-3.5 h-3.5" />
