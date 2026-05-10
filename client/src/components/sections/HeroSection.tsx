@@ -79,7 +79,7 @@ const SLIDES = [
     headBold: "You'll speak first,",
     headLight: "and be heard.",
     sub: "GDs aren't about the loudest — they're about the clearest. Learn to enter in the first 30 seconds, steer the group, and leave with the panel remembering your name.",
-    cta: { label: "Join a live batch", href: "/group-discussion" },
+    cta: { label: "Join a live batch", href: "/login?redirect=%2Fgd-booking%3FserviceId%3Dgd-popular" },
     ghost: { label: "Join a live batch", href: "/services" },
     floater: { avatar: "MK", name: "Meera K.", action: "cleared campus GD round", time: "3 days ago" },
     cardTitle: "Your GD Practice Round",

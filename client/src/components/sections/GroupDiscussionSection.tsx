@@ -478,7 +478,7 @@ export default function GroupDiscussionSection() {
 
               {/* CTAs */}
               <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginBottom: 28 }}>
-                <Link href="/group-discussion" className="gd-cta">
+                <Link href="/login?redirect=%2Fgd-booking%3FserviceId%3Dgd-popular" className="gd-cta">
                   <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8 }}>
                     Book a GD batch
                     <ArrowRight size={14} />
