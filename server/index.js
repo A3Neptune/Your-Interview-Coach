@@ -32,16 +32,16 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
-  .split(',')
-  .map(o => o.trim())
-  .concat(['http://localhost:3001', 'https://yourinterviewcoach.vercel.app', 'https://your-interview-coach.vercel.app', 'https://yourinterviewcoach.in', 'https://www.yourinterviewcoach.in']);
+    .split(',')
+    .map(o => o.trim())
+    .concat(['http://localhost:3001', 'https://yourinterviewcoach.vercel.app', 'https://your-interview-coach.vercel.app', 'https://yourinterviewcoach.in', 'https://www.yourinterviewcoach.in']);
 
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || origin.includes('yourinterviewcoach') || origin.includes('your-interview-coach') || origin.startsWith('http://localhost:')) cb(null, true);
-    else cb(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
+    origin: (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin) || origin.includes('yourinterviewcoach') || origin.includes('your-interview-coach') || origin.startsWith('http://localhost:')) cb(null, true);
+        else cb(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
 }));
 app.use(helmet());
 app.use(morgan('dev'));
@@ -78,7 +78,11 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/career-coach-lms';
 
-mongoose.connect(MONGO_URI)
+const dbOptions = {
+    dbName: 'career-coach-lms-new',
+};
+
+mongoose.connect(MONGO_URI, dbOptions)
     .then(async () => {
         console.log('✅ Connected to MongoDB');
 
