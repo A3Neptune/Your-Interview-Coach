@@ -141,30 +141,38 @@ const loginWithGoogle = async (googleToken) => {
   let user = await User.findOne({ $or: [{ email }, { googleId }] });
 
   if (!user) {
-    // Return flag to the frontend to redirect user to complete their signup profile (with required fields like mobile)
-    return {
-      isNewUser: true,
-      googleData: {
-        name,
-        email,
-        picture,
-        googleId,
-      },
-    };
-  }
+    // Automatically create a new user for Google signup!
+    user = new User({
+      name,
+      email,
+      googleId,
+      profileImage: picture,
+      userType: 'student', // default
+      isVerified: true,
+      isActive: true,
+    });
+    await user.save();
 
-  // Update existing user
-  let updated = false;
-  if (!user.googleId) {
-    user.googleId = googleId;
-    updated = true;
+    // Send welcome email
+    await sendEmail(
+      user.email,
+      'Welcome to YourInterviewCoach!',
+      welcomeEmailTemplate(user.name)
+    ).catch(err => console.error('Failed to send welcome email:', err));
+  } else {
+    // Update existing user
+    let updated = false;
+    if (!user.googleId) {
+      user.googleId = googleId;
+      updated = true;
+    }
+    if (!user.profileImage) {
+      user.profileImage = picture;
+      updated = true;
+    }
+    user.lastLogin = new Date();
+    await user.save();
   }
-  if (!user.profileImage) {
-    user.profileImage = picture;
-    updated = true;
-  }
-  user.lastLogin = new Date();
-  await user.save();
 
   const token = jwt.sign(
     { id: user._id, userType: user.userType },

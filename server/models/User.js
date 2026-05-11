@@ -25,7 +25,9 @@ const userSchema = new mongoose.Schema(
     },
     mobile: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
     },
     userType: {
       type: String,
@@ -37,7 +39,7 @@ const userSchema = new mongoose.Schema(
       min: 1,
       max: 4,
       required: function () {
-        return this.userType === 'student';
+        return this.userType === 'student' && !this.googleId;
       },
     },
     skills: [

@@ -80,22 +80,13 @@ function LoginForm() {
     try {
       setIsLoading(true);
       const response = await authAPI.googleLogin(credentialResponse.credential);
-      if (response.data.isNewUser) {
-        sessionStorage.setItem(
-          "googleData",
-          JSON.stringify(response.data.googleData),
-        );
-        toast.success("Complete your profile");
-        router.push("/signup");
-      } else {
-        setAuthToken(response.data.token);
-        await fetchUser();
-        const userType = response.data.user?.userType;
-        toast.success(
-          userType === "admin" ? "Welcome back, Mentor!" : "Welcome back!",
-        );
-        setTimeout(() => router.push(getPostLoginPath(userType)), 800);
-      }
+      setAuthToken(response.data.token);
+      await fetchUser();
+      const userType = response.data.user?.userType;
+      toast.success(
+        userType === "admin" ? "Welcome back, Mentor!" : "Welcome back!",
+      );
+      setTimeout(() => router.push(getPostLoginPath(userType)), 800);
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Google login failed");
     } finally {
@@ -140,7 +131,7 @@ function LoginForm() {
         .google-btn {
           transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
         }
-        .google-btn:hover { transform: translateY(-1px); background: #f8faff !important; border-color: rgba(29,78,216,0.22) !important; }
+        .google-container:hover .google-btn { transform: translateY(-1px); background: #f8faff !important; border-color: rgba(29,78,216,0.22) !important; }
 
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -150,7 +141,7 @@ function LoginForm() {
 
         /* make GoogleLogin iframe fill its container cleanly */
         .google-wrapper > div,
-        .google-wrapper iframe { width: 100% !important; border-radius: 12px !important; }
+        .google-wrapper iframe { width: 100% !important; height: 100% !important; border-radius: 12px !important; }
       `}</style>
 
       <div
@@ -209,9 +200,9 @@ function LoginForm() {
             </div>
 
             {/* Google login */}
-            <div className="mb-5">
+            <div className="mb-5 relative google-container">
               <div
-                className="google-btn flex items-center justify-between w-full py-3 px-4 rounded-xl border cursor-pointer"
+                className="google-btn flex items-center justify-between w-full py-3 px-4 rounded-xl border pointer-events-none transition-all duration-200"
                 style={{
                   background: "#fff",
                   borderColor: "rgba(29,78,216,0.14)",
@@ -248,18 +239,17 @@ function LoginForm() {
                     </p>
                   </div>
                 </div>
-                {/* Actual GoogleLogin hidden behind this UI — overlay technique */}
                 <ChevronRight className="w-4 h-4 text-slate-300" />
               </div>
 
-              {/* Real GoogleLogin — transparent overlay */}
-              <div className="google-wrapper relative -mt-[52px] opacity-0 h-[52px]">
+              {/* Real GoogleLogin — transparent absolute overlay */}
+              <div className="google-wrapper absolute inset-0 opacity-0 z-10 cursor-pointer overflow-hidden w-full h-full">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   theme="filled_black"
                   size="large"
-                  width="380"
+                  width="100%"
                   text="continue_with"
                 />
               </div>
