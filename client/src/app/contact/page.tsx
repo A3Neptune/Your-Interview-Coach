@@ -79,16 +79,15 @@ export default function ContactPage() {
   const inputBase: React.CSSProperties = {
     width: '100%', padding: '12px 14px', borderRadius: '12px', fontSize: '14px',
     background: 'rgba(248,250,255,0.9)', border: '1.5px solid', outline: 'none', color: '#0f172a',
-    fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     boxSizing: 'border-box',
   };
   const labelBase: React.CSSProperties = { fontSize: '12.5px', fontWeight: 600, color: '#374151', marginBottom: '6px', display: 'block' };
 
   return (
-    <main className="min-h-screen overflow-x-hidden" style={{ background: '#F8F6F1', fontFamily: "'DM Sans', sans-serif" }}>
+    <main className="min-h-screen overflow-x-hidden" style={{ background: '#F8F6F1' }}>
       <Navbar />
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap');
         @keyframes ct-word { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
         @keyframes ct-shim { from{transform:translateX(-120%) skewX(-8deg)} to{transform:translateX(280%) skewX(-8deg)} }
         @keyframes ct-success-in { from{opacity:0;transform:scale(0.88) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
@@ -121,7 +120,7 @@ export default function ContactPage() {
             <span className="text-xs font-semibold text-blue-700 uppercase tracking-widest">Get in Touch</span>
           </div>
 
-          <h1 style={{ fontFamily:"'Fraunces',serif",lineHeight:1.1,letterSpacing:'-0.02em',marginBottom:'14px' }}>
+          <h1 style={{ lineHeight:1.1,letterSpacing:'-0.02em',marginBottom:'14px' }}>
             {['We\'d love','to','hear'].map((w,i)=>(
               <span key={i} className="ct-word" style={{ display:'inline-block',marginRight:'0.22em',fontSize:'clamp(34px,7vw,66px)',fontWeight:300,color:'#0f172a',animationDelay:`${i*55+60}ms` }}>{w}</span>
             ))}
@@ -175,7 +174,7 @@ export default function ContactPage() {
                           <path className="ct-check-path" d="M6 14l6 6 10-10" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                         </svg>
                       </div>
-                      <h3 style={{ fontFamily:"'Fraunces',serif",fontSize:'22px',fontWeight:600,color:'#0f172a',marginBottom:'8px' }}>Message sent!</h3>
+                      <h3 style={{ fontSize:'22px',fontWeight:700,color:'#0f172a',marginBottom:'8px' }}>Message sent!</h3>
                       <p style={{ fontSize:'14px',color:'#64748b',lineHeight:1.6 }}>We'll get back to you within 2 hours. Check your inbox for a confirmation.</p>
                       <button onClick={()=>{setSent(false);setForm({name:'',email:'',topic:'',message:''});setTouched({});}} style={{ marginTop:'20px',padding:'10px 22px',borderRadius:'10px',fontSize:'13px',fontWeight:600,color:'#2563eb',background:'rgba(37,99,235,0.08)',border:'1.5px solid rgba(37,99,235,0.2)',cursor:'pointer',transition:'background 0.2s ease' }}>
                         Send another
@@ -183,7 +182,7 @@ export default function ContactPage() {
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} noValidate>
-                      <h2 style={{ fontFamily:"'Fraunces',serif",fontSize:'22px',fontWeight:600,color:'#0f172a',marginBottom:'6px' }}>Send us a message</h2>
+                      <h2 style={{ fontSize:'22px',fontWeight:700,color:'#0f172a',marginBottom:'6px' }}>Send us a message</h2>
                       <p style={{ fontSize:'13px',color:'#64748b',marginBottom:'24px' }}>Fill this out and we'll reply within a couple of hours.</p>
 
                       {/* Name + Email row */}

@@ -1189,11 +1189,6 @@ function SelectSlotContent() {
                                           </span>
                                         ) : null}
                                       </div>
-                                      {!isSelected && (
-                                        <span className="text-[10px] text-slate-400 font-medium ml-auto">
-                                          {slot.bookedCount}/{slot.maxParticipants} booked
-                                        </span>
-                                      )}
                                     </div>
                                   </motion.button>
                                 );

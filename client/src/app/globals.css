@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-heading: 'Poppins', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-accent: 'Space Grotesk', system-ui, sans-serif;
+  --font-heading: 'DM Sans', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-accent: 'DM Sans', system-ui, sans-serif;
 }
 
 :root {
@@ -27,7 +27,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -49,9 +49,8 @@ a[disabled] {
   cursor: not-allowed !important;
 }
 
-/* Headings use Poppins */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -63,19 +62,19 @@ h1, h2, h3, h4, h5, h6 {
 
 @layer utilities {
   .font-heading {
-    font-family: 'Poppins', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
 
   .font-body {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
 
   .font-accent {
-    font-family: 'Space Grotesk', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
 
   .font-sora {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
 
   .glass {
@@ -261,7 +260,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .section-badge-text {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 11px;
   color: #3b82f6;
   text-transform: uppercase;
@@ -271,7 +270,7 @@ h1, h2, h3, h4, h5, h6 {
 .section-title {
   position: relative;
   display: inline-block;
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
 
 .section-title::after {
