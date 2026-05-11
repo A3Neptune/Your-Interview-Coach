@@ -247,14 +247,7 @@ const signup = async (userData) => {
       verificationEmailTemplate(user.name, verificationToken)
     ).catch(err => console.error('Failed to send verification email:', err));
 
-    // Log verification link for local development
-    const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    console.log('\n=======================================');
-    console.log('✉️  EMAIL VERIFICATION LINK (DEVELOPMENT):');
-    console.log(verifyLink);
-    console.log('=======================================\n');
-
-    return { token: null, user, isVerified: false, message: 'Account created! A verification link has been sent to your email. Please verify it to activate your account.', verificationToken };
+    return { token: null, user, isVerified: false, message: 'Account created! A verification link has been sent to your email. Please verify it to activate your account.' };
   }
 };
 
@@ -312,13 +305,6 @@ const generateResetToken = async (email) => {
     'Reset Your Password',
     forgotPasswordTemplate(user.name, resetToken)
   ).catch(err => console.error('Failed to send password reset email:', err));
-
-  // Log reset link for local development
-  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-  console.log('\n=======================================');
-  console.log('🔑 PASSWORD RESET LINK (DEVELOPMENT):');
-  console.log(resetLink);
-  console.log('=======================================\n');
 
   return { resetToken, user };
 };
