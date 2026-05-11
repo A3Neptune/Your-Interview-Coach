@@ -11,10 +11,15 @@ const getTransporter = () => {
     console.log('  PASS:', process.env.EMAIL_PASS ? '****' + process.env.EMAIL_PASS.slice(-4) : 'MISSING');
 
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // false for 587 (STARTTLS)
       auth: {
         user: process.env.EMAIL_USER || process.env.EMAIL_FROM,
         pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
 
