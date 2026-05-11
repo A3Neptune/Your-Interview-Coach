@@ -34,11 +34,11 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
   .map(o => o.trim())
-  .concat(['http://localhost:3001']);
+  .concat(['http://localhost:3001', 'https://yourinterviewcoach.vercel.app', 'https://your-interview-coach.vercel.app', 'https://yourinterviewcoach.in', 'https://www.yourinterviewcoach.in']);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) cb(null, true);
+    if (!origin || allowedOrigins.includes(origin) || origin.includes('yourinterviewcoach') || origin.includes('your-interview-coach') || origin.startsWith('http://localhost:')) cb(null, true);
     else cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
