@@ -91,6 +91,14 @@ export const authAPI = {
   // Update mentor settings
   updateMentorSettings: (data: any) =>
     apiClient.put('/auth/update-mentor-settings', data),
+
+  // Verify email
+  verifyEmail: (token: string) =>
+    apiClient.post('/auth/verify-email', { token }),
+
+  // Resend email verification
+  resendVerification: (email: string) =>
+    apiClient.post('/auth/resend-verification', { email }),
 };
 
 export const setAuthToken = (token: string) => {

@@ -10,10 +10,9 @@ import crypto from 'crypto';
 import {  OAuth2Client  } from 'google-auth-library';
 import {  ValidationError, NotFoundError, UnauthorizedError  } from '../../utils/errors.js';
 import {  sendEmail  } from '../emailService.js';
-import {  welcomeEmailTemplate, loginNotificationTemplate, forgotPasswordTemplate  } from '../../templates/emailTemplates.js';
+import {  welcomeEmailTemplate, loginNotificationTemplate, forgotPasswordTemplate, verificationEmailTemplate  } from '../../templates/emailTemplates.js';
 import {  getLocationFromIP, getDeviceFromUserAgent, getClientIP  } from '../../utils/locationHelper.js';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
  * Email login
@@ -22,6 +21,10 @@ const loginWithEmail = async (email, password, req = null) => {
   const user = await User.findOne({ email });
   if (!user) {
     throw new UnauthorizedError('Invalid credentials');
+  }
+
+  if (user.isVerified === false) {
+    throw new UnauthorizedError('Please verify your email address. A verification link was sent to your registered email.');
   }
 
   const isValidPassword = await user.comparePassword(password);
@@ -121,9 +124,15 @@ const loginWithEmail = async (email, password, req = null) => {
  * Google OAuth login
  */
 const loginWithGoogle = async (googleToken) => {
-  const ticket = await client.verifyIdToken({
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  if (!googleClientId) {
+    throw new ValidationError('Google Client ID is not configured on the server');
+  }
+
+  const oauthClient = new OAuth2Client(googleClientId);
+  const ticket = await oauthClient.verifyIdToken({
     idToken: googleToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
+    audience: googleClientId,
   });
 
   const payload = ticket.getPayload();
@@ -132,27 +141,30 @@ const loginWithGoogle = async (googleToken) => {
   let user = await User.findOne({ $or: [{ email }, { googleId }] });
 
   if (!user) {
-    // Create new user
-    user = new User({
-      name,
-      email,
-      profileImage: picture,
-      googleId,
-      userType: 'student',
-      isActive: true,
-    });
-    await user.save();
-  } else {
-    // Update existing user
-    if (!user.googleId) {
-      user.googleId = googleId;
-    }
-    if (!user.profileImage) {
-      user.profileImage = picture;
-    }
-    user.lastLogin = new Date();
-    await user.save();
+    // Return flag to the frontend to redirect user to complete their signup profile (with required fields like mobile)
+    return {
+      isNewUser: true,
+      googleData: {
+        name,
+        email,
+        picture,
+        googleId,
+      },
+    };
   }
+
+  // Update existing user
+  let updated = false;
+  if (!user.googleId) {
+    user.googleId = googleId;
+    updated = true;
+  }
+  if (!user.profileImage) {
+    user.profileImage = picture;
+    updated = true;
+  }
+  user.lastLogin = new Date();
+  await user.save();
 
   const token = jwt.sign(
     { id: user._id, userType: user.userType },
@@ -167,7 +179,7 @@ const loginWithGoogle = async (googleToken) => {
  * Signup
  */
 const signup = async (userData) => {
-  const { name, email, password, mobile, userType, yearOfStudy, company, designation, yearsOfExperience } = userData;
+  const { name, email, password, mobile, userType, yearOfStudy, company, designation, yearsOfExperience, googleId, profileImage } = userData;
 
   // Check if user exists
   const existingUser = await User.findOne({ email });
@@ -184,6 +196,8 @@ const signup = async (userData) => {
     throw new ValidationError('Company and designation are required for professionals');
   }
 
+  const isGoogleSignup = !!googleId;
+
   // Create user
   const user = new User({
     name,
@@ -195,25 +209,46 @@ const signup = async (userData) => {
     company: userType === 'professional' ? company : undefined,
     designation: userType === 'professional' ? designation : undefined,
     yearsOfExperience: userType === 'professional' ? yearsOfExperience : undefined,
+    googleId,
+    profileImage,
     isActive: true,
+    isVerified: isGoogleSignup, // Google signup doesn't require manual verification
   });
+
+  let verificationToken = null;
+  if (!isGoogleSignup) {
+    verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    user.verificationTokenExpiry = Date.now() + 24 * 3600 * 1000; // 24 hours
+  }
 
   await user.save();
 
-  const token = jwt.sign(
-    { id: user._id, userType: user.userType },
-    process.env.JWT_SECRET,
-    { expiresIn: '30d' }
-  );
+  if (isGoogleSignup) {
+    const token = jwt.sign(
+      { id: user._id, userType: user.userType },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
 
-  // Send welcome email (non-blocking)
-  sendEmail(
-    user.email,
-    'Welcome to YourInterviewCoach!',
-    welcomeEmailTemplate(user.name)
-  ).catch(err => console.error('Failed to send welcome email:', err));
+    // Send welcome email (non-blocking)
+    sendEmail(
+      user.email,
+      'Welcome to YourInterviewCoach!',
+      welcomeEmailTemplate(user.name)
+    ).catch(err => console.error('Failed to send welcome email:', err));
 
-  return { token, user };
+    return { token, user, isVerified: true };
+  } else {
+    // Send verification email (non-blocking)
+    sendEmail(
+      user.email,
+      'Verify Your Email - YourInterviewCoach',
+      verificationEmailTemplate(user.name, verificationToken)
+    ).catch(err => console.error('Failed to send verification email:', err));
+
+    return { token: null, user, isVerified: false, message: 'Account created! A verification link has been sent to your email. Please verify it to activate your account.' };
+  }
 };
 
 /**
@@ -259,8 +294,8 @@ const generateResetToken = async (email) => {
   }
 
   const resetToken = crypto.randomBytes(32).toString('hex');
-  user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+  user.resetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
 
   await user.save();
 
@@ -281,8 +316,8 @@ const verifyResetToken = async (token) => {
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
   const user = await User.findOne({
-    resetPasswordToken: hashedToken,
-    resetPasswordExpires: { $gt: Date.now() },
+    resetToken: hashedToken,
+    resetTokenExpiry: { $gt: Date.now() },
   });
 
   if (!user) {
@@ -299,8 +334,8 @@ const resetPassword = async (token, newPassword) => {
   const user = await verifyResetToken(token);
 
   user.password = newPassword;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpires = undefined;
+  user.resetToken = null;
+  user.resetTokenExpiry = null;
 
   await user.save();
 
@@ -433,6 +468,69 @@ const createUser = async (userData) => {
   return user;
 };
 
+/**
+ * Verify email token
+ */
+const verifyEmail = async (token) => {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    verificationToken: hashedToken,
+    verificationTokenExpiry: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new ValidationError('Invalid or expired verification token');
+  }
+
+  user.isVerified = true;
+  user.verificationToken = null;
+  user.verificationTokenExpiry = null;
+  await user.save();
+
+  // Send welcome email (non-blocking)
+  sendEmail(
+    user.email,
+    'Welcome to YourInterviewCoach!',
+    welcomeEmailTemplate(user.name)
+  ).catch(err => console.error('Failed to send welcome email:', err));
+
+  const authToken = jwt.sign(
+    { id: user._id, userType: user.userType },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+
+  return { token: authToken, user };
+};
+
+/**
+ * Resend email verification link
+ */
+const resendVerification = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  if (user.isVerified) {
+    throw new ValidationError('Email is already verified');
+  }
+
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+  user.verificationTokenExpiry = Date.now() + 24 * 3600 * 1000; // 24 hours
+  await user.save();
+
+  await sendEmail(
+    user.email,
+    'Verify Your Email - YourInterviewCoach',
+    verificationEmailTemplate(user.name, verificationToken)
+  );
+
+  return { success: true, message: 'Verification link resent successfully' };
+};
+
 export {
   loginWithEmail,
   loginWithGoogle,
@@ -448,6 +546,8 @@ export {
   deleteUser,
   updateUserStatus,
   createUser,
+  verifyEmail,
+  resendVerification,
 };
 export default {
   loginWithEmail,
@@ -464,4 +564,6 @@ export default {
   deleteUser,
   updateUserStatus,
   createUser,
+  verifyEmail,
+  resendVerification,
 };

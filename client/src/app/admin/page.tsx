@@ -51,13 +51,14 @@ type SessionFilter =
   | "resumeAnalysis"
   | "mockInterview"
   | "liveWebinar"
-  | "liveWebinar";
+  | "gdGroupDiscussions";
 
 const SESSION_FILTERS: Array<{ key: SessionFilter; label: string }> = [
   { key: "all", label: "All Sessions" },
   { key: "resumeAnalysis", label: "Resume Analysis" },
   { key: "mockInterview", label: "Mock Interview" },
   { key: "liveWebinar", label: "Live Webinar" },
+  { key: "gdGroupDiscussions", label: "GD Practice" },
 ];
 
 const getSessionCategory = (sessionType?: string): SessionFilter => {
@@ -79,6 +80,8 @@ const getSessionCategory = (sessionType?: string): SessionFilter => {
     return "mockInterview";
   if (["webinars", "liveWebinar", "live-webinar"].includes(value))
     return "liveWebinar";
+  if (["gdGroupDiscussions", "groupDiscussion", "gd-practice"].includes(value))
+    return "gdGroupDiscussions";
   return "all";
 };
 
@@ -88,6 +91,7 @@ const getSessionLabel = (sessionType?: string) => {
     resumeAnalysis: "Resume Analysis",
     mockInterview: "Mock Interview",
     liveWebinar: "Live Webinar",
+    gdGroupDiscussions: "GD Practice",
   };
   return type === "all" ? sessionType || "Other" : mapping[type];
 };

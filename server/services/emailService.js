@@ -5,34 +5,25 @@ let transporter = null;
 // Lazy initialize transporter (after .env is loaded)
 const getTransporter = () => {
   if (!transporter) {
-    console.log('📧 Email Configuration:');
-    console.log('  HOST:', process.env.EMAIL_HOST);
-    console.log('  PORT:', process.env.EMAIL_PORT);
+    console.log('📧 Email Configuration (Google SMTP Service):');
     console.log('  USER:', process.env.EMAIL_USER);
     console.log('  FROM:', process.env.EMAIL_FROM);
     console.log('  PASS:', process.env.EMAIL_PASS ? '****' + process.env.EMAIL_PASS.slice(-4) : 'MISSING');
 
     transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.hostinger.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
-      secure: process.env.EMAIL_SECURE === 'true', // false for 587, true for 465
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER || process.env.EMAIL_FROM,
         pass: process.env.EMAIL_PASS,
       },
-      tls: {
-        rejectUnauthorized: false,
-      },
-      debug: false, // Disable debug to reduce noise
-      logger: false,
     });
 
     // Verify once
     transporter.verify((error, success) => {
       if (error) {
-        console.error('❌ Email transporter verification failed:', error.message);
+        console.error('❌ Google Email transporter verification failed:', error.message);
       } else {
-        console.log('✅ Email server is ready to send messages');
+        console.log('✅ Google Email server is ready to send messages');
       }
     });
   }
@@ -44,9 +35,10 @@ const sendEmail = async (to, subject, html) => {
   console.log(`📤 [EMAIL] Attempting → to: ${to} | subject: "${subject}"`);
   try {
     const transport = getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
     const mailOptions = {
-      from: `"YourInterviewCoach" <${process.env.EMAIL_FROM}>`,
+      from: `"YourInterviewCoach" <${fromAddress}>`,
       to,
       subject,
       html,

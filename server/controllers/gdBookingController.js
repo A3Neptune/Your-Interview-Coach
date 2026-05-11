@@ -1,4 +1,5 @@
 import GDBooking from '../models/GDBooking.js';
+import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 import PricingSection from '../models/PricingSection.js';
 import { getPricingSection } from '../services/domain/pricingService.js';
@@ -192,6 +193,9 @@ export const verifyGDPayment = async (req, res) => {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
+    // Generate meeting link
+    const meetingLink = `https://meet.jit.si/yic-gd-session-${bookingId}`;
+
     // Update booking
     const gdBooking = await GDBooking.findByIdAndUpdate(
       bookingId,
@@ -199,12 +203,47 @@ export const verifyGDPayment = async (req, res) => {
         paymentStatus: 'completed',
         razorpayPaymentId: razorpay_payment_id,
         status: 'confirmed',
+        meetingLink: meetingLink,
       },
       { new: true }
     ).populate('userId', 'name email');
 
     if (!gdBooking) {
       return res.status(404).json({ error: 'GD Booking not found' });
+    }
+
+    // Find the active admin mentor (Neel)
+    const adminMentor = await User.findOne({ userType: 'admin', isActive: true });
+    const mentorId = adminMentor?._id || (await User.findOne({ userType: 'admin' }))?._id;
+
+    if (!mentorId) {
+      console.error('❌ Active admin mentor not found during GD payment verification!');
+    } else {
+      // Find plans to get the plan title
+      const plans = await getGDPlansFromDB();
+      const plan = plans[gdBooking.planType];
+      const planTitle = plan ? plan.title : 'Group Discussion Session';
+
+      // Create a corresponding entry in the standard Booking collection
+      const standardBooking = new Booking({
+        studentId: gdBooking.userId._id || gdBooking.userId,
+        mentorId: mentorId,
+        sessionType: 'gdGroupDiscussions',
+        title: `GD Practice - ${planTitle}`,
+        description: `Group Discussion practice slot for ${gdBooking.memberCount} members.`,
+        scheduledDate: gdBooking.scheduledDate,
+        duration: 60,
+        meetingLink: meetingLink,
+        status: 'confirmed',
+        paymentRequired: true,
+        amount: gdBooking.totalAmount,
+        paymentStatus: 'completed',
+        razorpayPaymentId: razorpay_payment_id,
+        razorpayOrderId: razorpay_order_id,
+        confirmedAt: new Date(),
+      });
+      await standardBooking.save();
+      console.log(`✅ Standard Booking created for GD Session (${standardBooking._id}) with meeting link ${meetingLink}`);
     }
 
     res.json({

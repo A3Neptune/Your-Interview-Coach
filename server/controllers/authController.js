@@ -16,6 +16,9 @@ export const googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
     const result = await authService.loginWithGoogle(token);
+    if (result.isNewUser) {
+      return res.json({ success: true, isNewUser: true, googleData: result.googleData });
+    }
     res.json({ success: true, token: result.token, user: result.user });
   } catch (error) {
     console.error('Google login error:', error);
@@ -27,7 +30,13 @@ export const signup = async (req, res) => {
   try {
     const userData = req.body;
     const result = await authService.signup(userData);
-    res.status(201).json({ success: true, token: result.token, user: result.user });
+    res.status(201).json({
+      success: true,
+      token: result.token,
+      user: result.user,
+      isVerified: result.isVerified,
+      message: result.message
+    });
   } catch (error) {
     console.error('Sign up error:', error);
     handleControllerError(res, error);
@@ -172,6 +181,28 @@ export const createUser = async (req, res) => {
   }
 };
 
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const result = await authService.verifyEmail(token);
+    res.json({ success: true, token: result.token, user: result.user, message: 'Email verified successfully!' });
+  } catch (error) {
+    console.error('Verify email error:', error);
+    handleControllerError(res, error);
+  }
+};
+
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.resendVerification(email);
+    res.json(result);
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    handleControllerError(res, error);
+  }
+};
+
 export default {
   emailLogin,
   googleLogin,
@@ -189,4 +220,6 @@ export default {
   deleteUser,
   updateUserStatus,
   createUser,
+  verifyEmail,
+  resendVerification,
 };

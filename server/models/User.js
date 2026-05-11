@@ -174,6 +174,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    verificationToken: {
+      type: String,
+      default: null,
+    },
+    verificationTokenExpiry: {
+      type: Date,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

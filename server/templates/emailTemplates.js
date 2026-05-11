@@ -686,15 +686,211 @@ const placementAcceleratorBookingTemplate = (userName, weekLabel) => {
   `;
 };
 
+const verificationEmailTemplate = (userName, verificationToken) => {
+  const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          line-height: 1.6;
+          color: #18181b;
+          background: #fafafa;
+          padding: 20px;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .header {
+          background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+          color: white;
+          padding: 48px 32px;
+          text-align: center;
+        }
+        .header h1 {
+          font-size: 32px;
+          font-weight: 700;
+          margin-bottom: 8px;
+          letter-spacing: -0.02em;
+        }
+        .header p {
+          font-size: 16px;
+          font-weight: 300;
+          opacity: 0.9;
+        }
+        .content {
+          background: white;
+          padding: 40px 32px;
+        }
+        .content h2 {
+          font-size: 24px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          color: #18181b;
+        }
+        .content p {
+          font-size: 16px;
+          color: #52525b;
+          margin-bottom: 16px;
+          line-height: 1.7;
+        }
+        .button {
+          display: inline-block;
+          padding: 14px 32px;
+          background: #1d4ed8;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
+          margin: 24px 0;
+          font-weight: 600;
+          font-size: 16px;
+          transition: all 0.2s;
+          box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.3);
+        }
+        .button:hover {
+          background: #1e3a8a;
+          box-shadow: 0 10px 15px -3px rgba(29, 78, 216, 0.4);
+        }
+        .token-box {
+          background: #f0f4ff;
+          border: 2px dashed #1d4ed8;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 24px 0;
+          text-align: center;
+          word-break: break-all;
+        }
+        .token-box a {
+          color: #1d4ed8;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+        }
+        .warning-box {
+          background: #fef2f2;
+          border: 2px solid #fca5a5;
+          border-radius: 12px;
+          padding: 24px;
+          margin: 24px 0;
+        }
+        .warning-box .title {
+          display: flex;
+          align-items: center;
+          font-weight: 600;
+          color: #991b1b;
+          margin-bottom: 12px;
+          font-size: 16px;
+        }
+        .warning-box .icon {
+          font-size: 24px;
+          margin-right: 8px;
+        }
+        .warning-box ul {
+          margin: 0;
+          padding-left: 20px;
+          color: #991b1b;
+        }
+        .warning-box li {
+          margin: 8px 0;
+          font-size: 14px;
+        }
+        .divider {
+          height: 1px;
+          background: linear-gradient(to right, transparent, #e4e4e7, transparent);
+          margin: 32px 0;
+        }
+        .footer {
+          background: #fafafa;
+          text-align: center;
+          padding: 32px;
+          color: #71717a;
+          font-size: 13px;
+          line-height: 1.8;
+        }
+        .footer strong {
+          color: #52525b;
+        }
+        @media only screen and (max-width: 600px) {
+          .container { border-radius: 0; }
+          .header { padding: 32px 24px; }
+          .content { padding: 32px 24px; }
+          .header h1 { font-size: 28px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✉️ Verify Your Email</h1>
+          <p>Please confirm your email address to activate your account</p>
+        </div>
+        <div class="content">
+          <h2>Hi ${userName},</h2>
+          <p>Thank you for signing up on YourInterviewCoach! To ensure your account is secure and that we can reach you with important updates, please verify your email address by clicking the button below:</p>
+
+          <center>
+            <a href="${verifyUrl}" class="button">Verify Email Address →</a>
+          </center>
+
+          <p style="font-size: 14px; color: #71717a; margin-top: 8px;">Button not working? Copy and paste this link into your browser:</p>
+
+          <div class="token-box">
+            <a href="${verifyUrl}">${verifyUrl}</a>
+          </div>
+
+          <div class="warning-box">
+            <div class="title">
+              <span class="icon">⚠️</span>
+              <span>Important Information</span>
+            </div>
+            <ul>
+              <li><strong>This link expires in 24 hours</strong> for security reasons</li>
+              <li>If you did not sign up for an account, please disregard this email</li>
+            </ul>
+          </div>
+
+          <div class="divider"></div>
+
+          <p style="font-size: 14px; color: #71717a;">If you have any questions or did not receive this email intentionally, please contact our support team.</p>
+
+          <p style="margin-top: 24px; font-weight: 500; color: #18181b;">Best regards,<br>The YourInterviewCoach Team</p>
+        </div>
+        <div class="footer">
+          <p><strong>YourInterviewCoach</strong></p>
+          <p>&copy; ${new Date().getFullYear()} YourInterviewCoach. All rights reserved.</p>
+          <p style="margin-top: 12px;">This is an automated email. Please do not reply.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
 export {
   welcomeEmailTemplate,
   loginNotificationTemplate,
   forgotPasswordTemplate,
   placementAcceleratorBookingTemplate,
+  verificationEmailTemplate,
 };
 export default {
   welcomeEmailTemplate,
   loginNotificationTemplate,
   forgotPasswordTemplate,
   placementAcceleratorBookingTemplate,
+  verificationEmailTemplate,
 };

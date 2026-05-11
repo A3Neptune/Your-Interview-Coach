@@ -459,16 +459,22 @@ export default function SignupPage() {
         name: formData.name, email: formData.email, mobile: formData.mobile,
         userType, isEmailSignup: !googleData,
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()) : [],
+        ...(googleData ? { googleId: googleData.googleId, profileImage: googleData.picture } : {}),
       };
       if (!googleData) signupData.password = formData.password;
       if (userType === 'student') signupData.yearOfStudy = parseInt(formData.yearOfStudy);
       else { signupData.company = formData.company; signupData.designation = formData.designation; signupData.yearsOfExperience = parseInt(formData.yearsOfExperience); }
       const response = await authAPI.signup(signupData);
-      setAuthToken(response.data.token);
-      await fetchUser();
-      toast.success('Account created successfully!');
       sessionStorage.removeItem('googleData');
-      setTimeout(() => router.push('/dashboard'), 800);
+      if (response.data.isVerified === false) {
+        toast.success(response.data.message || 'Verification link sent to your email!');
+        setTimeout(() => router.push('/login'), 3000);
+      } else {
+        setAuthToken(response.data.token);
+        await fetchUser();
+        toast.success('Account created successfully!');
+        setTimeout(() => router.push('/dashboard'), 800);
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Signup failed');
     } finally {
