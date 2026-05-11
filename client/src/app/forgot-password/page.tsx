@@ -232,23 +232,6 @@ export default function ForgotPasswordPage() {
                     </p>
                   </div>
 
-                  {resetToken && (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-left space-y-1">
-                      <p className="text-xs font-bold text-amber-800 uppercase tracking-wide flex items-center gap-1">
-                        ⚠️ Local Developer Helper
-                      </p>
-                      <p className="text-xs text-slate-600">
-                        Since outgoing SMTP ports are blocked on this network, here is your direct reset link:
-                      </p>
-                      <Link
-                        href={`/reset-password?token=${resetToken}`}
-                        className="text-xs text-blue-600 font-bold hover:underline block break-all"
-                      >
-                        {window.location.origin}/reset-password?token={resetToken}
-                      </Link>
-                    </div>
-                  )}
-
                   <button
                     onClick={() => {
                       setEmail('');
