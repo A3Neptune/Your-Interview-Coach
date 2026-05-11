@@ -108,7 +108,7 @@ const loginWithEmail = async (email, password, req = null) => {
 
     console.log(`🔔 New device detected for ${user.email} - sending security alert`);
 
-    sendEmail(
+    await sendEmail(
       user.email,
       'Security Alert: New Login to Your Account',
       loginNotificationTemplate(user.name, loginTime, location, ipAddress, device)
@@ -231,8 +231,8 @@ const signup = async (userData) => {
       { expiresIn: '30d' }
     );
 
-    // Send welcome email (non-blocking)
-    sendEmail(
+    // Send welcome email (awaited for serverless safety)
+    await sendEmail(
       user.email,
       'Welcome to YourInterviewCoach!',
       welcomeEmailTemplate(user.name)
@@ -240,8 +240,8 @@ const signup = async (userData) => {
 
     return { token, user, isVerified: true };
   } else {
-    // Send verification email (non-blocking)
-    sendEmail(
+    // Send verification email (awaited for serverless safety)
+    await sendEmail(
       user.email,
       'Verify Your Email - YourInterviewCoach',
       verificationEmailTemplate(user.name, verificationToken)
@@ -306,8 +306,8 @@ const generateResetToken = async (email) => {
 
   await user.save();
 
-  // Send password reset email (non-blocking)
-  sendEmail(
+  // Send password reset email (awaited for serverless safety)
+  await sendEmail(
     user.email,
     'Reset Your Password',
     forgotPasswordTemplate(user.name, resetToken)
@@ -502,8 +502,8 @@ const verifyEmail = async (token) => {
   user.verificationTokenExpiry = null;
   await user.save();
 
-  // Send welcome email (non-blocking)
-  sendEmail(
+  // Send welcome email (awaited for serverless safety)
+  await sendEmail(
     user.email,
     'Welcome to YourInterviewCoach!',
     welcomeEmailTemplate(user.name)
