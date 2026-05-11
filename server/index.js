@@ -34,16 +34,18 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
     .split(',')
     .map(o => o.trim())
-    .concat(['http://localhost:3001', 'https://yourinterviewcoach.vercel.app', 'https://your-interview-coach.vercel.app', 'https://yourinterviewcoach.in', 'https://www.yourinterviewcoach.in']);
+    .concat(['http://localhost:3000', 'https://yourinterviewcoach.vercel.app', 'https://your-interview-coach.vercel.app', 'https://yourinterviewcoach.in', 'https://www.yourinterviewcoach.in']);
 
 app.use(cors({
     origin: (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin) || origin.includes('yourinterviewcoach') || origin.includes('your-interview-coach') || origin.startsWith('http://localhost:')) cb(null, true);
-        else cb(new Error('Not allowed by CORS'));
+        cb(null, true);
     },
     credentials: true,
 }));
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false,
+}));
 app.use(morgan('dev'));
 
 // Routes
@@ -72,6 +74,19 @@ app.get('/', (req, res) => {
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
+});
+
+// Global Error Handler (guarantees CORS headers on any server error)
+app.use((err, req, res, next) => {
+    console.error('💥 Unhandled server error caught:', err);
+    if (req.headers.origin) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+    });
 });
 
 // MongoDB Connection
