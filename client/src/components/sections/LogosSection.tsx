@@ -6,16 +6,16 @@ import { Sparkles } from "lucide-react";
 
 const companies = [
   {
-    name: "Google",
-    logo: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png",
+    name: "Wipro",
+    logo: "https://e7.pngegg.com/pngimages/157/702/png-clipart-wipro-logo-business-corporate-identity-business-text-service.png",
   },
   {
-    name: "Microsoft",
-    logo: "https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31",
+    name: "Tech Mahindra",
+    logo: "https://i.pinimg.com/736x/05/4d/ce/054dcec1ace21a43d5b5f8d608576ba0.jpg",
   },
   {
-    name: "Amazon",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+    name: "Hcl",
+    logo: "https://e7.pngegg.com/pngimages/685/961/png-clipart-logo-brand-trademark-product-design-hcl-technologies-design-blue-text.png",
   },
   {
     name: "Accenture",
@@ -34,8 +34,8 @@ const companies = [
     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSmQV0IWOvYZIMUVDOWIyS4HwGEf4lhCYyuA&s",
   },
   {
-    name: "Uber",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png",
+    name: "Cognizant",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cognizant_logo_2022.svg/3840px-Cognizant_logo_2022.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
   },
   {
     name: "TCS",
@@ -54,8 +54,8 @@ const companies = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.png",
   },
   {
-    name: "Oracle",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg",
+    name: "Ltimindtree",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/LTIMindtree_Logo.svg/960px-LTIMindtree_Logo.svg.png",
   },
   {
     name: "IBM",
