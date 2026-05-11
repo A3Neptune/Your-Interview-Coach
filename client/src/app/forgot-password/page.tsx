@@ -11,6 +11,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [resetToken, setResetToken] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +23,10 @@ export default function ForgotPasswordPage() {
 
     try {
       setIsLoading(true);
-      await authAPI.forgotPassword(email);
+      const response = await authAPI.forgotPassword(email);
+      if (response.data.resetToken) {
+        setResetToken(response.data.resetToken);
+      }
       toast.success('Password reset link sent to your email!');
       setSubmitted(true);
     } catch (err: any) {
@@ -227,6 +231,23 @@ export default function ForgotPasswordPage() {
                       The link remains active for exactly 1 hour. Please check your spam folder if you do not receive it.
                     </p>
                   </div>
+
+                  {resetToken && (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-left space-y-1">
+                      <p className="text-xs font-bold text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                        ⚠️ Local Developer Helper
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        Since outgoing SMTP ports are blocked on this network, here is your direct reset link:
+                      </p>
+                      <Link
+                        href={`/reset-password?token=${resetToken}`}
+                        className="text-xs text-blue-600 font-bold hover:underline block break-all"
+                      >
+                        {window.location.origin}/reset-password?token={resetToken}
+                      </Link>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => {
