@@ -168,6 +168,9 @@ export const bookingAPI = {
   // Get mentor bookings
   getMentorBookings: () => apiClient.get('/bookings/mentor'),
 
+  // Get webinar booking stats for all slots (mentor-only, includes past + full)
+  getMentorWebinarStats: () => apiClient.get('/bookings/mentor/webinar-stats'),
+
   // Update booking status (mentor)
   updateBookingStatus: (bookingId: string, data: any) =>
     apiClient.put(`/bookings/${bookingId}/status`, data),

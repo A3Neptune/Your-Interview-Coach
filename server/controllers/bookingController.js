@@ -362,6 +362,17 @@ export const getWebinarSchedule = async (req, res) => {
  * Update student notes on a booking
  * PUT /api/bookings/:bookingId/notes
  */
+export const getMentorWebinarStats = async (req, res) => {
+  try {
+    const mentorId = req.user._id || req.user.id;
+    const data = await bookingService.getMentorWebinarStats(mentorId);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Error fetching mentor webinar stats:', error);
+    handleControllerError(res, error);
+  }
+};
+
 export const updateBookingNotes = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -401,4 +412,5 @@ export default {
   verifyPayment,
   releasePaymentLock,
   updateBookingNotes,
+  getMentorWebinarStats,
 };

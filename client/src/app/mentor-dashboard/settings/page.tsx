@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Settings, Bell, Lock, Globe, User, Save, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { authAPI } from '@/lib/api';
+import { authAPI, bookingAPI } from '@/lib/api';
 import LaunchBannerManager from '@/components/admin/LaunchBannerManager';
 
 export default function SettingsPage() {
@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [blockDateInput, setBlockDateInput] = useState('');
   const [overrideForm, setOverrideForm] = useState({ date: '', startHour: 9, endHour: 18 });
   const [webinarSlotForm, setWebinarSlotForm] = useState({ date: '', time: '', topic: '', maxParticipants: 70 });
+  const [webinarStats, setWebinarStats] = useState<Record<string, { bookedCount: number; spotsLeft: number; maxParticipants: number; isExpired: boolean; isFull: boolean }>>({});
 
   useEffect(() => {
     fetchSettings();
@@ -93,6 +94,17 @@ export default function SettingsPage() {
         setSettings(loadedSettings);
         setOriginalSettings(loadedSettings);
         setHasChanges(false);
+
+        try {
+          const statsRes = await bookingAPI.getMentorWebinarStats();
+          const statsMap: Record<string, { bookedCount: number; spotsLeft: number; maxParticipants: number; isExpired: boolean; isFull: boolean }> = {};
+          for (const s of (statsRes.data.slots || [])) {
+            statsMap[`${s.date}_${s.time}`] = s;
+          }
+          setWebinarStats(statsMap);
+        } catch {
+          // stats are non-critical; proceed without them
+        }
       } catch (err: any) {
         if (err?.response?.status === 401) {
           localStorage.removeItem('authToken');
@@ -514,15 +526,37 @@ export default function SettingsPage() {
                 const period = hh >= 12 ? 'PM' : 'AM';
                 const displayH = hh > 12 ? hh - 12 : hh === 0 ? 12 : hh;
                 const timeLabel = `${displayH}:${String(mm).padStart(2, '0')} ${period}`;
+                const stats = webinarStats[`${s.date}_${s.time}`];
+                const isExpired = new Date(`${s.date}T${s.time}:00+05:30`) <= new Date();
+                const bookedCount = stats?.bookedCount ?? 0;
+                const maxP = s.maxParticipants || settings.availabilitySettings.webinarMaxParticipants || 70;
+                const spotsLeft = stats ? stats.spotsLeft : maxP - bookedCount;
+                const isFull = bookedCount >= maxP;
                 return (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700 text-sm">
-                    <span className="text-white font-semibold w-28 shrink-0">{new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                    <span className="text-blue-400 w-20 shrink-0">{timeLabel}</span>
-                    <span className="text-zinc-300 flex-1 truncate">{s.topic || <span className="text-zinc-600 italic">No topic</span>}</span>
-                    <span className="text-zinc-500 text-xs shrink-0">max {s.maxParticipants}</span>
+                  <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm transition ${isExpired ? 'bg-zinc-900/60 border-zinc-800 opacity-70' : 'bg-zinc-800/60 border-zinc-700'}`}>
+                    <span className={`font-semibold w-28 shrink-0 ${isExpired ? 'text-zinc-500' : 'text-white'}`}>
+                      {new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                    <span className={`w-20 shrink-0 ${isExpired ? 'text-zinc-600' : 'text-blue-400'}`}>{timeLabel}</span>
+                    <span className="text-zinc-300 flex-1 truncate min-w-0">{s.topic || <span className="text-zinc-600 italic">No topic</span>}</span>
+
+                    {isExpired ? (
+                      <span className="px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-500 text-xs font-semibold shrink-0">Expired</span>
+                    ) : isFull ? (
+                      <span className="px-2 py-0.5 rounded-full bg-red-900/40 border border-red-700/50 text-red-400 text-xs font-semibold shrink-0">Full</span>
+                    ) : spotsLeft <= 5 ? (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-900/30 border border-amber-600/40 text-amber-400 text-xs font-semibold shrink-0">{spotsLeft} left</span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-900/20 border border-emerald-700/30 text-emerald-400 text-xs font-semibold shrink-0">{spotsLeft} left</span>
+                    )}
+
+                    <span className="text-zinc-500 text-xs shrink-0 w-20 text-right">
+                      {bookedCount}/{maxP} booked
+                    </span>
+
                     <button type="button"
                       onClick={() => setSettings({ ...settings, availabilitySettings: { ...settings.availabilitySettings, webinarSlots: settings.availabilitySettings.webinarSlots.filter((_, j) => j !== i) } })}
-                      className="text-zinc-600 hover:text-red-400 transition text-base leading-none"
+                      className="text-zinc-600 hover:text-red-400 transition text-base leading-none shrink-0"
                     >×</button>
                   </div>
                 );

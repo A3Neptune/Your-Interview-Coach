@@ -23,6 +23,7 @@ router.get('/student', verifyToken, verifyUser, bookingController.getStudentBook
 router.get('/mentor', verifyToken, verifyMentor, bookingController.getMentorBookings);
 router.get('/mentor/students/list', verifyToken, verifyMentor, bookingController.getMentorStudentsList);
 router.get('/mentor/all-bookings', verifyToken, verifyMentor, bookingController.getMentorAllBookings);
+router.get('/mentor/webinar-stats', verifyToken, verifyMentor, bookingController.getMentorWebinarStats);
 
 // Shared routes (student & mentor)
 router.get('/:bookingId', verifyToken, verifyUser, bookingController.getBookingById);

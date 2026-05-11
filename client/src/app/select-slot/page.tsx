@@ -1173,13 +1173,9 @@ function SelectSlotContent() {
                                       </div>
                                     )}
 
-                                    {(spotsLow || isSelected) && (
-                                      <div className="flex items-center gap-2 pt-2 border-t" style={{borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#e2e8f0"}}>
-                                        {spotsLow && !isSelected ? (
-                                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                                            ⚡ {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left
-                                          </span>
-                                        ) : isSelected && (
+                                    <div className="flex items-center justify-between pt-2 border-t mt-1" style={{borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#e2e8f0"}}>
+                                      <div>
+                                        {isSelected ? (
                                           <motion.span
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -1187,9 +1183,18 @@ function SelectSlotContent() {
                                           >
                                             ✓ Selected
                                           </motion.span>
-                                        )}
+                                        ) : spotsLow ? (
+                                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                            ⚡ {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left
+                                          </span>
+                                        ) : null}
                                       </div>
-                                    )}
+                                      {!isSelected && (
+                                        <span className="text-[10px] text-slate-400 font-medium ml-auto">
+                                          {slot.bookedCount}/{slot.maxParticipants} booked
+                                        </span>
+                                      )}
+                                    </div>
                                   </motion.button>
                                 );
                               })}

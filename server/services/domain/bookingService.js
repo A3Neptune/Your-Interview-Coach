@@ -1017,17 +1017,23 @@ const getWebinarSchedule = async () => {
   const allSlots    = settings.webinarSlots || [];
   const now         = new Date();
 
-  // Filter to upcoming slots only
-  const upcoming = allSlots.filter(ws => {
-    const [hh, mm] = ws.time.split(':').map(Number);
-    const pad = n => String(n).padStart(2, '0');
-    const slotStart = new Date(`${ws.date}T${pad(hh)}:${pad(mm)}:00+05:30`);
-    return slotStart > now;
-  });
+  // Filter to upcoming slots only, then sort chronologically so
+  // firstDate/lastDate always give a valid (non-inverted) query range
+  const upcoming = allSlots
+    .filter(ws => {
+      const [hh, mm] = ws.time.split(':').map(Number);
+      const pad = n => String(n).padStart(2, '0');
+      const slotStart = new Date(`${ws.date}T${pad(hh)}:${pad(mm)}:00+05:30`);
+      return slotStart > now;
+    })
+    .sort((a, b) =>
+      `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
+    );
 
   if (!upcoming.length) return { mentorId: mentor._id, slotDuration, slots: [] };
 
   // Batch-fetch all relevant bookings in one query
+  // upcoming is now sorted so upcoming[0] is earliest, upcoming[last] is latest
   const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
   const firstDate = upcoming[0].date;
   const lastDate  = upcoming[upcoming.length - 1].date;
@@ -1075,6 +1081,69 @@ const getWebinarSchedule = async () => {
   return { mentorId: mentor._id, slotDuration, slots };
 };
 
+const getMentorWebinarStats = async (mentorId) => {
+  const mentor = await User.findById(mentorId);
+  if (!mentor) throw new NotFoundError('Mentor not found');
+
+  const settings     = mentor.availabilitySettings || {};
+  const slotDuration = Math.max(1, settings.slotDuration ?? 60);
+  const allSlots     = settings.webinarSlots || [];
+
+  if (!allSlots.length) return { slots: [] };
+
+  const pad = n => String(n).padStart(2, '0');
+  const makeIST = (dateStr, hh, mm) =>
+    new Date(`${dateStr}T${pad(hh)}:${pad(mm)}:00+05:30`);
+
+  const sorted = [...allSlots].sort((a, b) =>
+    `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
+  );
+  const firstDate = sorted[0].date;
+  const lastDate  = sorted[sorted.length - 1].date;
+  const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
+  const now = new Date();
+
+  const existingBookings = await Booking.find({
+    mentorId: mentor._id,
+    sessionType: 'webinars',
+    scheduledDate: {
+      $gte: makeIST(firstDate, 0, 0),
+      $lte: makeIST(lastDate, 23, 59),
+    },
+    $or: [
+      { status: 'confirmed' },
+      { status: 'pending', paymentStatus: 'pending', createdAt: { $gte: pendingCutoff } },
+    ],
+  }).select('scheduledDate duration').lean();
+
+  const slots = allSlots.map(ws => {
+    const [hh, mm] = ws.time.split(':').map(Number);
+    const slotStart    = makeIST(ws.date, hh, mm);
+    const slotEnd      = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
+    const maxParticipants = ws.maxParticipants || settings.webinarMaxParticipants || 70;
+    const isExpired    = slotStart <= now;
+
+    const bookedCount = existingBookings.filter(b => {
+      const bStart = new Date(b.scheduledDate);
+      const bEnd   = new Date(bStart.getTime() + b.duration * 60 * 1000);
+      return slotStart < bEnd && slotEnd > bStart;
+    }).length;
+
+    return {
+      date: ws.date,
+      time: ws.time,
+      topic: ws.topic || '',
+      bookedCount,
+      maxParticipants,
+      spotsLeft: maxParticipants - bookedCount,
+      isExpired,
+      isFull: bookedCount >= maxParticipants,
+    };
+  });
+
+  return { slots };
+};
+
 export default {
   getPublicAvailability,
   getAvailableMentors,
@@ -1093,4 +1162,5 @@ export default {
   updateBookingStatus,
   addBookingFeedback,
   getWebinarSchedule,
+  getMentorWebinarStats,
 };
