@@ -313,20 +313,16 @@ function UserBookingsContent() {
                 : `yic-session-${booking._id}`;
               const sessionLink = booking.meetingLink || `https://meet.jit.si/${jitsiRoom}`;
 
-              // PA spans a full week — only expired after the week ends
-              const expired = pa
-                ? weekEnded
-                : now > new Date(booking.scheduledDate).getTime() + booking.duration * 60000;
-              const joinable = pa ? false : canJoinNow(booking.scheduledDate, booking.duration);
-              const countdown = pa ? null : getJoinCountdown(booking.scheduledDate);
+              const expired = now > new Date(booking.scheduledDate).getTime() + booking.duration * 60000;
+              const joinable = canJoinNow(booking.scheduledDate, booking.duration);
+              const countdown = getJoinCountdown(booking.scheduledDate);
 
-              // Prefer stored weekLabel for PA; fall back to computed range
               const dateLabel = pa
-                ? (booking.weekLabel || (() => {
+                ? (() => {
                     const ws = new Date(booking.scheduledDate);
                     const we = new Date(ws.getTime() + WEEK_MS);
                     return `${ws.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${we.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-                  })())
+                  })()
                 : new Date(booking.scheduledDate).toLocaleDateString('en-US', {
                     weekday: 'short', month: 'short', day: 'numeric',
                     year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -423,8 +419,7 @@ function UserBookingsContent() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2.5">
-                    {/* PA is email-coordinated — no live join buttons */}
-                    {!pa && booking.status === 'confirmed' && (() => {
+                    {booking.status === 'confirmed' && (() => {
                       if (expired) return (
                         <span className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-400 text-[11px] font-bold border border-slate-100 cursor-not-allowed">
                           <Clock className="w-3.5 h-3.5" />

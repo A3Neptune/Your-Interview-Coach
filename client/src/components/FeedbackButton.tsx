@@ -3,9 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquarePlus } from "lucide-react";
 import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
-
-const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
+import FeedbackModal from "./FeedbackModal";
 
 const SIZE = 42;            // collapsed: perfect circle
 const EXPANDED_W = 132;     // expanded: pill width

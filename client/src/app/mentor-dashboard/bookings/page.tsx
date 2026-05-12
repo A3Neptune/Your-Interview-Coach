@@ -470,7 +470,7 @@ export default function MentorBookingsPage() {
                           booking.status === "completed" ? "text-blue-400 bg-blue-500/10 border-blue-500/30" :
                           "text-zinc-400 bg-zinc-500/10 border-zinc-500/30"
                         }`}>
-                          {booking.status === "confirmed" && isCompletedBooking(booking) ? "ended" : booking.status}
+                          {booking.status === "confirmed" && date.getTime() <= nowMs ? "ended" : booking.status}
                         </span>
                       </div>
 
