@@ -32,10 +32,24 @@ export const validateBookingInput = (req, res, next) => {
 
       if (isNaN(bookingDate.getTime())) {
         errors.push('Invalid scheduledDate format');
-      } else if (bookingDate <= now) {
-        errors.push('scheduledDate must be in the future');
-      } else if (bookingDate > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) {
-        errors.push('Can only book up to 30 days in advance');
+      } else if (sessionType === 'placementAccelerator') {
+        // Week-range slot: bookable only within the first 3 days of the week (Mon–Wed).
+        // scheduledDate is always the Monday (week start).
+        const weekStart = new Date(bookingDate); weekStart.setHours(0, 0, 0, 0);
+        const bookingWindowEnd = new Date(weekStart); bookingWindowEnd.setDate(bookingWindowEnd.getDate() + 2); bookingWindowEnd.setHours(23, 59, 59, 999);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        if (today > bookingWindowEnd) {
+          errors.push('Booking window for this week has closed (available Mon–Wed only)');
+        }
+        if (weekStart > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) {
+          errors.push('Can only book up to 30 days in advance');
+        }
+      } else {
+        if (bookingDate <= now) {
+          errors.push('scheduledDate must be in the future');
+        } else if (bookingDate > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) {
+          errors.push('Can only book up to 30 days in advance');
+        }
       }
     }
 
