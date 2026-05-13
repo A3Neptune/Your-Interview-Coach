@@ -222,6 +222,10 @@ function SelectSlotContent() {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const timeSelectionRef = useRef<HTMLDivElement>(null);
 
+  // Active PA booking check — prevents user from booking duplicate PA
+  const [activePABooking, setActivePABooking] = useState<{ scheduledDate: string; weekLabel?: string | null; status: string } | null>(null);
+  const [paCheckLoading, setPaCheckLoading] = useState(false);
+
   const serviceId = searchParams.get("serviceId");
 
   useEffect(() => {
@@ -426,6 +430,43 @@ function SelectSlotContent() {
         prefetchMonthSlots(new Date(), resolvedDaysOff, resolvedBlocked);
       } else {
         setCalendarReady(true);
+        // Check if user already has an active PA booking
+        setPaCheckLoading(true);
+        try {
+          const res = await axios.get(`${API_URL}/bookings/student`, {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          });
+          if (res.data?.success && Array.isArray(res.data.bookings)) {
+            const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+            const PENDING_CUTOFF_MS = 30 * 60 * 1000;
+            const now = Date.now();
+            const active = res.data.bookings.find((b: any) => {
+              if (b.sessionType !== 'placementAccelerator') return false;
+              const isConfirmed = b.status === 'confirmed';
+              const isPendingPayment =
+                b.status === 'pending' &&
+                b.paymentStatus === 'pending' &&
+                b.createdAt &&
+                now - new Date(b.createdAt).getTime() < PENDING_CUTOFF_MS;
+              if (!isConfirmed && !isPendingPayment) return false;
+              const weekStillActive =
+                new Date(b.scheduledDate).getTime() + WEEK_MS > now;
+              return weekStillActive;
+            });
+            if (active) {
+              setActivePABooking({
+                scheduledDate: active.scheduledDate,
+                weekLabel: active.weekLabel,
+                status: active.status,
+              });
+            }
+          }
+        } catch {
+          // non-fatal — fall through to allow booking; server will block at submit
+        } finally {
+          setPaCheckLoading(false);
+        }
       }
     } catch {
       toast.error("Failed to load availability");
@@ -1203,8 +1244,80 @@ function SelectSlotContent() {
               </motion.div>
             )}
 
-            {/* ── Week Card Selector (placementAccelerator only) ────────────── */}
-            {serviceId === 'placementAccelerator' && (
+            {/* ── Active PA Booking Notice (replaces week selector) ────────────── */}
+            {serviceId === 'placementAccelerator' && activePABooking && (
+              <motion.div
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl shadow-sm overflow-hidden"
+                variants={ITEM_VARIANTS}
+              >
+                <div className="px-5 py-4 border-b border-blue-100 flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-blue-600" />
+                  <h3 className="text-sm font-bold text-blue-900">You already have an active Placement Accelerator</h3>
+                </div>
+                <div className="p-6">
+                  <div className="bg-white border border-blue-100 rounded-xl p-4 mb-5">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Your active week</p>
+                    <p className="text-base font-bold text-slate-900">
+                      {activePABooking.weekLabel || new Date(activePABooking.scheduledDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                        activePABooking.status === 'confirmed'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${activePABooking.status === 'confirmed' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                        {activePABooking.status === 'confirmed' ? 'Confirmed' : 'Awaiting payment'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-slate-600 leading-relaxed mb-2">
+                    To keep things simple, you can only have <strong>one active Placement Accelerator</strong> at a time.
+                  </p>
+                  <p className="text-sm text-slate-600 leading-relaxed mb-5">
+                    {activePABooking.status === 'confirmed'
+                      ? 'You\'ll be able to book a new programme once your current week ends, or after your mentor cancels the existing booking.'
+                      : 'Please complete the pending payment, or wait a few minutes for it to expire before booking again.'}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={() => router.push('/user-dashboard/bookings')}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition shadow-sm shadow-blue-200"
+                    >
+                      View My Booking <ChevronRight size={14} />
+                    </button>
+                    <button
+                      onClick={() => router.push('/')}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition"
+                    >
+                      Browse Other Sessions
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Week Card Loading Skeleton ────────────── */}
+            {serviceId === 'placementAccelerator' && paCheckLoading && (
+              <motion.div
+                className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
+                variants={ITEM_VARIANTS}
+              >
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <Sh className="w-44 h-5 rounded-md" />
+                </div>
+                <div className="p-5 space-y-3">
+                  <Sh className="w-full h-4 rounded-md" />
+                  <Sh className="w-full h-16 rounded-2xl" />
+                  <Sh className="w-full h-16 rounded-2xl" />
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Week Card Selector (placementAccelerator only, no active booking) ────────────── */}
+            {serviceId === 'placementAccelerator' && !activePABooking && !paCheckLoading && (
               <motion.div
                 className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-hidden"
                 variants={ITEM_VARIANTS}

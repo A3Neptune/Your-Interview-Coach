@@ -13,24 +13,44 @@ const baseStyles = `
   body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #0f172a; -webkit-font-smoothing: antialiased; padding: 32px 16px; }
   .wrap { max-width: 600px; margin: 0 auto; }
   .card { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 40px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.05); }
-  .content { padding: 36px 40px; }
+  .content { padding: 40px 44px; }
   p.body { font-size: 15px; color: #475569; line-height: 1.78; margin-bottom: 16px; }
-  .divider { height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); margin: 28px 0; }
+  .divider { height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); margin: 32px 0; }
   .btn { display: inline-block; padding: 15px 36px; background: #2563eb; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px; letter-spacing: -0.01em; box-shadow: 0 6px 20px rgba(37,99,235,0.30); font-family: 'DM Sans', sans-serif; }
-  .footer-area { background: #0f172a; padding: 28px 40px; text-align: center; }
-  .footer-brand { font-size: 14px; font-weight: 800; color: #f8fafc; letter-spacing: -0.01em; margin-bottom: 4px; }
+
+  /* FOOTER */
+  .footer-area { background: #0f172a; padding: 32px 40px 28px; text-align: center; position: relative; overflow: hidden; }
+  .footer-area::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 3px; background: linear-gradient(90deg, transparent, #2563eb, transparent); }
+  .footer-brand { font-size: 16px; font-weight: 800; color: #f8fafc; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .footer-tagline { font-size: 11px; font-weight: 600; color: #2563eb; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px; }
+  .footer-links { font-size: 12px; color: #64748b; margin-bottom: 16px; line-height: 1.7; }
+  .footer-links a { color: #94a3b8; text-decoration: none; font-weight: 500; }
+  .footer-links a:hover { color: #cbd5e1; }
   .footer-copy { font-size: 11px; color: #475569; line-height: 1.7; }
+  .footer-craft { display: inline-block; margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(148,163,184,0.10); font-size: 10px; font-weight: 600; color: #64748b; letter-spacing: 0.05em; }
+  .footer-craft a { color: #94a3b8; text-decoration: none; font-weight: 700; }
+  .footer-craft .a3-mark { display: inline-block; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.10); color: #93c5fd; font-weight: 800; letter-spacing: 0.02em; margin: 0 2px; }
+
   @media only screen and (max-width: 600px) {
     body { padding: 16px 8px; }
     .content { padding: 28px 24px; }
-    .footer-area { padding: 24px 20px; }
+    .footer-area { padding: 28px 20px 24px; }
   }
 `;
 
 const footer = (note = "You're receiving this because you have an account with YourInterviewCoach.") => `
   <div class="footer-area">
     <p class="footer-brand">YourInterviewCoach</p>
+    <p class="footer-tagline">Where preparation meets placement</p>
+    <p class="footer-links">
+      <a href="${BASE_URL}">Visit Website</a> &nbsp;·&nbsp;
+      <a href="${BASE_URL}/user-dashboard">Dashboard</a> &nbsp;·&nbsp;
+      <a href="${BASE_URL}/contact">Contact</a>
+    </p>
     <p class="footer-copy">&copy; ${new Date().getFullYear()} YourInterviewCoach. All rights reserved.<br>${note}</p>
+    <p class="footer-craft">
+      Designed &amp; engineered by <span class="a3-mark">A3 Neptune</span> &nbsp;·&nbsp; Bengaluru
+    </p>
   </div>
 `;
 
