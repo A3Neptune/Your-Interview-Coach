@@ -11,10 +11,12 @@ import FAQSection from "@/components/sections/FAQSection";
 import CTASectionPremium from "@/components/sections/CTASectionPremium";
 import StandardFooter from "@/components/StandardFooter";
 import ServicesPopup from "@/components/ServicesPopup";
+import HomePageTracker from "@/components/HomePageTracker";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      <HomePageTracker />
       <Navbar />
       <HeroSection />
       <GroupDiscussionSection />

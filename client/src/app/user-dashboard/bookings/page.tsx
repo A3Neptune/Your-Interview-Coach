@@ -419,7 +419,8 @@ function UserBookingsContent() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2.5">
-                    {booking.status === 'confirmed' && (() => {
+                    {/* PA is email + WhatsApp coordinated — no live join/countdown UI */}
+                    {!pa && booking.status === 'confirmed' && (() => {
                       if (expired) return (
                         <span className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-400 text-[11px] font-bold border border-slate-100 cursor-not-allowed">
                           <Clock className="w-3.5 h-3.5" />

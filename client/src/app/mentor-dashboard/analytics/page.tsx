@@ -7,10 +7,23 @@ import {
   Users,
   DollarSign,
   BookOpen,
+  Eye,
+  Globe,
+  Calendar as CalendarIcon,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from 'sonner';
 import axios from "axios";
+
+type HomeStatsWindow = { hits: number; unique: number };
+type HomeStats = {
+  today: HomeStatsWindow;
+  week: HomeStatsWindow;
+  month: HomeStatsWindow;
+  allTime: HomeStatsWindow;
+  lastViewAt: string | null;
+};
 
 export default function AnalyticsPage() {
   const [stats, setStats] = useState<any[]>([]);
@@ -18,10 +31,33 @@ export default function AnalyticsPage() {
   const [sessionTypes, setSessionTypes] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [homeStats, setHomeStats] = useState<HomeStats | null>(null);
+  const [homeStatsLoading, setHomeStatsLoading] = useState(true);
 
   useEffect(() => {
     fetchAnalyticsData();
+    fetchHomeStats();
   }, []);
+
+  const fetchHomeStats = async () => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setHomeStatsLoading(false);
+        return;
+      }
+      const res = await axios.get(`${API_URL}/analytics/home-stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 8000,
+      });
+      if (res.data?.success) setHomeStats(res.data.stats);
+    } catch {
+      // non-fatal
+    } finally {
+      setHomeStatsLoading(false);
+    }
+  };
 
   const fetchAnalyticsData = async () => {
     try {
@@ -253,8 +289,73 @@ export default function AnalyticsPage() {
   const maxRevenue =
     revenueData.length > 0 ? Math.max(...revenueData.map((d) => d.revenue)) : 1;
 
+  const homeStatCards: { label: string; window: HomeStatsWindow | null; icon: any; gradient: string; border: string }[] = [
+    { label: "Today",      window: homeStats?.today    ?? null, icon: Activity,      gradient: "from-blue-500/15 to-cyan-500/10",     border: "border-blue-500/25" },
+    { label: "This Week",  window: homeStats?.week     ?? null, icon: CalendarIcon,  gradient: "from-violet-500/15 to-fuchsia-500/10", border: "border-violet-500/25" },
+    { label: "This Month", window: homeStats?.month    ?? null, icon: Globe,         gradient: "from-emerald-500/15 to-teal-500/10",   border: "border-emerald-500/25" },
+    { label: "All Time",   window: homeStats?.allTime  ?? null, icon: Eye,           gradient: "from-amber-500/15 to-orange-500/10",   border: "border-amber-500/25" },
+  ];
+
   return (
     <div className="space-y-8">
+      {/* Home Page Traffic */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-900/50 to-black border border-zinc-800 rounded-2xl p-6 md:p-8">
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+              <Globe size={10} />
+              Home Page Traffic
+            </div>
+            <h2 className="text-xl font-bold text-white">Visitors on yourinterviewcoach.in</h2>
+            <p className="text-xs text-zinc-400 mt-1">
+              Tracking unique visitors and total page views on the homepage
+              {homeStats?.lastViewAt && (
+                <>
+                  <span className="mx-1.5 text-zinc-600">·</span>
+                  Last visit {new Date(homeStats.lastViewAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {homeStatCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.label}
+                className={`bg-gradient-to-br ${card.gradient} border ${card.border} rounded-xl p-5 transition`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider">{card.label}</p>
+                  <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+                    <Icon size={14} className="text-white" />
+                  </div>
+                </div>
+                {homeStatsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-7 w-16 bg-white/10 rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-white/5 rounded animate-pulse" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-1.5 mb-1">
+                      <p className="text-3xl font-bold text-white tabular-nums">{(card.window?.unique ?? 0).toLocaleString()}</p>
+                      <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">unique</span>
+                    </div>
+                    <p className="text-xs text-zinc-400">
+                      <span className="font-semibold text-zinc-300 tabular-nums">{(card.window?.hits ?? 0).toLocaleString()}</span>
+                      <span className="ml-1">total hits</span>
+                    </p>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {

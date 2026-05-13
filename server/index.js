@@ -25,6 +25,7 @@ import courseAdvancedRoutes from './routes/courseAdvanced.js';
 import uploadRoutes from './routes/upload.js';
 import enrollmentRoutes from './routes/enrollments.js';
 import feedbackRouter from './routes/feedback.js';
+import analyticsRoutes from './routes/analytics.js';
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use('/api/advanced', courseAdvancedRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Career Coach LMS API' });

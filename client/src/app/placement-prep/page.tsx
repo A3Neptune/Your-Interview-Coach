@@ -1505,8 +1505,8 @@ export default function PlacementAccelerator() {
         .pa-ticker { animation: tickerMove 28s linear infinite; }
         .pa-ticker:hover { animation-play-state: paused; }
 
-        .mentor-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: clamp(2rem,5vw,5rem); align-items: center; max-width: 1000px; margin: 0 auto; }
-        @media(max-width:768px) { .mentor-grid { grid-template-columns: 1fr !important; } }
+        .mentor-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(3rem,5vw,5.5rem); align-items: center; max-width: 1060px; margin: 0 auto; padding: clamp(1rem,3vw,2.5rem) 0; }
+        @media(max-width:820px) { .mentor-grid { grid-template-columns: 1fr !important; gap: clamp(3rem,7vw,4rem) !important; } }
 
         .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         @media(max-width:640px) { .pricing-grid { grid-template-columns: 1fr !important; } }
@@ -1636,19 +1636,91 @@ export default function PlacementAccelerator() {
               {/* Photo */}
               <Reveal delay={0.1}>
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                  <div style={{ position: "relative", width: "100%", maxWidth: 320 }}>
+                  <div style={{ position: "relative", width: "100%", maxWidth: 360 }}>
+                    {/* Decorative offset frame behind photo */}
+                    <div aria-hidden style={{
+                      position: "absolute", inset: 0,
+                      transform: "translate(14px,14px)",
+                      borderRadius: 26,
+                      border: `1.5px solid ${T.blue}`,
+                      opacity: 0.55,
+                      pointerEvents: "none",
+                    }} />
+                    <div aria-hidden style={{
+                      position: "absolute", inset: 0,
+                      transform: "translate(-10px,-10px)",
+                      borderRadius: 26,
+                      background: "linear-gradient(135deg,rgba(37,99,235,0.10),rgba(37,99,235,0.0))",
+                      pointerEvents: "none",
+                    }} />
+
+                    {/* Main photo card */}
                     <div style={{
-                      borderRadius: 24, overflow: "hidden", aspectRatio: "3/4",
-                      position: "relative", background: "linear-gradient(135deg,#dbeafe,#bfdbfe)",
-                      boxShadow: "0 28px 72px rgba(37,99,235,0.16)",
+                      position: "relative",
+                      borderRadius: 24, overflow: "hidden", aspectRatio: "4/5",
+                      background: "linear-gradient(135deg,#dbeafe,#bfdbfe)",
+                      boxShadow: "0 32px 80px rgba(37,99,235,0.22), 0 6px 18px rgba(15,23,42,0.08)",
+                      border: "1px solid rgba(37,99,235,0.12)",
                     }}>
-                      <Image src="/neel-aashish-seru.jpeg" alt="Neel Aashish Seru" fill className="object-cover object-top" />
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, background: "linear-gradient(to top,rgba(15,23,42,0.28),transparent)" }} />
+                      <Image
+                        src="/neel-new.jpeg"
+                        alt="Neel Aashish Seru — Interview Coach"
+                        fill
+                        className="object-cover object-center"
+                        priority
+                      />
+                      {/* Top dark wash for the badge to read on */}
+                      <div style={{
+                        position: "absolute", top: 0, left: 0, right: 0, height: 110,
+                        background: "linear-gradient(to bottom,rgba(15,23,42,0.45),transparent)",
+                        pointerEvents: "none",
+                      }} />
+                      {/* Bottom dark wash */}
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, height: 160,
+                        background: "linear-gradient(to top,rgba(15,23,42,0.55),transparent)",
+                        pointerEvents: "none",
+                      }} />
+
+                      {/* Top-left "verified" pill */}
+                      <div style={{
+                        position: "absolute", top: 16, left: 16,
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        background: "rgba(255,255,255,0.92)",
+                        backdropFilter: "blur(8px)",
+                        WebkitBackdropFilter: "blur(8px)",
+                        border: "1px solid rgba(37,99,235,0.18)",
+                        borderRadius: 99, padding: "5px 11px",
+                      }}>
+                        <BadgeCheck size={12} style={{ color: T.blue }} />
+                        <span style={{ fontSize: 10, fontWeight: 800, color: T.ink, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                          Verified Mentor
+                        </span>
+                      </div>
+
+                      {/* Bottom-overlay name plate */}
+                      <div style={{
+                        position: "absolute", left: 18, right: 18, bottom: 18,
+                        color: "#fff",
+                      }}>
+                        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.78)", marginBottom: 4 }}>
+                          Your Mentor
+                        </p>
+                        <p style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
+                          Neel Aashish Seru
+                        </p>
+                        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.78)", fontWeight: 500, marginTop: 4 }}>
+                          12+ yrs · Tech Mahindra · IndiaMART
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Floating success badge — bottom right */}
                     <div style={{
-                      position: "absolute", bottom: -16, right: -16, background: "#fff",
+                      position: "absolute", bottom: -18, right: -14,
+                      background: "#fff",
                       borderRadius: 16, padding: "12px 16px",
-                      boxShadow: "0 10px 36px rgba(37,99,235,0.14)",
+                      boxShadow: "0 14px 40px rgba(37,99,235,0.18), 0 2px 6px rgba(15,23,42,0.06)",
                       border: "1px solid rgba(37,99,235,0.10)",
                       display: "flex", alignItems: "center", gap: 10,
                     }}>
@@ -1657,12 +1729,27 @@ export default function PlacementAccelerator() {
                         background: "rgba(37,99,235,0.09)", border: "1px solid rgba(37,99,235,0.15)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
-                        <BadgeCheck size={18} style={{ color: T.blue }} />
+                        <TrendingUp size={17} style={{ color: T.blue }} />
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 800, color: T.ink, lineHeight: 1 }}>94% Success</p>
-                        <p style={{ fontSize: 10, color: T.muted, fontWeight: 500, marginTop: 2 }}>Placement Rate</p>
+                        <p style={{ fontSize: 14, fontWeight: 900, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>94%</p>
+                        <p style={{ fontSize: 10, color: T.muted, fontWeight: 600, marginTop: 2 }}>Placement Success</p>
                       </div>
+                    </div>
+
+                    {/* Floating "5,000+" badge — top right (outside photo) */}
+                    <div style={{
+                      position: "absolute", top: -14, right: -10,
+                      background: "#0f172a",
+                      borderRadius: 12, padding: "8px 12px",
+                      boxShadow: "0 10px 28px rgba(15,23,42,0.20)",
+                      border: "1px solid rgba(37,99,235,0.30)",
+                      display: "flex", alignItems: "center", gap: 8,
+                    }}>
+                      <Users size={13} style={{ color: "#93c5fd" }} />
+                      <p style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                        5,000+ <span style={{ color: "#94a3b8", fontWeight: 600 }}>coached</span>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1671,24 +1758,59 @@ export default function PlacementAccelerator() {
               {/* Bio */}
               <Reveal delay={0.15}>
                 <div>
-                  <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>
-                    12+ years · Both sides of the table
-                  </p>
-                  <h3 style={{ fontSize: "clamp(26px,3.2vw,42px)", fontWeight: 800, letterSpacing: "-0.03em", color: T.ink, lineHeight: 1.1, marginBottom: 16 }}>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "5px 12px", borderRadius: 99,
+                    background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.18)",
+                    marginBottom: 14,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.blue, display: "block" }} />
+                    <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.blue }}>
+                      12+ years · Both sides of the table
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: "clamp(28px,3.4vw,46px)", fontWeight: 800, letterSpacing: "-0.03em", color: T.ink, lineHeight: 1.05, marginBottom: 18 }}>
                     Neel Aashish Seru
                   </h3>
-                  <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.78, marginBottom: 28, maxWidth: 440 }}>
-                    Most rejection emails look the same. But the notes inside that panel room are specific — and avoidable. Neel has 12+ years of experience across Tech Mahindra and IndiaMART, sitting on hiring panels. He knows exactly what interviewers note down when they decide to pass.
+
+                  {/* Pull quote */}
+                  <div style={{
+                    position: "relative",
+                    padding: "16px 20px",
+                    borderLeft: `3px solid ${T.blue}`,
+                    background: "linear-gradient(90deg,rgba(37,99,235,0.06),rgba(37,99,235,0))",
+                    borderRadius: "0 12px 12px 0",
+                    marginBottom: 22,
+                  }}>
+                    <p style={{ fontSize: 15, color: T.ink, lineHeight: 1.65, fontWeight: 500, fontStyle: "italic" }}>
+                      &ldquo;Most rejection emails look the same. But the notes inside the panel room are specific — and avoidable.&rdquo;
+                    </p>
+                  </div>
+
+                  <p style={{ fontSize: 14.5, color: T.muted, lineHeight: 1.78, marginBottom: 26, maxWidth: 460 }}>
+                    Neel has 12+ years of experience across <strong style={{ color: T.soft, fontWeight: 700 }}>Tech Mahindra</strong> and <strong style={{ color: T.soft, fontWeight: 700 }}>IndiaMART</strong>, sitting on hiring panels alongside senior decision-makers. He knows exactly what interviewers note down when they decide to pass — and how to make sure they write something different about you.
                   </p>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 30 }}>
+                  {/* Credentials — 2x2 stat-card grid */}
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
+                    marginBottom: 28,
+                  }}>
                     {[
-                      { icon: Award, text: "12+ years inside corporate hiring panels" },
-                      { icon: Users, text: "5,000+ candidates personally coached" },
-                      { icon: TrendingUp, text: "Tech Mahindra & IndiaMART — both sides" },
-                      { icon: ShieldCheck, text: "No scripts, no fluff — only real frameworks" },
-                    ].map(({ icon: Icon, text }) => (
-                      <div key={text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      { icon: Award, text: "12+ years on hiring panels", sub: "Corporate experience" },
+                      { icon: Users, text: "5,000+ candidates", sub: "Personally coached" },
+                      { icon: TrendingUp, text: "Tech Mahindra · IndiaMART", sub: "Both sides of the table" },
+                      { icon: ShieldCheck, text: "No scripts, no fluff", sub: "Only real frameworks" },
+                    ].map(({ icon: Icon, text, sub }) => (
+                      <div key={text} style={{
+                        display: "flex", alignItems: "flex-start", gap: 11,
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        background: "#fff",
+                        border: "1px solid rgba(37,99,235,0.10)",
+                        boxShadow: "0 2px 8px rgba(15,23,42,0.03)",
+                      }}>
                         <div style={{
                           width: 32, height: 32, borderRadius: 9,
                           background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.14)",
@@ -1696,12 +1818,22 @@ export default function PlacementAccelerator() {
                         }}>
                           <Icon size={14} style={{ color: T.blue }} />
                         </div>
-                        <span style={{ fontSize: 14, color: T.soft, fontWeight: 500 }}>{text}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13, color: T.ink, fontWeight: 700, lineHeight: 1.25, letterSpacing: "-0.01em" }}>{text}</p>
+                          <p style={{ fontSize: 11, color: T.muted, fontWeight: 500, marginTop: 2 }}>{sub}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  <Link href="/about" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: T.blue, textDecoration: "none" }}>
+                  <Link href="/about" style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    fontSize: 13, fontWeight: 700, color: T.blue, textDecoration: "none",
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    background: "rgba(37,99,235,0.06)",
+                    border: "1px solid rgba(37,99,235,0.18)",
+                  }}>
                     Read the full story <ArrowRight size={13} />
                   </Link>
                 </div>
