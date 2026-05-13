@@ -434,8 +434,9 @@ export default function DashboardPage() {
               <>
                 <div className="grid md:grid-cols-3 gap-5">
                   {upcomingBookings.map((booking) => {
-                    const joinable = canJoinNow(booking.scheduledDate, booking.duration);
-                    const countdown = getJoinCountdown(booking.scheduledDate);
+                    const pa = isPA(booking);
+                    const joinable = !pa && canJoinNow(booking.scheduledDate, booking.duration);
+                    const countdown = !pa ? getJoinCountdown(booking.scheduledDate) : null;
                     return (
                       <div key={booking._id} className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden">
                         {/* card colour accent */}
@@ -468,7 +469,12 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          {booking.meetingLink && (
+                          {pa ? (
+                            <div className="mt-auto w-full py-2.5 rounded-xl bg-blue-50 text-blue-700 text-xs font-semibold flex items-center justify-center gap-2 border border-blue-100">
+                              <Clock className="w-3.5 h-3.5" />
+                              Schedule confirmed via WhatsApp
+                            </div>
+                          ) : booking.meetingLink && (
                             joinable ? (
                               <a
                                 href={booking.meetingLink}
