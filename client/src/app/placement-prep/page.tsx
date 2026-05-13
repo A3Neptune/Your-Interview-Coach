@@ -1682,22 +1682,6 @@ export default function PlacementAccelerator() {
                         pointerEvents: "none",
                       }} />
 
-                      {/* Top-left "verified" pill */}
-                      <div style={{
-                        position: "absolute", top: 16, left: 16,
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        background: "rgba(255,255,255,0.92)",
-                        backdropFilter: "blur(8px)",
-                        WebkitBackdropFilter: "blur(8px)",
-                        border: "1px solid rgba(37,99,235,0.18)",
-                        borderRadius: 99, padding: "5px 11px",
-                      }}>
-                        <BadgeCheck size={12} style={{ color: T.blue }} />
-                        <span style={{ fontSize: 10, fontWeight: 800, color: T.ink, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                          Verified Mentor
-                        </span>
-                      </div>
-
                       {/* Bottom-overlay name plate */}
                       <div style={{
                         position: "absolute", left: 18, right: 18, bottom: 18,
@@ -1715,42 +1699,6 @@ export default function PlacementAccelerator() {
                       </div>
                     </div>
 
-                    {/* Floating success badge — bottom right */}
-                    <div style={{
-                      position: "absolute", bottom: -18, right: -14,
-                      background: "#fff",
-                      borderRadius: 16, padding: "12px 16px",
-                      boxShadow: "0 14px 40px rgba(37,99,235,0.18), 0 2px 6px rgba(15,23,42,0.06)",
-                      border: "1px solid rgba(37,99,235,0.10)",
-                      display: "flex", alignItems: "center", gap: 10,
-                    }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: "rgba(37,99,235,0.09)", border: "1px solid rgba(37,99,235,0.15)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <TrendingUp size={17} style={{ color: T.blue }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 14, fontWeight: 900, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>94%</p>
-                        <p style={{ fontSize: 10, color: T.muted, fontWeight: 600, marginTop: 2 }}>Placement Success</p>
-                      </div>
-                    </div>
-
-                    {/* Floating "5,000+" badge — top right (outside photo) */}
-                    <div style={{
-                      position: "absolute", top: -14, right: -10,
-                      background: "#0f172a",
-                      borderRadius: 12, padding: "8px 12px",
-                      boxShadow: "0 10px 28px rgba(15,23,42,0.20)",
-                      border: "1px solid rgba(37,99,235,0.30)",
-                      display: "flex", alignItems: "center", gap: 8,
-                    }}>
-                      <Users size={13} style={{ color: "#93c5fd" }} />
-                      <p style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
-                        5,000+ <span style={{ color: "#94a3b8", fontWeight: 600 }}>coached</span>
-                      </p>
-                    </div>
                   </div>
                 </div>
               </Reveal>
