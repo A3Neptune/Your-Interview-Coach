@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ProfileDropdown from "./ProfileDropdown";
+import LaunchBanner from "./LaunchBanner";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -16,16 +17,17 @@ const navLinks = [
   { name: "Contact", href: "/contact" },
 ];
 
-interface NavbarProps {
-  bannerHeight?: number;
-}
-
-export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
+export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setMobileMenu] = useState(false);
+  const [bannerHeight, setBannerHeight] = useState(0);
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
   const logoHref = isLoggedIn ? "/dashboard" : "/";
+
+  const handleBannerHeight = useCallback((h: number) => {
+    setBannerHeight(h);
+  }, []);
 
   const handleLogoClick = () => {
     setMobileMenu(false);
@@ -53,11 +55,13 @@ export default function Navbar({ bannerHeight = 0 }: NavbarProps) {
         }
       `}</style>
 
+      <LaunchBanner onHeightChange={handleBannerHeight} />
+
       {/* ── NAV SHELL ── */}
       <nav
         className="nav-root fixed left-0 right-0 z-50 w-full"
         style={{
-          top: 0,
+          top: bannerHeight,
           background: "rgba(255, 255, 255, 0.6)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",

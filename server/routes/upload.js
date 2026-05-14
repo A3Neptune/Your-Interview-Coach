@@ -251,7 +251,7 @@ router.post('/resume', verifyToken, uploadDocument.single('file'), async (req, r
       });
     }
 
-    const result = await uploadToCloudinary(req.file, 'resumes', 'auto');
+    const result = await uploadToCloudinary(req.file, 'resumes', 'raw');
 
     res.json({
       success: true,

@@ -1373,7 +1373,7 @@ function ModuleCard({ mod, index }: { mod: typeof MODULES[number]; index: number
             borderRadius: 99, padding: "3px 10px", flexShrink: 0,
           }}>
             <span style={{ fontSize: 10, fontWeight: 800, color: mod.accent, letterSpacing: "0.04em" }}>
-              Included · ₹4,999
+              Included · ₹2,100
             </span>
           </div>
         </div>
@@ -1440,8 +1440,9 @@ function PricingContextStrip() {
         {/* Price + CTA */}
         <div style={{ display: "flex", alignItems: "center", gap: 20, flexShrink: 0 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-              <span style={{ fontSize: 28, fontWeight: 900, color: T.blue, letterSpacing: "-0.04em", lineHeight: 1 }}>₹4,999</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+              <span style={{ fontSize: 16, fontWeight: 600, color: T.muted, textDecoration: "line-through", letterSpacing: "-0.01em", lineHeight: 1, opacity: 0.7 }}>₹6,999</span>
+              <span style={{ fontSize: 28, fontWeight: 900, color: T.blue, letterSpacing: "-0.04em", lineHeight: 1 }}>₹2,100</span>
               <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>+ GST</span>
             </div>
             <p style={{ fontSize: 10.5, color: T.muted, marginTop: 2, fontWeight: 500 }}>All 4 modules · 5 hours live</p>
@@ -1565,8 +1566,9 @@ export default function PlacementAccelerator() {
               background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)",
               borderRadius: 12, padding: "10px 18px", marginBottom: 30,
             }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.muted, textDecoration: "line-through", opacity: 0.7 }}>₹6,999</span>
               <IndianRupee size={14} style={{ color: T.blue }} />
-              <span style={{ fontSize: 16, fontWeight: 900, color: T.blue, letterSpacing: "-0.02em" }}>4,999</span>
+              <span style={{ fontSize: 16, fontWeight: 900, color: T.blue, letterSpacing: "-0.02em" }}>2,100</span>
               <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>+ 18% GST</span>
               <span style={{ width: 1, height: 16, background: "rgba(37,99,235,0.2)" }} />
               <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>4 modules · 5 hrs · 1:1 feedback</span>
@@ -1603,9 +1605,9 @@ export default function PlacementAccelerator() {
             <div className="pa-ticker" style={{ display: "flex", gap: 36, paddingRight: 36 }}>
               {[
                 "4 Modules", "✦", "5 Hours of Live Prep", "✦", "Resume + GD + Interview + Mock", "✦",
-                "₹4,999 All-Inclusive", "✦", "1:1 Feedback", "✦", "Limited Seats",
+                "₹2,100 Launch Price", "✦", "1:1 Feedback", "✦", "Limited Seats",
                 "4 Modules", "✦", "5 Hours of Live Prep", "✦", "Resume + GD + Interview + Mock", "✦",
-                "₹4,999 All-Inclusive", "✦", "1:1 Feedback", "✦", "Limited Seats",
+                "₹2,100 Launch Price", "✦", "1:1 Feedback", "✦", "Limited Seats",
               ].map((t, i) => (
                 <span key={i} style={{
                   fontSize: 11, letterSpacing: "0.07em", textTransform: "uppercase",
@@ -1851,11 +1853,14 @@ export default function PlacementAccelerator() {
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>All 4 modules included at</span>
                   <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 4,
+                    display: "inline-flex", alignItems: "center", gap: 6,
                     background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.18)",
                     borderRadius: 99, padding: "3px 11px",
                     fontSize: 13, fontWeight: 800, color: T.blue,
-                  }}>₹4,999 total</span>
+                  }}>
+                    <span style={{ textDecoration: "line-through", fontWeight: 500, color: T.muted, fontSize: 11, opacity: 0.7 }}>₹6,999</span>
+                    ₹2,100 total
+                  </span>
                 </div>
               </div>
             </Reveal>
@@ -1995,13 +2000,17 @@ export default function PlacementAccelerator() {
                       background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)",
                       borderRadius: 14, padding: "16px 18px", marginBottom: 22,
                     }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: T.muted, textDecoration: "line-through", opacity: 0.6 }}>₹6,999</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, background: "#dcfce7", color: "#16a34a", borderRadius: 6, padding: "2px 7px", letterSpacing: "0.04em" }}>70% OFF</span>
+                      </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                        <span style={{ fontSize: 40, fontWeight: 900, color: T.blue, letterSpacing: "-0.04em", lineHeight: 1 }}>₹4,999</span>
+                        <span style={{ fontSize: 40, fontWeight: 900, color: T.blue, letterSpacing: "-0.04em", lineHeight: 1 }}>₹2,100</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>+ ₹900 GST (18%)</span>
+                        <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>+ ₹378 GST (18%)</span>
                         <span style={{ width: 1, height: 12, background: "rgba(37,99,235,0.15)" }} />
-                        <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>Total: ₹5,899</span>
+                        <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>Total: ₹2,478</span>
                       </div>
                     </div>
 
@@ -2151,14 +2160,16 @@ export default function PlacementAccelerator() {
                 background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.14)",
                 borderRadius: 14, padding: "10px 20px", marginBottom: 28,
               }}>
-                <span style={{ fontSize: 22, fontWeight: 900, color: T.blue, letterSpacing: "-0.03em" }}>₹4,999</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: T.muted, textDecoration: "line-through", opacity: 0.6 }}>₹6,999</span>
+                <span style={{ fontSize: 22, fontWeight: 900, color: T.blue, letterSpacing: "-0.03em" }}>₹2,100</span>
+                <span style={{ fontSize: 10, fontWeight: 700, background: "#dcfce7", color: "#16a34a", borderRadius: 6, padding: "2px 7px" }}>70% OFF</span>
                 <span style={{ width: 1, height: 16, background: "rgba(37,99,235,0.2)" }} />
                 <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>4 modules · 5 hrs · +18% GST</span>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
                 <Link href="/select-slot?serviceId=placementAccelerator" className="pa-cta-btn" style={{ fontSize: 15 }}>
-                  Secure my seat — ₹4,999
+                  Secure my seat — ₹2,100
                   <ArrowRight size={15} />
                 </Link>
                 <Link href="/contact" className="pa-ghost-btn">

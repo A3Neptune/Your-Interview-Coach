@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, Check, Sparkles, ArrowRight, MessageCircle, Calendar, ChevronDown } from 'lucide-react';
+import axios from 'axios';
+import { Mail, MapPin, Clock, Send, Check, ArrowRight, MessageCircle, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import StandardFooter from '@/components/StandardFooter';
 
@@ -26,9 +27,7 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
 }
 
 const contactInfo = [
-  { icon: Mail, label: 'Email us', value: 'neel.yourinterviewcoach@gmail.com', sub: 'We reply within 2 hours', accent: '#2563eb', href: 'mailto:hello@yourinterviewcoach.com' },
-  { icon: Phone, label: 'Call us', value: '+91 98765 43210', sub: 'Mon–Sat, 9 AM–7 PM IST', accent: '#0891b2', href: 'tel:+919876543210' },
-  { icon: Calendar, label: 'Book a call', value: 'Free 15-min discovery', sub: 'No commitment needed', accent: '#7c3aed', href: '/select-slot' },
+  { icon: Mail, label: 'Email us', value: 'neel.yourinterviewcoach@gmail.com', sub: 'We reply within 2 hours', accent: '#2563eb', href: 'mailto:neel.yourinterviewcoach@gmail.com' },
   { icon: MapPin, label: 'Based in', value: 'Chandigarh, Mohali', sub: 'Serving clients worldwide', accent: '#059669', href: '#' },
 ];
 
@@ -42,6 +41,7 @@ export default function ContactPage() {
   const [touched, setTouched] = useState<TouchedState>({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [topicOpen, setTopicOpen] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
 
@@ -62,9 +62,17 @@ export default function ContactPage() {
     setTouched({ name: true, email: true, topic: true, message: true });
     if (!isValid) return;
     setSending(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setSending(false);
-    setSent(true);
+    setSubmitError('');
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      await axios.post(`${API_URL}/contact`, { name: form.name, email: form.email, topic: form.topic, message: form.message });
+      setSent(true);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } }; message?: string })?.response?.data?.error || 'Something went wrong. Please try again.';
+      setSubmitError(msg);
+    } finally {
+      setSending(false);
+    }
   }
 
   function field(key: keyof FormState) {
@@ -135,7 +143,7 @@ export default function ContactPage() {
 
       {/* ── INFO CARDS ROW ── */}
       <section className="px-6 pb-8">
-        <div className="max-w-5xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-4">
           {contactInfo.map((c,i)=>{
             const Icon=c.icon;
             return (
@@ -176,7 +184,7 @@ export default function ContactPage() {
                       </div>
                       <h3 style={{ fontSize:'22px',fontWeight:700,color:'#0f172a',marginBottom:'8px' }}>Message sent!</h3>
                       <p style={{ fontSize:'14px',color:'#64748b',lineHeight:1.6 }}>We'll get back to you within 2 hours. Check your inbox for a confirmation.</p>
-                      <button onClick={()=>{setSent(false);setForm({name:'',email:'',topic:'',message:''});setTouched({});}} style={{ marginTop:'20px',padding:'10px 22px',borderRadius:'10px',fontSize:'13px',fontWeight:600,color:'#2563eb',background:'rgba(37,99,235,0.08)',border:'1.5px solid rgba(37,99,235,0.2)',cursor:'pointer',transition:'background 0.2s ease' }}>
+                      <button onClick={()=>{setSent(false);setForm({name:'',email:'',topic:'',message:''});setTouched({});setSubmitError('');}} style={{ marginTop:'20px',padding:'10px 22px',borderRadius:'10px',fontSize:'13px',fontWeight:600,color:'#2563eb',background:'rgba(37,99,235,0.08)',border:'1.5px solid rgba(37,99,235,0.2)',cursor:'pointer',transition:'background 0.2s ease' }}>
                         Send another
                       </button>
                     </div>
@@ -259,6 +267,11 @@ export default function ContactPage() {
                         </div>
                       </div>
 
+                      {/* Submit error */}
+                      {submitError && (
+                        <p style={{ fontSize:'12.5px',color:'#ef4444',marginBottom:'12px',padding:'10px 12px',background:'rgba(239,68,68,0.06)',borderRadius:'8px',border:'1px solid rgba(239,68,68,0.2)' }}>{submitError}</p>
+                      )}
+
                       {/* Submit */}
                       <button
                         type="submit"
@@ -295,13 +308,12 @@ export default function ContactPage() {
                 <div style={{ height:'3px',background:'linear-gradient(90deg,#2563eb,transparent)',borderRadius:'2px',marginBottom:'18px' }} />
                 <h3 style={{ fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'14px' }}>Quick access</h3>
                 {[
-                  { label:'Book a session', sub:'Pick your slot now', icon:Calendar, accent:'#2563eb', href:'/services' },
+                  { label:'Book a session', sub:'Pick your slot now', icon:ArrowRight, accent:'#2563eb', href:'/select-slot' },
                   { label:'View all services', sub:'See what we offer', icon:ArrowRight, accent:'#0891b2', href:'/services' },
-                  { label:'Start free call', sub:'15-min no-commitment chat', icon:Phone, accent:'#7c3aed', href:'/select-slot' },
                 ].map((item,i)=>{
                   const Icon=item.icon;
                   return (
-                    <a key={i} href={item.href} style={{ display:'flex',alignItems:'center',gap:'12px',padding:'11px 12px',borderRadius:'12px',textDecoration:'none',transition:'background 0.18s ease',marginBottom: i===2?0:'6px',background:'rgba(248,250,255,0.6)',border:'1px solid rgba(219,234,254,0.5)' }}
+                    <a key={i} href={item.href} style={{ display:'flex',alignItems:'center',gap:'12px',padding:'11px 12px',borderRadius:'12px',textDecoration:'none',transition:'background 0.18s ease',marginBottom: i===1?0:'6px',background:'rgba(248,250,255,0.6)',border:'1px solid rgba(219,234,254,0.5)' }}
                       onMouseEnter={e=>(e.currentTarget as HTMLAnchorElement).style.background='rgba(37,99,235,0.05)'}
                       onMouseLeave={e=>(e.currentTarget as HTMLAnchorElement).style.background='rgba(248,250,255,0.6)'}
                     >

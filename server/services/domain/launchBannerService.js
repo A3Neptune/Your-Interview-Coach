@@ -16,15 +16,15 @@ const getActiveBanner = async () => {
   if (!banner) {
     banner = new LaunchBanner({
       isActive: true,
-      message: 'Grand Launch: All sessions',
-      originalPrice: 999,
-      discountedPrice: 9,
-      ctaText: 'Claim Now',
-      ctaLink: '/signup',
-      countdownHours: 48,
-      showCountdown: true,
-      badgeText: 'Launch Offer',
-      savePercentage: 99,
+      message: 'Soft Launch — Placement Accelerator at launch price',
+      originalPrice: 6999,
+      discountedPrice: 2100,
+      ctaText: 'Claim Offer',
+      ctaLink: '/placement-prep#pricing',
+      countdownHours: 72,
+      showCountdown: false,
+      badgeText: 'Soft Launch',
+      savePercentage: 70,
     });
     await banner.save();
   }

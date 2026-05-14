@@ -29,6 +29,13 @@ type SessionTypeKey =
 
 /* ──────────────────────── Constants ──────────────────────── */
 
+const toCloudinaryDownloadUrl = (url: string): string => {
+  if (!url) return url;
+  // Insert fl_attachment after /upload/ so Cloudinary forces a file download
+  // Works for both /image/upload/ (existing) and /raw/upload/ (new) resource types
+  return url.replace(/(\/upload\/)/, "$1fl_attachment/");
+};
+
 const normalizeSessionType = (sessionType?: string): SessionTypeKey => {
   const value = (sessionType || "").trim();
   if (
@@ -594,7 +601,7 @@ export default function StudentsPage() {
                       <td className="px-6 py-4">
                         {(isResumeAnalysis || normalizedType === "mockInterview") && resumeUrl ? (
                           <a
-                            href={resumeUrl}
+                            href={toCloudinaryDownloadUrl(resumeUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-500/25 transition"

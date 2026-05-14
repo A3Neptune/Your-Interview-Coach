@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 interface LaunchBannerProps {
   onVisibilityChange?: (isVisible: boolean) => void;
+  onHeightChange?: (h: number) => void;
 }
 
 interface BannerData {
@@ -21,7 +22,7 @@ interface BannerData {
   savePercentage: number;
 }
 
-export default function LaunchBanner({ onVisibilityChange }: LaunchBannerProps) {
+export default function LaunchBanner({ onVisibilityChange, onHeightChange }: LaunchBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [timeLeft, setTimeLeft] = useState({
@@ -120,21 +121,20 @@ export default function LaunchBanner({ onVisibilityChange }: LaunchBannerProps) 
   useEffect(() => {
     const updateBannerHeight = () => {
       const bannerElement = document.getElementById('launch-banner');
-      if (bannerElement) {
-        const height = bannerElement.offsetHeight;
-        setBannerHeight(height);
-      }
+      const h = bannerElement ? bannerElement.offsetHeight : 0;
+      setBannerHeight(h);
+      onHeightChange?.(h);
     };
 
     updateBannerHeight();
     window.addEventListener('resize', updateBannerHeight);
     return () => window.removeEventListener('resize', updateBannerHeight);
-  }, [isVisible, bannerData]);
+  }, [isVisible, bannerData, onHeightChange]);
 
   if (!isVisible || !bannerData || !bannerData.isActive) return null;
 
   return (
-    <div id="launch-banner" className="hidden sm:block fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border-b border-blue-400/30 shadow-lg mb-8">
+    <div id="launch-banner" className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border-b border-blue-400/30 shadow-lg">
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-white/10 to-white/5 animate-pulse" />
       {/* Top accent line */}
