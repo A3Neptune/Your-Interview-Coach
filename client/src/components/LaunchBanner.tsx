@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, Sparkles, ArrowRight, Clock, Zap } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Sparkles, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface LaunchBannerProps {
@@ -22,266 +22,300 @@ interface BannerData {
   savePercentage: number;
 }
 
-export default function LaunchBanner({ onVisibilityChange, onHeightChange }: LaunchBannerProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const [bannerData, setBannerData] = useState<BannerData | null>(null);
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-  const [bannerHeight, setBannerHeight] = useState(0);
+const DISMISSED_KEY = 'yic_banner_dismissed_v2';
+const COUNTDOWN_KEY = 'yic_banner_countdown_start';
 
-  // Fetch banner data from API with auto-refresh
+export default function LaunchBanner({ onVisibilityChange, onHeightChange }: LaunchBannerProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [bannerData, setBannerData] = useState<BannerData | null>(null);
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  /* ── fetch ── */
   const fetchBannerData = useCallback(async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${API_URL}/launch-banner/active`, {
-        cache: 'no-store',
-      });
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        setBannerData(data.data);
-
-        // If banner is not active, hide it
-        if (!data.data.isActive) {
-          setIsVisible(false);
-          onVisibilityChange?.(false);
-        }
+      const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${base}/launch-banner/active`, { cache: 'no-store' });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setBannerData(json.data);
+        const active = json.data.isActive;
+        const dismissed = (() => { try { return localStorage.getItem(DISMISSED_KEY) === '1'; } catch { return false; } })();
+        const show = active && !dismissed;
+        setIsVisible(show);
+        if (!show) onVisibilityChange?.(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch banner data:', error);
+    } catch {
+      /* non-critical — fail silently */
     }
   }, [onVisibilityChange]);
 
-  // Initial fetch and auto-refresh every 30 seconds
   useEffect(() => {
     fetchBannerData();
-    const refreshInterval = setInterval(fetchBannerData, 30000);
-    return () => clearInterval(refreshInterval);
+    const t = setInterval(fetchBannerData, 30_000);
+    return () => clearInterval(t);
   }, [fetchBannerData]);
 
-  // Countdown timer - fixed to show remaining time correctly
+  /* ── countdown ── */
   useEffect(() => {
     if (!bannerData?.showCountdown) return;
-
-    // Store start time in localStorage or use current time
-    const storageKey = 'bannerCountdownStart';
-    let startTime = localStorage.getItem(storageKey);
-
-    if (!startTime) {
-      startTime = new Date().getTime().toString();
-      localStorage.setItem(storageKey, startTime);
+    let start: string | null;
+    try { start = localStorage.getItem(COUNTDOWN_KEY); } catch { start = null; }
+    if (!start) {
+      start = String(Date.now());
+      try { localStorage.setItem(COUNTDOWN_KEY, start); } catch { /* ignore */ }
     }
-
-    const calculateTimeLeft = () => {
-      const start = parseInt(startTime!);
-      const endTime = start + ((bannerData?.countdownHours || 48) * 60 * 60 * 1000);
-      const now = new Date().getTime();
-      const difference = endTime - now;
-
-      if (difference > 0) {
-        const totalHours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        const seconds = Math.floor((difference / 1000) % 60);
-
-        setTimeLeft({
-          hours: totalHours,
-          minutes: minutes,
-          seconds: seconds,
-        });
+    const endMs = parseInt(start) + (bannerData.countdownHours || 48) * 3_600_000;
+    const tick = () => {
+      const diff = endMs - Date.now();
+      if (diff > 0) {
+        setTimeLeft({ h: Math.floor(diff / 3_600_000), m: Math.floor((diff % 3_600_000) / 60_000), s: Math.floor((diff % 60_000) / 1000) });
       } else {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+        setTimeLeft({ h: 0, m: 0, s: 0 });
       }
     };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, [bannerData]);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    onVisibilityChange?.(false);
-    localStorage.setItem('launchBannerDismissed', 'true');
-  };
-
-  // Check if user already dismissed the banner
+  /* ── report height via ResizeObserver ── */
   useEffect(() => {
-    const dismissed = localStorage.getItem('launchBannerDismissed');
-    if (dismissed === 'true') {
-      setIsVisible(false);
-      onVisibilityChange?.(false);
-    }
-  }, [onVisibilityChange]);
-
-  // Update banner height for navbar positioning
-  useEffect(() => {
-    const updateBannerHeight = () => {
-      const bannerElement = document.getElementById('launch-banner');
-      const h = bannerElement ? bannerElement.offsetHeight : 0;
-      setBannerHeight(h);
-      onHeightChange?.(h);
-    };
-
-    updateBannerHeight();
-    window.addEventListener('resize', updateBannerHeight);
-    return () => window.removeEventListener('resize', updateBannerHeight);
+    const el = bannerRef.current;
+    if (!el) { onHeightChange?.(0); return; }
+    const ro = new ResizeObserver(() => onHeightChange?.(isVisible ? el.offsetHeight : 0));
+    ro.observe(el);
+    onHeightChange?.(isVisible ? el.offsetHeight : 0);
+    return () => ro.disconnect();
   }, [isVisible, bannerData, onHeightChange]);
 
-  if (!isVisible || !bannerData || !bannerData.isActive) return null;
+  /* ── dismiss ── */
+  function dismiss() {
+    try { localStorage.setItem(DISMISSED_KEY, '1'); } catch { /* ignore */ }
+    setIsVisible(false);
+    onVisibilityChange?.(false);
+  }
+
+  if (!isVisible || !bannerData?.isActive) return null;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const origFmt = `₹${bannerData.originalPrice.toLocaleString('en-IN')}`;
+  const discFmt = `₹${bannerData.discountedPrice.toLocaleString('en-IN')}`;
 
   return (
-    <div id="launch-banner" className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border-b border-blue-400/30 shadow-lg">
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-white/10 to-white/5 animate-pulse" />
-      {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
-      <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-        {/* Tablet Layout - Simplified for smaller screens */}
-        <div className="flex md:hidden flex-col py-2.5 gap-2">
-          <div className="flex items-center justify-between gap-2">
-            {/* Tablet Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-full border border-white/30 ">
-              <div className="relative">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <div className="absolute inset-0 w-2 h-2 bg-white rounded-full animate-ping" />
-              </div>
-              <span className="text-xs font-bold text-white uppercase tracking-wide whitespace-nowrap">
-                {bannerData.badgeText}
-              </span>
-            </div>
+        @keyframes lb-sweep {
+          0%   { transform: translateX(-120%) skewX(-15deg); opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateX(220%) skewX(-15deg); opacity: 0; }
+        }
 
-            {/* Close on tablet */}
-            <button
-              onClick={handleClose}
-              className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              aria-label="Close banner"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+        #launch-banner {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 200;
+          overflow: hidden;
+          background: linear-gradient(100deg, #0f1f5c 0%, #1d4ed8 55%, #2563eb 100%);
+          border-bottom: 1px solid rgba(255,255,255,0.10);
+          box-shadow: 0 2px 20px rgba(29,78,216,0.35);
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <p className="text-sm text-white font-semibold">
-                {bannerData.message}
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xs text-white/50 line-through">₹{bannerData.originalPrice}</span>
-                <span className="text-xl font-bold text-white">₹{bannerData.discountedPrice}</span>
-              </div>
-              <div className="px-2 py-0.5 bg-white/90 rounded text-xs font-extrabold text-blue-600 whitespace-nowrap">
-                {bannerData.savePercentage}% OFF
-              </div>
-            </div>
-          </div>
+        /* shimmer */
+        #lb-shim {
+          position: absolute; inset: 0;
+          background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.09) 50%, transparent 65%);
+          animation: lb-sweep 5s ease-in-out infinite;
+          pointer-events: none;
+        }
 
-          <div className="flex items-center gap-2">
-            {bannerData.showCountdown && (
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/20 rounded-lg border border-white/30 ">
-                <Clock className="w-3.5 h-3.5 text-white" />
-                <span className="font-mono text-xs font-medium text-white">
-                  {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
-            )}
-            <Link
-              href={bannerData.ctaLink}
-              className="flex-1 text-center px-5 py-2 bg-white hover:bg-white/90 text-blue-600 text-sm font-bold rounded-lg transition-all"
-            >
-              {bannerData.ctaText}
-            </Link>
-          </div>
+        /* inner row */
+        #lb-row {
+          position: relative;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 48px 0 20px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+        }
+
+        /* badge */
+        .lb-badge {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,0.13);
+          border: 1px solid rgba(255,255,255,0.20);
+          border-radius: 99px;
+          padding: 3px 10px;
+          font-size: 10px; font-weight: 700;
+          letter-spacing: 0.10em; text-transform: uppercase;
+          color: #fff; white-space: nowrap; flex-shrink: 0;
+        }
+
+        /* dot divider */
+        .lb-dot {
+          width: 3px; height: 3px; border-radius: 50%;
+          background: rgba(255,255,255,0.30);
+          flex-shrink: 0;
+        }
+
+        /* message text */
+        .lb-msg {
+          font-size: 13px; font-weight: 500;
+          color: rgba(255,255,255,0.88);
+          white-space: nowrap;
+        }
+
+        /* price cluster */
+        .lb-price {
+          display: inline-flex; align-items: baseline; gap: 5px;
+          flex-shrink: 0;
+        }
+        .lb-price-orig {
+          font-size: 11.5px; font-weight: 500;
+          color: rgba(255,255,255,0.38);
+          text-decoration: line-through;
+        }
+        .lb-price-disc {
+          font-size: 16px; font-weight: 800;
+          color: #fff; letter-spacing: -0.025em;
+        }
+        .lb-pct-off {
+          font-size: 9px; font-weight: 700;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          background: rgba(255,255,255,0.16);
+          border: 1px solid rgba(255,255,255,0.24);
+          border-radius: 4px; padding: 1px 5px;
+          color: #fff; white-space: nowrap;
+          align-self: center;
+        }
+
+        /* countdown */
+        .lb-timer {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,0.10);
+          border: 1px solid rgba(255,255,255,0.16);
+          border-radius: 6px; padding: 3px 8px;
+          font-size: 11px; font-weight: 600;
+          color: rgba(255,255,255,0.88);
+          letter-spacing: 0.04em;
+          font-variant-numeric: tabular-nums;
+          flex-shrink: 0;
+        }
+
+        /* CTA button */
+        .lb-cta {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #fff;
+          border-radius: 8px; padding: 6px 14px;
+          font-size: 12.5px; font-weight: 700;
+          color: #1d4ed8;
+          text-decoration: none; white-space: nowrap; flex-shrink: 0;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.20);
+          border: none;
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .lb-cta:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+
+        /* dismiss button */
+        #lb-dismiss {
+          position: absolute; top: 50%; right: 14px;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,0.10);
+          border: 1px solid rgba(255,255,255,0.18);
+          border-radius: 6px; padding: 5px;
+          cursor: pointer; color: rgba(255,255,255,0.65);
+          display: flex; align-items: center; justify-content: center;
+          line-height: 0;
+          transition: background 0.15s, color 0.15s;
+        }
+        #lb-dismiss:hover {
+          background: rgba(255,255,255,0.20);
+          color: #fff;
+        }
+
+        /* ── RESPONSIVE ── */
+
+        /* Tablet: hide full message, show short version */
+        @media (max-width: 768px) {
+          .lb-msg     { display: none; }
+          .lb-msg-sm  { display: inline !important; }
+          #lb-row     { gap: 10px; padding-right: 44px; }
+        }
+
+        /* Mobile: tighten further */
+        @media (max-width: 480px) {
+          #lb-row        { height: auto; min-height: 48px; padding: 8px 44px 8px 14px; flex-wrap: wrap; justify-content: flex-start; gap: 8px 10px; }
+          .lb-badge      { font-size: 9px; padding: 2px 8px; }
+          .lb-price-disc { font-size: 14px; }
+          .lb-price-orig { font-size: 11px; }
+          .lb-pct-off    { font-size: 8.5px; }
+          .lb-cta        { font-size: 12px; padding: 5px 12px; }
+          .lb-timer      { font-size: 10px; }
+          .lb-dot        { display: none; }
+        }
+      `}</style>
+
+      <div id="launch-banner" ref={bannerRef}>
+        <div id="lb-shim" aria-hidden="true" />
+
+        <div id="lb-row">
+          {/* Badge */}
+          <span className="lb-badge">
+            <Sparkles style={{ width: 9, height: 9, flexShrink: 0 }} />
+            {bannerData.badgeText}
+          </span>
+
+          {/* Dot */}
+          <span className="lb-dot" aria-hidden="true" />
+
+          {/* Full message — hidden on mobile */}
+          <span className="lb-msg">{bannerData.message}</span>
+
+          {/* Short message — mobile only (display:none by default, shown via media query) */}
+          <span className="lb-msg-sm lb-msg" style={{ display: 'none' }}>
+            Launch offer — limited seats
+          </span>
+
+          {/* Dot */}
+          <span className="lb-dot" aria-hidden="true" />
+
+          {/* Price */}
+          <span className="lb-price">
+            <span className="lb-price-orig">{origFmt}</span>
+            <span className="lb-price-disc">{discFmt}</span>
+            <span className="lb-pct-off">{bannerData.savePercentage}% off</span>
+          </span>
+
+          {/* Countdown (optional) */}
+          {bannerData.showCountdown && (
+            <span className="lb-timer">
+              <Clock style={{ width: 10, height: 10, flexShrink: 0 }} />
+              {pad(timeLeft.h)}:{pad(timeLeft.m)}:{pad(timeLeft.s)}
+            </span>
+          )}
+
+          {/* CTA */}
+          <Link href={bannerData.ctaLink} className="lb-cta">
+            {bannerData.ctaText}
+            <ArrowRight style={{ width: 11, height: 11 }} />
+          </Link>
         </div>
 
-        {/* Tablet/Desktop Layout */}
-        <div className="hidden md:flex items-center justify-between py-3 gap-4">
-          {/* Left Section: Message & Pricing */}
-          <div className="flex items-center gap-3 lg:gap-6 flex-1 min-w-0">
-            {/* Launch Badge - Enhanced */}
-            <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full border-2 border-white/30 ">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
-                <div className="absolute inset-0 w-2.5 h-2.5 bg-white rounded-full animate-ping" />
-              </div>
-              <span className="text-xs font-bold text-white uppercase tracking-wider whitespace-nowrap">
-                {bannerData.badgeText}
-              </span>
-            </div>
-
-            {/* Message & Price - Enhanced */}
-            <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 min-w-0">
-              <p className="text-sm lg:text-base text-white font-semibold whitespace-nowrap ">
-                {bannerData.message}
-              </p>
-
-              <div className="flex items-center gap-2 lg:gap-3">
-                {/* Price */}
-                <div className="flex items-baseline gap-1.5 lg:gap-2">
-                  <span className="text-xs lg:text-sm text-white/50 line-through">₹{bannerData.originalPrice}</span>
-                  <span className="text-lg lg:text-2xl font-bold text-white">₹{bannerData.discountedPrice}</span>
-                </div>
-
-                {/* Discount Badge - Enhanced */}
-                <div className="px-2 lg:px-2.5 py-0.5 lg:py-1 bg-white/90 rounded-md text-[10px] lg:text-xs font-extrabold text-blue-600 animate-pulse">
-                  SAVE {bannerData.savePercentage}%
-                </div>
-              </div>
-            </div>
-
-            {/* Timer - Desktop */}
-            {bannerData.showCountdown && (
-              <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-lg border border-white/30 ">
-                <Clock className="w-4 h-4 text-white" />
-                <div className="flex items-center gap-1 font-mono text-sm font-medium text-white">
-                  <span>{String(timeLeft.hours).padStart(2, '0')}</span>
-                  <span className="text-white/50">:</span>
-                  <span>{String(timeLeft.minutes).padStart(2, '0')}</span>
-                  <span className="text-white/50">:</span>
-                  <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Section: CTA & Close */}
-          <div className="flex items-center gap-2 lg:gap-3">
-            {/* Timer - Tablet */}
-            {bannerData.showCountdown && (
-              <div className="flex xl:hidden items-center gap-1.5 px-2.5 py-1.5 bg-white/20 rounded-lg border border-white/30 ">
-                <Clock className="w-3.5 h-3.5 text-white" />
-                <span className="font-mono text-xs font-medium text-white whitespace-nowrap">
-                  {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
-            )}
-
-            {/* CTA Button - Enhanced */}
-            <Link
-              href={bannerData.ctaLink}
-              className="group relative px-4 lg:px-6 py-2 lg:py-2.5 bg-white hover:bg-white/90 text-blue-600 text-xs lg:text-sm font-bold rounded-lg transition-all duration-300 overflow-hidden whitespace-nowrap hover:scale-105"
-            >
-              <span className="relative z-10 flex items-center gap-1.5 lg:gap-2">
-                {bannerData.ctaText}
-                <ArrowRight className="w-3.5 lg:w-4 h-3.5 lg:h-4 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-
-            {/* Close Button */}
-            <button
-              onClick={handleClose}
-              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              aria-label="Close banner"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {/* Dismiss */}
+        <button id="lb-dismiss" onClick={dismiss} aria-label="Dismiss banner">
+          <X style={{ width: 13, height: 13 }} />
+        </button>
       </div>
-    </div>
+    </>
   );
 }
