@@ -382,7 +382,10 @@ export default function HeroCarousel() {
           position: "relative", zIndex: 10,
           flex: 1,
           width: "100%", maxWidth: 1280, margin: "0 auto",
-          padding: "clamp(90px, 10vw, 128px) clamp(20px, 4vw, 56px) 0",
+          paddingTop: "calc(var(--yic-header-h, 64px) + clamp(24px, 3vw, 40px))",
+          paddingRight: "clamp(20px, 4vw, 56px)",
+          paddingBottom: 0,
+          paddingLeft: "clamp(20px, 4vw, 56px)",
           display: "flex", flexDirection: "column",
         }}>
 

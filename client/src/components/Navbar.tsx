@@ -29,6 +29,14 @@ export default function Navbar() {
     setBannerHeight(h);
   }, []);
 
+  // Keep --yic-header-h in sync so pages and anchor scroll-padding stay correct
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--yic-header-h",
+      `${bannerHeight + 64}px`
+    );
+  }, [bannerHeight]);
+
   const handleLogoClick = () => {
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: "smooth" });

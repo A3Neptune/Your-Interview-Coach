@@ -1519,7 +1519,7 @@ export default function PlacementAccelerator() {
         {/* ══ HERO ══ */}
         <section style={{
           position: "relative", overflow: "hidden",
-          paddingTop: "clamp(100px,12vw,140px)",
+          paddingTop: "calc(var(--yic-header-h, 64px) + clamp(28px, 4vw, 52px))",
           paddingBottom: "clamp(60px,8vw,100px)",
           background: "#fff",
         }}>

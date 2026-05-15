@@ -185,7 +185,7 @@ export default function WhyMePage() {
       `}</style>
 
       {/* ── HERO ───────────────────────────────────────────── */}
-      <section className="min-h-screen flex flex-col justify-center pt-[90px] pb-16 px-4 sm:px-6 relative overflow-hidden">
+      <section className="min-h-screen flex flex-col justify-center pb-16 px-4 sm:px-6 relative overflow-hidden" style={{ paddingTop: "calc(var(--yic-header-h, 64px) + 28px)" }}>
         {/* Dot grid bg */}
         <div
           className="absolute inset-0 pointer-events-none"
