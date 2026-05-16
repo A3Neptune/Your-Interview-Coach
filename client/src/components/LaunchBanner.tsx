@@ -99,6 +99,7 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
   if (!isVisible || !bannerData?.isActive) return null;
 
   const pad = (n: number) => String(n).padStart(2, '0');
+  const showPrice = bannerData.originalPrice > 0 && bannerData.discountedPrice > 0;
   const origFmt = `₹${bannerData.originalPrice.toLocaleString('en-IN')}`;
   const discFmt = `₹${bannerData.discountedPrice.toLocaleString('en-IN')}`;
 
@@ -138,22 +139,22 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
           position: relative;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 48px 0 20px;
-          height: 44px;
+          padding: 0 44px 0 16px;
+          height: 38px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 14px;
+          gap: 10px;
         }
 
         /* badge */
         .lb-badge {
-          display: inline-flex; align-items: center; gap: 5px;
+          display: inline-flex; align-items: center; gap: 4px;
           background: rgba(255,255,255,0.13);
           border: 1px solid rgba(255,255,255,0.20);
           border-radius: 99px;
-          padding: 3px 10px;
-          font-size: 10px; font-weight: 700;
+          padding: 2px 8px;
+          font-size: 9.5px; font-weight: 700;
           letter-spacing: 0.10em; text-transform: uppercase;
           color: #fff; white-space: nowrap; flex-shrink: 0;
         }
@@ -167,24 +168,30 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
 
         /* message text */
         .lb-msg {
-          font-size: 13px; font-weight: 500;
+          font-size: 12.5px; font-weight: 500;
           color: rgba(255,255,255,0.88);
           white-space: nowrap;
         }
 
         /* price cluster */
         .lb-price {
-          display: inline-flex; align-items: baseline; gap: 5px;
+          display: inline-flex; align-items: baseline; gap: 4px;
           flex-shrink: 0;
         }
+        .lb-price-label {
+          font-size: 10.5px; font-weight: 600;
+          color: rgba(255,255,255,0.65);
+          white-space: nowrap;
+          align-self: center;
+        }
         .lb-price-orig {
-          font-size: 11.5px; font-weight: 500;
-          color: rgba(255,255,255,0.38);
+          font-size: 11px; font-weight: 500;
+          color: rgba(255,255,255,0.35);
           text-decoration: line-through;
         }
         .lb-price-disc {
-          font-size: 16px; font-weight: 800;
-          color: #fff; letter-spacing: -0.025em;
+          font-size: 14px; font-weight: 800;
+          color: #fff; letter-spacing: -0.02em;
         }
         .lb-pct-off {
           font-size: 9px; font-weight: 700;
@@ -198,11 +205,11 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
 
         /* countdown */
         .lb-timer {
-          display: inline-flex; align-items: center; gap: 5px;
+          display: inline-flex; align-items: center; gap: 4px;
           background: rgba(255,255,255,0.10);
           border: 1px solid rgba(255,255,255,0.16);
-          border-radius: 6px; padding: 3px 8px;
-          font-size: 11px; font-weight: 600;
+          border-radius: 5px; padding: 2px 7px;
+          font-size: 10.5px; font-weight: 600;
           color: rgba(255,255,255,0.88);
           letter-spacing: 0.04em;
           font-variant-numeric: tabular-nums;
@@ -211,28 +218,28 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
 
         /* CTA button */
         .lb-cta {
-          display: inline-flex; align-items: center; gap: 5px;
+          display: inline-flex; align-items: center; gap: 4px;
           background: #fff;
-          border-radius: 8px; padding: 6px 14px;
-          font-size: 12.5px; font-weight: 700;
+          border-radius: 7px; padding: 5px 12px;
+          font-size: 12px; font-weight: 700;
           color: #1d4ed8;
           text-decoration: none; white-space: nowrap; flex-shrink: 0;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.20);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
           border: none;
           transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
         .lb-cta:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+          box-shadow: 0 4px 14px rgba(0,0,0,0.22);
         }
 
         /* dismiss button */
         #lb-dismiss {
-          position: absolute; top: 50%; right: 14px;
+          position: absolute; top: 50%; right: 10px;
           transform: translateY(-50%);
           background: rgba(255,255,255,0.10);
           border: 1px solid rgba(255,255,255,0.18);
-          border-radius: 6px; padding: 5px;
+          border-radius: 5px; padding: 4px;
           cursor: pointer; color: rgba(255,255,255,0.65);
           display: flex; align-items: center; justify-content: center;
           line-height: 0;
@@ -247,21 +254,22 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
 
         /* Tablet: hide full message, show short version */
         @media (max-width: 768px) {
-          .lb-msg     { display: none; }
-          .lb-msg-sm  { display: inline !important; }
-          #lb-row     { gap: 10px; padding-right: 44px; }
+          .lb-msg       { display: none; }
+          .lb-msg-sm    { display: inline !important; }
+          .lb-dot       { display: none; }
+          #lb-row       { gap: 8px; padding-right: 40px; }
         }
 
-        /* Mobile: tighten further */
+        /* Mobile: stack compactly */
         @media (max-width: 480px) {
-          #lb-row        { height: auto; min-height: 48px; padding: 8px 44px 8px 14px; flex-wrap: wrap; justify-content: flex-start; gap: 8px 10px; }
-          .lb-badge      { font-size: 9px; padding: 2px 8px; }
-          .lb-price-disc { font-size: 14px; }
-          .lb-price-orig { font-size: 11px; }
-          .lb-pct-off    { font-size: 8.5px; }
-          .lb-cta        { font-size: 12px; padding: 5px 12px; }
-          .lb-timer      { font-size: 10px; }
-          .lb-dot        { display: none; }
+          #lb-row        { height: auto; min-height: 40px; padding: 6px 40px 6px 12px; flex-wrap: wrap; justify-content: center; gap: 5px 8px; }
+          .lb-badge      { font-size: 9px; padding: 2px 7px; }
+          .lb-price-disc { font-size: 13px; }
+          .lb-price-orig { font-size: 10px; }
+          .lb-price-label { font-size: 9.5px; }
+          .lb-pct-off    { font-size: 8px; }
+          .lb-cta        { font-size: 11px; padding: 4px 10px; }
+          .lb-timer      { font-size: 9.5px; padding: 2px 6px; }
         }
       `}</style>
 
@@ -286,15 +294,20 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
             Launch offer — limited seats
           </span>
 
-          {/* Dot */}
-          <span className="lb-dot" aria-hidden="true" />
-
-          {/* Price */}
-          <span className="lb-price">
-            <span className="lb-price-orig">{origFmt}</span>
-            <span className="lb-price-disc">{discFmt}</span>
-            <span className="lb-pct-off">{bannerData.savePercentage}% off</span>
-          </span>
+          {/* Price — hidden when either price is 0 */}
+          {showPrice && (
+            <>
+              <span className="lb-dot" aria-hidden="true" />
+              <span className="lb-price">
+                <span className="lb-price-label">Upto</span>
+                <span className="lb-price-orig">{origFmt}</span>
+                <span className="lb-price-disc">{discFmt}</span>
+                {bannerData.savePercentage > 0 && (
+                  <span className="lb-pct-off">{bannerData.savePercentage}% off</span>
+                )}
+              </span>
+            </>
+          )}
 
           {/* Countdown (optional) */}
           {bannerData.showCountdown && (

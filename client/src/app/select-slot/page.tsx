@@ -213,7 +213,7 @@ function SelectSlotContent() {
   const [calendarReady, setCalendarReady] = useState(false);
   const [webinarSchedule, setWebinarSchedule] = useState<{
     slotDuration: number;
-    slots: Array<{ date: string; start: string; end: string; topic: string; bookedCount: number; maxParticipants: number; spotsLeft: number }>;
+    slots: Array<{ date: string; start: string; end: string; topic: string; bookedCount: number; maxParticipants: number; spotsLeft: number; ongoing?: boolean; bookingClosed?: boolean }>;
   } | null>(null);
   const [webinarLoading, setWebinarLoading] = useState(false);
 
@@ -1161,7 +1161,9 @@ function SelectSlotContent() {
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{monthLabel}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                               {monthSlots.map((slot, slotIdx) => {
-                                const isSelected = selectedDate === slot.date && selectedTime === slot.start;
+                                const isOngoing = !!slot.ongoing;
+                                const isBookingClosed = !!slot.bookingClosed;
+                                const isSelected = !isBookingClosed && selectedDate === slot.date && selectedTime === slot.start;
                                 const spotsLow = slot.spotsLeft <= 5;
                                 const dateLabel = new Date(`${slot.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                                 const fmt12 = (t: string) => {
@@ -1174,6 +1176,7 @@ function SelectSlotContent() {
                                   <motion.button
                                     key={`${slot.date}-${slot.start}`}
                                     onClick={() => {
+                                      if (isBookingClosed) return;
                                       if (isSelected) {
                                         setSelectedDate(""); setSelectedTime(""); setAvailableSlots([]);
                                       } else {
@@ -1182,10 +1185,14 @@ function SelectSlotContent() {
                                         setAvailableSlots([{ start: slot.start, end: slot.end, bookedCount: slot.bookedCount, maxParticipants: slot.maxParticipants, spotsLeft: slot.spotsLeft }]);
                                       }
                                     }}
-                                    className={`rounded-2xl p-5 text-left transition-all border-2 ${
-                                      isSelected
-                                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-300"
-                                        : "bg-white text-slate-800 border-slate-100 hover:border-blue-300 hover:shadow-md"
+                                    className={`rounded-2xl p-5 text-left transition-all border-2 w-full ${
+                                      isBookingClosed
+                                        ? "bg-slate-50 border-slate-200 opacity-70 cursor-not-allowed"
+                                        : isOngoing
+                                          ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-300 shadow-md shadow-emerald-100"
+                                          : isSelected
+                                            ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-300"
+                                            : "bg-white text-slate-800 border-slate-100 hover:border-blue-300 hover:shadow-md"
                                     }`}
                                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1193,30 +1200,76 @@ function SelectSlotContent() {
                                     whileHover={{ scale: 1.03, y: -2 }}
                                     whileTap={{ scale: 0.98 }}
                                   >
-                                    <p className={`text-lg font-bold leading-snug mb-3 ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                    {/* Status badge */}
+                                    {isBookingClosed ? (
+                                      <div className="flex items-center gap-1.5 mb-3">
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+                                          🔒 Bookings Closed
+                                        </span>
+                                      </div>
+                                    ) : isOngoing ? (
+                                      <div className="flex items-center gap-1.5 mb-3">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                        </span>
+                                        <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                                          Live Now
+                                        </span>
+                                      </div>
+                                    ) : null}
+
+                                    <p className={`text-lg font-bold leading-snug mb-3 ${isOngoing ? "text-slate-900" : isSelected ? "text-white" : "text-slate-900"}`}>
                                       {dateLabel}
                                     </p>
 
                                     <div className="flex items-center gap-2 mb-3">
-                                      <Clock size={14} className={isSelected ? "text-blue-100" : "text-blue-500"} />
-                                      <p className={`text-sm font-semibold ${isSelected ? "text-blue-100" : "text-slate-600"}`}>
+                                      <Clock size={14} className={isOngoing ? "text-emerald-500" : isSelected ? "text-blue-100" : "text-blue-500"} />
+                                      <p className={`text-sm font-semibold ${isOngoing ? "text-slate-600" : isSelected ? "text-blue-100" : "text-slate-600"}`}>
                                         {fmt12(slot.start)} – {fmt12(slot.end)}
                                       </p>
                                     </div>
 
                                     {slot.topic && (
                                       <div className={`inline-block px-3 py-1.5 rounded-lg mb-3 text-xs font-semibold ${
-                                        isSelected
-                                          ? "bg-white/25 text-white"
-                                          : "bg-blue-50 text-blue-700 border border-blue-100"
+                                        isOngoing
+                                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                          : isSelected
+                                            ? "bg-white/25 text-white"
+                                            : "bg-blue-50 text-blue-700 border border-blue-100"
                                       }`}>
                                         Topic - {slot.topic}
                                       </div>
                                     )}
 
-                                    <div className="flex items-center justify-between pt-2 border-t mt-1" style={{borderColor: isSelected ? "rgba(255,255,255,0.2)" : "#e2e8f0"}}>
+                                    {/* Session message */}
+                                    {isBookingClosed ? (
+                                      <div className="mt-2 mb-3 px-3 py-2.5 rounded-xl bg-slate-100 border border-slate-200">
+                                        <p className="text-[12px] font-semibold text-slate-600 leading-snug">
+                                          Session ends at {fmt12(slot.end)}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                          Bookings for this session are now closed.
+                                        </p>
+                                      </div>
+                                    ) : isOngoing ? (
+                                      <div className="mt-2 mb-3 px-3 py-2.5 rounded-xl bg-emerald-100/70 border border-emerald-200">
+                                        <p className="text-[12px] font-semibold text-emerald-800 leading-snug">
+                                          Session in progress · ends at {fmt12(slot.end)}
+                                        </p>
+                                        <p className="text-[11px] text-emerald-700 mt-0.5 leading-snug">
+                                          Join now to interact with the mentor in real time.
+                                        </p>
+                                      </div>
+                                    ) : null}
+
+                                    <div className="flex items-center justify-between pt-2 border-t mt-1" style={{borderColor: isBookingClosed ? "#e2e8f0" : isOngoing ? "rgba(16,185,129,0.2)" : isSelected ? "rgba(255,255,255,0.2)" : "#e2e8f0"}}>
                                       <div>
-                                        {isSelected ? (
+                                        {isBookingClosed ? (
+                                          <span className="text-[11px] font-medium text-slate-400">
+                                            No new bookings accepted
+                                          </span>
+                                        ) : isSelected ? (
                                           <motion.span
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -1224,6 +1277,10 @@ function SelectSlotContent() {
                                           >
                                             ✓ Selected
                                           </motion.span>
+                                        ) : isOngoing ? (
+                                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800">
+                                            🎙 Join while it&apos;s live
+                                          </span>
                                         ) : spotsLow ? (
                                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
                                             ⚡ {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left

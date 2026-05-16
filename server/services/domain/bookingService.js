@@ -1024,7 +1024,8 @@ const getWebinarSchedule = async () => {
       const [hh, mm] = ws.time.split(':').map(Number);
       const pad = n => String(n).padStart(2, '0');
       const slotStart = new Date(`${ws.date}T${pad(hh)}:${pad(mm)}:00+05:30`);
-      return slotStart > now;
+      const slotEnd   = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
+      return slotEnd > now;
     })
     .sort((a, b) =>
       `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
@@ -1066,6 +1067,10 @@ const getWebinarSchedule = async () => {
       return slotStart < bEnd && slotEnd > bStart;
     }).length;
 
+    const ongoing = slotStart <= now && slotEnd > now;
+    // Stop accepting new bookings 20 min before session ends
+    const bookingClosed = ongoing && (slotEnd.getTime() - now.getTime() <= 20 * 60 * 1000);
+
     return {
       date: ws.date,
       start: `${pad(hh)}:${pad(mm)}`,
@@ -1075,6 +1080,8 @@ const getWebinarSchedule = async () => {
       maxParticipants,
       spotsLeft: maxParticipants - bookedCount,
       isFull: bookedCount >= maxParticipants,
+      ongoing,
+      bookingClosed,
     };
   }).filter(s => !s.isFull);
 
