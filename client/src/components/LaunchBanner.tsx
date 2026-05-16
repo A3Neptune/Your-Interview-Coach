@@ -99,7 +99,7 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
   if (!isVisible || !bannerData?.isActive) return null;
 
   const pad = (n: number) => String(n).padStart(2, '0');
-  const showPrice = bannerData.originalPrice > 0 && bannerData.discountedPrice > 0;
+  const showPrice = bannerData.discountedPrice > 0 || bannerData.savePercentage > 0;
   const origFmt = `₹${bannerData.originalPrice.toLocaleString('en-IN')}`;
   const discFmt = `₹${bannerData.discountedPrice.toLocaleString('en-IN')}`;
 
@@ -300,10 +300,18 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
               <span className="lb-dot" aria-hidden="true" />
               <span className="lb-price">
                 <span className="lb-price-label">Upto</span>
-                <span className="lb-price-orig">{origFmt}</span>
-                <span className="lb-price-disc">{discFmt}</span>
-                {bannerData.savePercentage > 0 && (
-                  <span className="lb-pct-off">{bannerData.savePercentage}% off</span>
+                {bannerData.discountedPrice > 0 ? (
+                  <>
+                    {bannerData.originalPrice > 0 && (
+                      <span className="lb-price-orig">{origFmt}</span>
+                    )}
+                    <span className="lb-price-disc">{discFmt}</span>
+                    {bannerData.savePercentage > 0 && (
+                      <span className="lb-pct-off">{bannerData.savePercentage}% off</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="lb-price-disc">{bannerData.savePercentage}% off</span>
                 )}
               </span>
             </>
