@@ -123,20 +123,32 @@ const loginWithEmail = async (email, password, req = null) => {
 /**
  * Google OAuth login
  */
-const loginWithGoogle = async (googleToken) => {
+const loginWithGoogle = async (googleToken, tokenType = 'id_token') => {
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   if (!googleClientId) {
     throw new ValidationError('Google Client ID is not configured on the server');
   }
 
-  const oauthClient = new OAuth2Client(googleClientId);
-  const ticket = await oauthClient.verifyIdToken({
-    idToken: googleToken,
-    audience: googleClientId,
-  });
+  let email, name, picture, googleId;
 
-  const payload = ticket.getPayload();
-  const { email, name, picture, sub: googleId } = payload;
+  if (tokenType === 'access_token') {
+    // Verify via Google userinfo endpoint
+    const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${googleToken}` },
+    });
+    if (!resp.ok) throw new UnauthorizedError('Invalid Google access token');
+    const info = await resp.json();
+    ({ email, name, picture, sub: googleId } = info);
+  } else {
+    // Verify ID token (legacy path)
+    const oauthClient = new OAuth2Client(googleClientId);
+    const ticket = await oauthClient.verifyIdToken({
+      idToken: googleToken,
+      audience: googleClientId,
+    });
+    const payload = ticket.getPayload();
+    ({ email, name, picture, sub: googleId } = payload);
+  }
 
   let user = await User.findOne({ $or: [{ email }, { googleId }] });
 

@@ -14,8 +14,8 @@ export const emailLogin = async (req, res) => {
 
 export const googleLogin = async (req, res) => {
   try {
-    const { token } = req.body;
-    const result = await authService.loginWithGoogle(token);
+    const { token, tokenType } = req.body;
+    const result = await authService.loginWithGoogle(token, tokenType || 'id_token');
     if (result.isNewUser) {
       return res.json({ success: true, isNewUser: true, googleData: result.googleData });
     }

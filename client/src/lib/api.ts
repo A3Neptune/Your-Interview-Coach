@@ -44,8 +44,8 @@ apiClient.interceptors.response.use(
 
 export const authAPI = {
   // Google login
-  googleLogin: (token: string) =>
-    apiClient.post('/auth/google-login', { token }),
+  googleLogin: (token: string, tokenType: 'id_token' | 'access_token' = 'access_token') =>
+    apiClient.post('/auth/google-login', { token, tokenType }),
 
   // Email login
   emailLogin: (email: string, password: string) =>
