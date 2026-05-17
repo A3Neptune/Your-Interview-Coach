@@ -8,7 +8,6 @@ export default function TestimonialsSection() {
     { title: "Arpit", src: "https://www.youtube.com/embed/SvP6McXPCXw" },
     { title: "Kinshuk", src: "https://www.youtube.com/embed/_2wnxSrAJe8" },
     { title: "Chawi", src: "https://www.youtube.com/embed/TmABADPK-Pw" },
-    // { title: 'Pranay', src: 'https://www.youtube.com/embed/L3qG3_7CZwc' },
     { title: "Shrutika", src: "https://www.youtube.com/embed/14LgWpMO4Bk" },
     { title: "Shubhi", src: "https://www.youtube.com/embed/uB-Z4J7QBgM" },
     { title: "Anushka", src: "https://www.youtube.com/embed/zC8eFR-ZAWU" },

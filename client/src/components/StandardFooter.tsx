@@ -291,7 +291,9 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
               Made with <span style={{ color: "#f43f5e" }}>♥</span> in Bangalore
               by{" "}
               <span style={{ fontWeight: 600, color: creditName }}>
-                <a href="https://a3neptune.vercel.app">A3Neptune</a>
+                <a href="https://a3neptune.vercel.app" target="_blank">
+                  A3Neptune
+                </a>
               </span>
             </p>
           </div>
