@@ -588,16 +588,14 @@
 //   verificationEmailTemplate,
 // };
 
-
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 //  YourInterviewCoach · Email Templates · v2
 //  Design: Editorial Precision — typographic hierarchy, strategic restraint
 //  Font: DM Sans · Primary: #2563eb · Ink: #0f172a
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.FRONTEND_URL || 'https://www.yourinterviewcoach.in';
+const BASE_URL =
+  process.env.FRONTEND_URL || "https://www.yourinterviewcoach.in";
 
 /* ─────────────────────────────────────────────────────────────
    SHARED PARTIALS
@@ -742,7 +740,9 @@ const baseStyles = `
   }
 `;
 
-const footer = (note = "You're receiving this because you have an account with YourInterviewCoach.") => `
+const footer = (
+  note = "You're receiving this because you have an account with YourInterviewCoach.",
+) => `
   <div class="footer-area">
     <div class="footer-rule"></div>
     <p class="footer-brand">YourInterviewCoach</p>
@@ -1225,12 +1225,12 @@ const loginNotificationTemplate = (userName, loginTime, location, device) => {
         <tr class="dt-row">
           <td class="dt-label">Location</td>
           <td class="dt-sep"></td>
-          <td class="dt-value">${location || 'Unknown location'}</td>
+          <td class="dt-value">${location || "Unknown location"}</td>
         </tr>
         <tr class="dt-row">
           <td class="dt-label">Device</td>
           <td class="dt-sep"></td>
-          <td class="dt-value">${device || 'Unknown device'}</td>
+          <td class="dt-value">${device || "Unknown device"}</td>
         </tr>
       </table>
 

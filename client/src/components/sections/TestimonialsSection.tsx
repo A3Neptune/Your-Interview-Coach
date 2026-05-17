@@ -70,14 +70,62 @@ const testimonialsAutoRow = [...testimonialsRow1, ...testimonialsRow2].slice(
 );
 
 const videoTestimonials = [
-  { id: 101, name: "Arpit", role: "Mentee", initials: "A", videoId: "SvP6McXPCXw" },
-  { id: 102, name: "Kinshuk", role: "Mentee", initials: "K", videoId: "_2wnxSrAJe8" },
-  { id: 103, name: "Chawi", role: "Mentee", initials: "C", videoId: "lQKRugX3j8M" },
-  { id: 105, name: "Shrutika", role: "Mentee", initials: "S", videoId: "5FvOpsl6ydg" },
-  { id: 106, name: "Shubhi", role: "Mentee", initials: "S", videoId: "uB-Z4J7QBgM" },
-  { id: 107, name: "Anushka", role: "Mentee", initials: "A", videoId: "s6LD7pWUpMw" },
-  { id: 108, name: "Bhaanvi", role: "Mentee", initials: "B", videoId: "oCLvaA9ZZUg" },
-  { id: 109, name: "Shiv", role: "Mentee", initials: "S", videoId: "7pB04N8KO6I" },
+  {
+    id: 101,
+    name: "Arpit",
+    role: "Mentee",
+    initials: "A",
+    videoId: "SvP6McXPCXw",
+  },
+  {
+    id: 102,
+    name: "Kinshuk",
+    role: "Mentee",
+    initials: "K",
+    videoId: "_2wnxSrAJe8",
+  },
+  {
+    id: 103,
+    name: "Chawi",
+    role: "Mentee",
+    initials: "C",
+    videoId: "TmABADPK-Pw",
+  },
+  {
+    id: 105,
+    name: "Shrutika",
+    role: "Mentee",
+    initials: "S",
+    videoId: "14LgWpMO4Bk",
+  },
+  {
+    id: 106,
+    name: "Shubhi",
+    role: "Mentee",
+    initials: "S",
+    videoId: "uB-Z4J7QBgM",
+  },
+  {
+    id: 107,
+    name: "Anushka",
+    role: "Mentee",
+    initials: "A",
+    videoId: "zC8eFR-ZAWU",
+  },
+  {
+    id: 108,
+    name: "Bhaanvi",
+    role: "Mentee",
+    initials: "B",
+    videoId: "Dd53s0OyVJg",
+  },
+  {
+    id: 109,
+    name: "Shiv",
+    role: "Mentee",
+    initials: "S",
+    videoId: "7pB04N8KO6I",
+  },
 ];
 
 /* avatar bg shades — all blue toned to match site palette */
@@ -569,62 +617,159 @@ export default function TestimonialsSection() {
               fontFamily: "'DM Sans', system-ui, sans-serif",
             }}
           >
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, transparent, #2563eb)" }} />
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 99, background: "#2563eb14", border: "1px solid #2563eb33" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 18,
+              }}
+            >
+              <span
+                style={{
+                  width: "clamp(24px, 5vw, 40px)",
+                  height: 1,
+                  background: "linear-gradient(90deg, transparent, #2563eb)",
+                }}
+              />
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "6px 14px",
+                  borderRadius: 99,
+                  background: "#2563eb14",
+                  border: "1px solid #2563eb33",
+                }}
+              >
                 <Sparkles size={11} style={{ color: "#2563eb" }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#2563eb",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
                   04 · Success Stories
                 </span>
               </div>
-              <span style={{ width: "clamp(24px, 5vw, 40px)", height: 1, background: "linear-gradient(90deg, #2563eb, transparent)" }} />
+              <span
+                style={{
+                  width: "clamp(24px, 5vw, 40px)",
+                  height: 1,
+                  background: "linear-gradient(90deg, #2563eb, transparent)",
+                }}
+              />
             </div>
 
-            <h2 style={{
-              margin: "0 0 14px",
-              fontSize: "clamp(34px, 5.4vw, 68px)",
-              lineHeight: 1.04, letterSpacing: "-0.035em",
-              fontWeight: 700, color: "#0f172a",
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-            }}>
+            <h2
+              style={{
+                margin: "0 0 14px",
+                fontSize: "clamp(34px, 5.4vw, 68px)",
+                lineHeight: 1.04,
+                letterSpacing: "-0.035em",
+                fontWeight: 700,
+                color: "#0f172a",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+              }}
+            >
               What our{" "}
-              <span style={{ position: "relative", display: "inline-block", color: "#2563eb" }}>
+              <span
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  color: "#2563eb",
+                }}
+              >
                 mentees say.
                 <motion.span
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   viewport={{ once: true, margin: "-80px" }}
-                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ position: "absolute", left: 0, right: 0, bottom: "-3px", height: 3, borderRadius: 2, background: "linear-gradient(90deg, #2563eb, #1d4ed8)", transformOrigin: "left", display: "block" }}
+                  transition={{
+                    duration: 0.7,
+                    delay: 0.3,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: "-3px",
+                    height: 3,
+                    borderRadius: 2,
+                    background: "linear-gradient(90deg, #2563eb, #1d4ed8)",
+                    transformOrigin: "left",
+                    display: "block",
+                  }}
                 />
               </span>
             </h2>
 
-            <p style={{
-              fontSize: "clamp(14px, 1.4vw, 17px)",
-              color: "#64748b", lineHeight: 1.65,
-              maxWidth: 600, margin: "0 auto",
-              fontWeight: 400,
-            }}>
-              Real stories from professionals who transformed their careers with Neel&apos;s mentorship.
+            <p
+              style={{
+                fontSize: "clamp(14px, 1.4vw, 17px)",
+                color: "#64748b",
+                lineHeight: 1.65,
+                maxWidth: 600,
+                margin: "0 auto",
+                fontWeight: 400,
+              }}
+            >
+              Real stories from professionals who transformed their careers with
+              Neel&apos;s mentorship.
             </p>
 
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "clamp(14px, 3vw, 44px)",
-              flexWrap: "wrap", justifyContent: "center", marginTop: 22,
-              padding: "14px 22px", borderRadius: 99,
-              background: "#fff", border: "1px solid #2563eb22",
-              boxShadow: "0 8px 30px #2563eb14",
-            }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "clamp(14px, 3vw, 44px)",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                marginTop: 22,
+                padding: "14px 22px",
+                borderRadius: 99,
+                background: "#fff",
+                border: "1px solid #2563eb22",
+                boxShadow: "0 8px 30px #2563eb14",
+              }}
+            >
               {[
                 { val: "5,000+", label: "Coached" },
                 { val: "4.9★", label: "Avg rating" },
                 { val: "94%", label: "Success rate" },
                 { val: "700+", label: "Stories" },
               ].map((s) => (
-                <div key={s.label} style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
-                  <span style={{ fontSize: "clamp(15px, 1.6vw, 20px)", fontWeight: 800, color: "#2563eb", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.val}</span>
-                  <span style={{ fontSize: 10.5, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</span>
+                <div
+                  key={s.label}
+                  style={{ display: "flex", alignItems: "baseline", gap: 7 }}
+                >
+                  <span
+                    style={{
+                      fontSize: "clamp(15px, 1.6vw, 20px)",
+                      fontWeight: 800,
+                      color: "#2563eb",
+                      letterSpacing: "-0.02em",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {s.val}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    {s.label}
+                  </span>
                 </div>
               ))}
             </div>

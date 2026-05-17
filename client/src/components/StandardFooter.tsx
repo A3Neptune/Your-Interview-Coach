@@ -13,7 +13,10 @@ const footerLinks = {
   Company: [
     { label: "About", href: "/about" },
     { label: "Blog", href: "#blog" },
-    { label: "Introduction", href: "https://youtu.be/rNuP5b7Abnc?si=K4EmN9R3uN-h3MaP" },
+    {
+      label: "Introduction",
+      href: "https://youtu.be/rNuP5b7Abnc?si=K4EmN9R3uN-h3MaP",
+    },
     { label: "Contact", href: "/contact" },
   ],
   Legal: [
@@ -24,9 +27,21 @@ const footerLinks = {
 
 const socialLinks = [
   // { icon: Twitter, href: "#twitter", label: "Twitter" },
-  { icon: Linkedin, href: "https://www.linkedin.com/in/neel-aashish-seru/", label: "LinkedIn" },
-  { icon: Instagram, href: "https://www.instagram.com/your_interview_coach", label: "Instagram" },
-  { icon: Mail, href: "mailto:neel.yourinterviewcoach@gmail.com", label: "Email" },
+  {
+    icon: Linkedin,
+    href: "https://www.linkedin.com/in/neel-aashish-seru/",
+    label: "LinkedIn",
+  },
+  {
+    icon: Instagram,
+    href: "https://www.instagram.com/your_interview_coach",
+    label: "Instagram",
+  },
+  {
+    icon: Mail,
+    href: "mailto:neel.yourinterviewcoach@gmail.com",
+    label: "Email",
+  },
 ];
 
 interface StandardFooterProps {
@@ -276,7 +291,7 @@ export default function StandardFooter({ dark = false }: StandardFooterProps) {
               Made with <span style={{ color: "#f43f5e" }}>♥</span> in Bangalore
               by{" "}
               <span style={{ fontWeight: 600, color: creditName }}>
-                <a href="https://a3neptune.kalawatiputra.com">A3Neptune</a>
+                <a href="https://a3neptune.vercel.app">A3Neptune</a>
               </span>
             </p>
           </div>
