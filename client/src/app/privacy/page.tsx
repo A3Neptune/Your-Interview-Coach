@@ -65,9 +65,9 @@ export default function PrivacyPage() {
               For privacy-related questions, contact us at{" "}
               <a
                 className="text-blue-700 hover:text-blue-800"
-                href="mailto:hello@yourinterviewcoach.com"
+                href="mailto:neel.yourinterviewcoach@gmail.com"
               >
-                hello@yourinterviewcoach.com
+                neel.yourinterviewcoach@gmail.com
               </a>
               .
             </p>

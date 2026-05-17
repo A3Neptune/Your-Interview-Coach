@@ -147,9 +147,10 @@ export default function ServicesPopup() {
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
                 <iframe
                   className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/jNQXAC9IVRw"
-                  title="YourInterviewCoach Intro"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  src="https://www.youtube.com/embed/rNuP5b7Abnc?si=YoiPFE8EASpdEXaj"
+                  title="YouTube video player"
+                  allow="accelerometer; autoplay; 
+                  clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
                 />
