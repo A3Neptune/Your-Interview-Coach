@@ -161,9 +161,8 @@ function CoachingBanner({ score }: { score: number }) {
   return (
     <div className="max-w-6xl mx-auto px-6 mb-10 mt-12">
       <div
-        className={`relative overflow-hidden rounded-3xl border ${
-          isLow ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
-        }`}
+        className={`relative overflow-hidden rounded-3xl border ${isLow ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
+          }`}
       >
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6 p-8 lg:p-10">
           <div className="flex items-center gap-4 flex-shrink-0">
@@ -208,11 +207,10 @@ function CoachingBanner({ score }: { score: number }) {
             <div className="flex gap-3">
               <Link
                 href="/services"
-                className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 ${
-                  isLow
+                className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 ${isLow
                     ? "bg-red-600 text-white hover:bg-red-700"
                     : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
+                  }`}
               >
                 <CalendarDays className="w-5 h-5" />
                 Book Now
@@ -360,7 +358,7 @@ export default function ResumeAnalyzerPage() {
                         {
                           icon: CheckCircle2,
                           label: "100% Free",
-                          desc: "No signup needed",
+                          desc: "",
                         },
                       ].map((item, i) => {
                         const Icon = item.icon;
