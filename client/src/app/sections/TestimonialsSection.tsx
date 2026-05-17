@@ -7,12 +7,12 @@ export default function TestimonialsSection() {
   const testimonials = [
     { title: 'Arpit', src: 'https://www.youtube.com/embed/SvP6McXPCXw' },
     { title: 'Kinshuk', src: 'https://www.youtube.com/embed/_2wnxSrAJe8' },
-    { title: 'Chawi', src: 'https://www.youtube.com/embed/lQKRugX3j8M' },
-    { title: 'Pranay', src: 'https://www.youtube.com/embed/L3qG3_7CZwc' },
-    { title: 'Shrutika', src: 'https://www.youtube.com/embed/5FvOpsl6ydg' },
+    { title: 'Chawi', src: 'https://www.youtube.com/embed/tUpeidAAlpc' },
+    // { title: 'Pranay', src: 'https://www.youtube.com/embed/L3qG3_7CZwc' },
+    { title: 'Shrutika', src: 'https://www.youtube.com/embed/vY4AqhRV6Wk' },
     { title: 'Shubhi', src: 'https://www.youtube.com/embed/uB-Z4J7QBgM' },
-    { title: 'Anushka', src: 'https://www.youtube.com/embed/s6LD7pWUpMw' },
-    { title: 'Bhaanvi', src: 'https://www.youtube.com/embed/oCLvaA9ZZUg' },
+    { title: 'Anushka', src: 'https://www.youtube.com/embed/fOFgBxGknKA' },
+    { title: 'Bhaanvi', src: 'https://www.youtube.com/embed/rAZFgNE5JYc' },
     { title: 'Shiv', src: 'https://www.youtube.com/embed/7pB04N8KO6I' },
   ];
 
