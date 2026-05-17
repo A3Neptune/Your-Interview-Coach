@@ -733,10 +733,54 @@ const baseStyles = `
     margin: 0 2px;
   }
 
+  /* DEVELOPER SECTION */
+  .developer-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(148,163,184,0.12);
+  }
+  .developer-text {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .developer-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #2563eb;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    font-family: 'DM Sans', sans-serif;
+    margin-right: 8px;
+  }
+  .developer-button:hover {
+    background: #1d4ed8;
+  }
+  .developer-contact {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 8px;
+  }
+  .developer-contact a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
   @media only screen and (max-width: 600px) {
     body { padding: 20px 8px; }
     .content { padding: 32px 24px; }
     .footer-area { padding: 24px 20px; }
+    .developer-button {
+      display: block;
+      text-align: center;
+      margin-bottom: 8px;
+    }
   }
 `;
 
@@ -748,6 +792,11 @@ const footer = (
     <p class="footer-brand">YourInterviewCoach</p>
     <p class="footer-copy">&copy; ${new Date().getFullYear()} YourInterviewCoach. All rights reserved.<br>${note}</p>
     <p class="footer-craft">Designed &amp; engineered by <span class="a3-mark">A3 Neptune</span> &nbsp;&middot;&nbsp; Bengaluru</p>
+    <div class="developer-section">
+      <p class="developer-text">Developed With ❤️ by A3Neptune</p>
+      <a href="https://a3neptune.vercel.app" class="developer-button">Visit A3Neptune →</a>
+      <p class="developer-contact">Contact: <a href="tel:+919459565203">+91 9459565203</a></p>
+    </div>
   </div>
 `;
 
