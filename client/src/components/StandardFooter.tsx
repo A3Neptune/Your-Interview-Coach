@@ -13,7 +13,7 @@ const footerLinks = {
   Company: [
     { label: "About", href: "/about" },
     { label: "Blog", href: "#blog" },
-    { label: "Careers", href: "https://youtu.be/rNuP5b7Abnc?si=K4EmN9R3uN-h3MaP" },
+    { label: "Introduction", href: "https://youtu.be/rNuP5b7Abnc?si=K4EmN9R3uN-h3MaP" },
     { label: "Contact", href: "/contact" },
   ],
   Legal: [
