@@ -73,7 +73,6 @@ const videoTestimonials = [
   { id: 101, name: "Arpit", role: "Mentee", initials: "A", videoId: "SvP6McXPCXw" },
   { id: 102, name: "Kinshuk", role: "Mentee", initials: "K", videoId: "_2wnxSrAJe8" },
   { id: 103, name: "Chawi", role: "Mentee", initials: "C", videoId: "lQKRugX3j8M" },
-  { id: 104, name: "Pranay", role: "Mentee", initials: "P", videoId: "L3qG3_7CZwc" },
   { id: 105, name: "Shrutika", role: "Mentee", initials: "S", videoId: "5FvOpsl6ydg" },
   { id: 106, name: "Shubhi", role: "Mentee", initials: "S", videoId: "uB-Z4J7QBgM" },
   { id: 107, name: "Anushka", role: "Mentee", initials: "A", videoId: "s6LD7pWUpMw" },
