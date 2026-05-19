@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3, BookOpen, Calendar, Users, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { authAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import { authAPI, analyticsAPI, getAuthToken, removeAuthToken } from '@/lib/api';
 
 interface UserData {
   _id: string;
@@ -27,6 +27,11 @@ interface Booking {
   status: string;
 }
 
+interface AnalyticsData {
+  stats: { path: string; hits: number; unique: number }[];
+  totals: { hits: number; unique: number };
+}
+
 export default function MentorDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
@@ -39,6 +44,7 @@ export default function MentorDashboard() {
     totalStudents: 0,
     totalRevenue: 0,
   });
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -141,6 +147,17 @@ export default function MentorDashboard() {
         } catch (err) {
           console.error('Error fetching courses:', err);
         }
+
+        // Fetch Analytics
+        try {
+          const analyticsResponse = await analyticsAPI.getAllStats();
+          if (analyticsResponse?.data?.success) {
+            setAnalytics(analyticsResponse.data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch analytics:', err);
+        }
+
       } catch (err: any) {
         removeAuthToken();
         router.push('/login');
@@ -302,6 +319,56 @@ export default function MentorDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Site Traffic & Analytics Section */}
+        {analytics && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md mt-8 p-8 mb-12">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Site Traffic & Analytics</h2>
+                <p className="text-zinc-400 text-sm">
+                  Path-wise visitor tracking, unique visitors, and total page hits.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-300 border border-blue-400/20">
+                  {analytics.totals?.unique || 0} Unique Visitors
+                </span>
+                <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/20">
+                  {analytics.totals?.hits || 0} Total Hits
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Page / Route Path</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Hits</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Unique Visitors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.stats?.map((stat, idx) => (
+                    <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                      <td className="px-4 py-3 font-medium text-white">{stat.path}</td>
+                      <td className="px-4 py-3 text-right text-sm text-zinc-300">{stat.hits}</td>
+                      <td className="px-4 py-3 text-right text-sm text-zinc-300">{stat.unique}</td>
+                    </tr>
+                  ))}
+                  {(!analytics.stats || analytics.stats.length === 0) && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
+                        No traffic data recorded yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
