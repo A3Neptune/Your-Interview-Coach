@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken, verifyMentor } from '../middleware/auth.js';
-import { trackPageView, getHomeStats } from '../controllers/analyticsController.js';
+import { trackPageView, getHomeStats, getAllPathsStats } from '../controllers/analyticsController.js';
 
 const router = express.Router();
 
@@ -38,5 +38,8 @@ router.post('/track', trackRateLimit, trackPageView);
 
 // Mentor — home page analytics summary
 router.get('/home-stats', verifyToken, verifyMentor, getHomeStats);
+
+// Mentor — all paths analytics summary
+router.get('/all-stats', verifyToken, verifyMentor, getAllPathsStats);
 
 export default router;

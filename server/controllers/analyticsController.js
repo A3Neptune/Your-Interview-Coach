@@ -3,7 +3,6 @@ import PageView from '../models/PageView.js';
 
 const HASH_SECRET = process.env.JWT_SECRET || 'yic-analytics-salt';
 
-const TRACKED_PATHS = new Set(['/']);
 
 const getClientIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
@@ -29,9 +28,7 @@ const truncate = (val, n) => {
 export const trackPageView = async (req, res) => {
   try {
     const path = (req.body?.path || '/').toString();
-    if (!TRACKED_PATHS.has(path)) {
-      return res.json({ success: true, tracked: false });
-    }
+
 
     const ip = getClientIp(req);
     const userAgent = truncate(req.headers['user-agent'], 480);
@@ -98,5 +95,50 @@ export const getHomeStats = async (req, res) => {
   } catch (err) {
     console.error('[Analytics] getHomeStats error:', err);
     return res.status(500).json({ success: false, error: 'Failed to load home page analytics' });
+  }
+};
+
+/**
+ * GET /api/analytics/all-stats
+ * Mentor-only — returns hits & unique visitors for all paths
+ */
+export const getAllPathsStats = async (req, res) => {
+  try {
+    const pipeline = [
+      {
+        $group: {
+          _id: "$path",
+          hits: { $sum: 1 },
+          uniqueVisitors: { $addToSet: "$visitorHash" }
+        }
+      },
+      {
+        $project: {
+          path: "$_id",
+          hits: 1,
+          unique: { $size: "$uniqueVisitors" },
+          _id: 0
+        }
+      },
+      { $sort: { hits: -1 } }
+    ];
+
+    const pathStats = await PageView.aggregate(pipeline);
+
+    const totalHits = await PageView.countDocuments();
+    const totalUniqueDocs = await PageView.distinct('visitorHash');
+    const totalUnique = totalUniqueDocs.length;
+
+    return res.json({
+      success: true,
+      stats: pathStats,
+      totals: {
+        hits: totalHits,
+        unique: totalUnique
+      }
+    });
+  } catch (err) {
+    console.error('[Analytics] getAllPathsStats error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to load all paths analytics' });
   }
 };
