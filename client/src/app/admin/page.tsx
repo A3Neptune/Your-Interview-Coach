@@ -18,7 +18,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { authAPI, bookingAPI, gdBookingAPI, getAuthToken, removeAuthToken } from "@/lib/api";
+import { authAPI, bookingAPI, gdBookingAPI, analyticsAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -113,6 +113,11 @@ interface GDBookingData {
   createdAt: string;
 }
 
+interface AnalyticsData {
+  stats: { path: string; hits: number; unique: number }[];
+  totals: { hits: number; unique: number };
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -123,6 +128,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sessionFilter, setSessionFilter] = useState<SessionFilter>("all");
   const [expandedGD, setExpandedGD] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -140,12 +146,13 @@ export default function AdminPage() {
         }
         setUser(response.data.user);
 
-        const [usersResponse, bookingsResponse, gdBookingsResponse] = await Promise.all([
+        const [usersResponse, bookingsResponse, gdBookingsResponse, analyticsResponse] = await Promise.all([
           fetch(`${API_URL}/auth/all-users`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           bookingAPI.getMentorBookings(),
           gdBookingAPI.adminGetAll().catch(() => ({ data: { bookings: [] } })),
+          analyticsAPI.getAllStats().catch(() => ({ data: null })),
         ]);
 
         if (usersResponse.ok) {
@@ -155,6 +162,10 @@ export default function AdminPage() {
 
         setBookings(bookingsResponse.data.bookings || []);
         setGdBookings(gdBookingsResponse.data.bookings || []);
+        
+        if (analyticsResponse?.data?.success) {
+          setAnalytics(analyticsResponse.data);
+        }
       } catch (err: any) {
         removeAuthToken();
         router.push("/login");
@@ -738,6 +749,57 @@ export default function AdminPage() {
             </table>
           </div>
         </div>
+        {/* Site Traffic & Analytics Section */}
+        {analytics && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md mt-8">
+            <div className="border-b border-white/10 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">Site Traffic & Analytics</h2>
+                  <p className="text-zinc-400 text-sm">
+                    Path-wise visitor tracking, unique visitors, and total page hits.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-300 border border-blue-400/20">
+                    {analytics.totals?.unique || 0} Unique Visitors
+                  </span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/20">
+                    {analytics.totals?.hits || 0} Total Hits
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Page / Route Path</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Hits</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">Unique Visitors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.stats?.map((stat, idx) => (
+                    <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-4 font-medium">{stat.path}</td>
+                      <td className="px-6 py-4 text-right text-sm">{stat.hits}</td>
+                      <td className="px-6 py-4 text-right text-sm">{stat.unique}</td>
+                    </tr>
+                  ))}
+                  {(!analytics.stats || analytics.stats.length === 0) && (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-zinc-500">
+                        No traffic data recorded yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

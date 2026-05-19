@@ -233,4 +233,11 @@ export const gdBookingAPI = {
   adminUpdate: (bookingId: string, data: any) => apiClient.put(`/gd-bookings/admin/${bookingId}`, data),
 };
 
+// Analytics API
+export const analyticsAPI = {
+  trackPageView: (data: { path: string; referrer?: string }) => apiClient.post('/analytics/track', data),
+  getHomeStats: () => apiClient.get('/analytics/home-stats'),
+  getAllStats: () => apiClient.get('/analytics/all-stats'),
+};
+
 export default apiClient;
