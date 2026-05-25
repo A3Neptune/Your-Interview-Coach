@@ -408,11 +408,48 @@ const updateMentorSettings = async (userId, settings) => {
 };
 
 /**
- * Get all users (admin)
+ * Get all users (admin) with pagination and search
  */
-const getAllUsers = async (filters = {}) => {
-  const users = await User.find(filters).select('-password').sort({ createdAt: -1 });
-  return users;
+const getAllUsers = async (filters = {}, options = {}) => {
+  const { page = 1, limit = 10, search = '', sortBy = 'createdAt', sortOrder = -1 } = options;
+  
+  // Build query filter
+  let query = { ...filters };
+  
+  // Add search filter for name and email
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } }
+    ];
+  }
+  
+  // Calculate pagination
+  const skip = (page - 1) * limit;
+  
+  // Build sort object
+  const sortObj = {};
+  sortObj[sortBy] = parseInt(sortOrder);
+  
+  // Execute query
+  const users = await User.find(query)
+    .select('-password')
+    .sort(sortObj)
+    .skip(skip)
+    .limit(parseInt(limit));
+  
+  // Get total count for pagination
+  const total = await User.countDocuments(query);
+  
+  return {
+    users,
+    pagination: {
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit)
+    }
+  };
 };
 
 /**

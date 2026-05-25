@@ -22,7 +22,7 @@ import {
   Award,
   Home,
 } from "lucide-react";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { authAPI, getAuthToken, removeAuthToken } from "@/lib/api";
 import StandardFooter from "@/components/StandardFooter";
 import ProfileDropdown from "@/components/ProfileDropdown";
@@ -110,9 +110,12 @@ export default function MentorDashboardLayout({
         const response = await authAPI.getCurrentUser();
         const userData = response.data.user;
 
-        // Only admin (Neel) can access mentor dashboard
-        if (userData.userType !== "admin") {
-          toast.error("Only admins can access this area");
+        // Allow both admin and mentor (professional) to access mentor dashboard
+        if (
+          userData.userType !== "admin" &&
+          userData.userType !== "professional"
+        ) {
+          toast.error("Only admins and mentors can access this area");
           router.push("/dashboard");
           return;
         }
@@ -217,6 +220,12 @@ export default function MentorDashboardLayout({
       icon: BookOpen,
       href: "/mentor-dashboard/courses",
       color: "text-indigo-400",
+    },
+    {
+      name: "User Management",
+      icon: Users,
+      href: "/mentor-dashboard/user-management",
+      color: "text-cyan-400",
     },
     {
       name: "Settings",

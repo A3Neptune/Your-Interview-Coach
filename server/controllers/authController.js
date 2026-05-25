@@ -125,10 +125,17 @@ export const updateMentorSettings = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { userType } = req.query;
+    const { userType, page = 1, limit = 10, search = '', sortBy = 'createdAt', sortOrder = -1 } = req.query;
     const filters = userType ? { userType } : {};
-    const users = await authService.getAllUsers(filters);
-    res.json({ success: true, users });
+    const options = {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+      search: search || '',
+      sortBy: sortBy || 'createdAt',
+      sortOrder: parseInt(sortOrder) || -1
+    };
+    const result = await authService.getAllUsers(filters, options);
+    res.json({ success: true, ...result });
   } catch (error) {
     console.error('Get all users error:', error);
     handleControllerError(res, error);
