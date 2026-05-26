@@ -2,10 +2,10 @@
 import config from './config/env.js';
 
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { connectDB, disconnectDB } from './config/database.js';
 
 import authRoutes from './routes/auth.js';
 import sessionRoutes from './routes/sessions.js';
@@ -93,18 +93,11 @@ app.use((err, req, res, next) => {
     });
 });
 
-// MongoDB Connection
+// MongoDB Connection with proper pooling
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/career-coach-lms';
 
-const dbOptions = {
-    dbName: 'career-coach-lms-new',
-};
-
-mongoose.connect(MONGO_URI, dbOptions)
+connectDB()
     .then(async () => {
-        console.log('✅ Connected to MongoDB');
-
         const server = app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
         });
@@ -112,6 +105,7 @@ mongoose.connect(MONGO_URI, dbOptions)
         // Graceful shutdown
         process.on('SIGTERM', async () => {
             console.log('📍 SIGTERM received, gracefully shutting down...');
+            await disconnectDB();
             server.close(() => {
                 process.exit(0);
             });
@@ -119,6 +113,7 @@ mongoose.connect(MONGO_URI, dbOptions)
 
         process.on('SIGINT', async () => {
             console.log('📍 SIGINT received, gracefully shutting down...');
+            await disconnectDB();
             server.close(() => {
                 process.exit(0);
             });
