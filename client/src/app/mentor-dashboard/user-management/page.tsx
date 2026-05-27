@@ -11,9 +11,11 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authAPI } from "@/lib/api";
+import { exportUsersToExcel, exportUsersToCSV } from "@/lib/excelExport";
 
 /* ──────────────────────── Types ──────────────────────── */
 
@@ -47,6 +49,7 @@ export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -119,6 +122,68 @@ export default function UserManagementPage() {
     }
   };
 
+  // Export users to Excel
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+
+      // Fetch all users without pagination for complete export
+      const params = {
+        page: "1",
+        limit: "10000",
+        search: search,
+        ...(selectedUserType && { userType: selectedUserType }),
+      };
+
+      const response = await authAPI.getAllUsers(params);
+
+      if (response.data.success && response.data.users.length > 0) {
+        exportUsersToExcel(response.data.users, "users_management");
+        toast.success(
+          `Successfully exported ${response.data.users.length} users to Excel`,
+        );
+      } else {
+        toast.error("No users to export");
+      }
+    } catch (error: any) {
+      console.error("Error exporting users:", error);
+      toast.error(error.response?.data?.message || "Failed to export users");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Export users to CSV
+  const handleExportCSV = async () => {
+    try {
+      setIsExporting(true);
+
+      // Fetch all users without pagination for complete export
+      const params = {
+        page: "1",
+        limit: "10000",
+        search: search,
+        ...(selectedUserType && { userType: selectedUserType }),
+      };
+
+      const response = await authAPI.getAllUsers(params);
+
+      if (response.data.success && response.data.users.length > 0) {
+        exportUsersToCSV(response.data.users, "users_management");
+        toast.success(
+          `Successfully exported ${response.data.users.length} users to CSV`,
+        );
+      } else {
+        toast.error("No users to export");
+      }
+    } catch (error: any) {
+      console.error("Error exporting users:", error);
+      toast.error(error.response?.data?.message || "Failed to export users");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Handle pagination
   const handleNextPage = () => {
     if (currentPage < pagination.totalPages) {
@@ -168,7 +233,7 @@ export default function UserManagementPage() {
 
         {/* Controls Section */}
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6 backdrop-blur-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Search Input */}
             <div className="relative">
               <Search
@@ -197,8 +262,28 @@ export default function UserManagementPage() {
             </select>
           </div>
 
+          {/* Export Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting || users.length === 0}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-900/30 text-green-300 hover:bg-green-900/50 border border-green-700/50 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download size={18} />
+              {isExporting ? "Exporting..." : "Export to Excel"}
+            </button>
+            <button
+              onClick={handleExportCSV}
+              disabled={isExporting || users.length === 0}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 border border-blue-700/50 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download size={18} />
+              {isExporting ? "Exporting..." : "Export to CSV"}
+            </button>
+          </div>
+
           {/* Results Count */}
-          <div className="mt-4 text-sm text-gray-400">
+          <div className="text-sm text-gray-400">
             Showing{" "}
             {users.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
             {Math.min(currentPage * itemsPerPage, pagination.total)} of{" "}
