@@ -87,7 +87,6 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
   // Calculate amount with GST (18%)
   const baseAmount = course.price;
 
-  // Validate amount
   if (!baseAmount || baseAmount <= 0) {
     throw new ValidationError('Invalid course price. Must be greater than 0');
   }

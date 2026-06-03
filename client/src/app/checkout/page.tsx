@@ -833,6 +833,16 @@ function CheckoutContent() {
         );
         bookingId = bookingRes.data.booking._id;
         const orderRes = await axios.post(`${API_URL}/bookings/${bookingId}/create-payment`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+
+        // Free booking — server confirmed it without Razorpay
+        if (orderRes.data.free) {
+          toast.success('Booking confirmed!');
+          setPaymentDone(true);
+          setIsProcessing(false);
+          setTimeout(() => router.push('/user-dashboard/bookings'), 2000);
+          return;
+        }
+
         rzOrder = orderRes.data.order;
         keyId = orderRes.data.keyId;
       }

@@ -142,7 +142,7 @@ export default function MentorPricingPage() {
 
       if (
         !service.name ||
-        !service.price ||
+        service.price === null || service.price === undefined ||
         !service.duration ||
         !service.title
       ) {
@@ -240,7 +240,7 @@ export default function MentorPricingPage() {
       // Validate required fields
       if (
         !newService.name ||
-        !newService.price ||
+        newService.price === null || newService.price === undefined ||
         !newService.duration ||
         !newService.title
       ) {

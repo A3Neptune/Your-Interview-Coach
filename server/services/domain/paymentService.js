@@ -62,8 +62,6 @@ const getRazorpayKeyId = () => {
  * Create Razorpay order for booking
  */
 const createPaymentOrder = async (bookingId, req) => {
-  const razorpay = getRazorpayInstance();
-
   const booking = await Booking.findById(bookingId)
     .populate('studentId', 'name email mobile');
   if (!booking) {
@@ -74,6 +72,31 @@ const createPaymentOrder = async (bookingId, req) => {
     throw new ValidationError('Booking already paid');
   }
 
+  // Free webinar — skip Razorpay entirely and confirm immediately
+  if (booking.amount === 0 && booking.sessionType === 'webinars') {
+    booking.status = 'confirmed';
+    booking.paymentStatus = 'completed';
+    booking.paymentRequired = false;
+    await booking.save();
+
+    await AuditLogService.logBookingAction(
+      req,
+      'BOOKING_CONFIRMED_FREE',
+      booking._id,
+      { amount: 0 },
+      'SUCCESS',
+      null
+    );
+
+    return { free: true, booking };
+  }
+
+  if (!booking.amount || booking.amount <= 0) {
+    throw new ValidationError('Invalid booking amount. Must be greater than 0');
+  }
+
+  const razorpay = getRazorpayInstance();
+
   // Lock booking during payment; auto-expires in 15 min if client never completes/dismisses
   booking.paymentLocked = true;
   booking.paymentLockExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
@@ -82,11 +105,6 @@ const createPaymentOrder = async (bookingId, req) => {
   // Create Razorpay order
   // Receipt must be <= 40 chars, so use timestamp + short ID
   const receiptId = `bkg_${Date.now()}_${booking._id.toString().substring(0, 8)}`;
-
-  // Validate amount
-  if (!booking.amount || booking.amount <= 0) {
-    throw new ValidationError('Invalid booking amount. Must be greater than 0');
-  }
 
   const amountInPaise = Math.round(booking.amount * 100);
 
