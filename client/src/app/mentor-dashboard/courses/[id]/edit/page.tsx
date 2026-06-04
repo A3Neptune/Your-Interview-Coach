@@ -558,11 +558,11 @@ export default function EditCoursePage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => addResourceToModule(moduleIndex, 'link')}
+                              onClick={() => addResourceToModule(moduleIndex, 'youtube')}
                               className="px-3 py-1 bg-zinc-900 hover:bg-zinc-700 rounded text-xs flex items-center gap-1 transition-colors"
                             >
                               <LinkIcon size={14} />
-                              Link
+                              YouTube
                             </button>
                           </div>
                         </div>
@@ -574,7 +574,7 @@ export default function EditCoursePage() {
                                 <div className="flex items-center gap-2 mb-2">
                                   {resource.type === 'video' && <Video size={16} className="text-blue-400" />}
                                   {resource.type === 'document' && <FileText size={16} className="text-green-400" />}
-                                  {resource.type === 'link' && <LinkIcon size={16} className="text-purple-400" />}
+                                  {resource.type === 'youtube' && <LinkIcon size={16} className="text-purple-400" />}
                                   <input
                                     type="text"
                                     placeholder="Resource Title"

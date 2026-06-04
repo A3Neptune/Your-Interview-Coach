@@ -233,7 +233,7 @@ export default function ServicesPopup() {
                   Neel Aashish Seru
                 </p>
                 <p style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>
-                  Ex-Tech Mahindra · 5,000+ coached
+                  Ex-IndiaMART · Ex-Tech Mahindra · 5,000+ coached
                 </p>
               </div>
             </div>

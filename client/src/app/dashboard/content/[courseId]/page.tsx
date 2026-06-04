@@ -78,8 +78,7 @@ export default function CourseDetailPage() {
 
   // Video caching and rendering states
   const [videoCache, setVideoCache] = useState<Map<string, string>>(new Map());
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
-  const [videoError, setVideoError] = useState<string | null>(null);
+
   const [videoProgress, setVideoProgress] = useState<Map<string, number>>(
     new Map(),
   );
@@ -130,7 +129,7 @@ export default function CourseDetailPage() {
                     description:
                       resource.description || module.description || "",
                     contentType:
-                      resource.type === "video" ? "video-link" : "other",
+                      (resource.type === "video" || resource.type === "youtube") ? "video-link" : "other",
                     embedUrl: resource.embedUrl || resource.url,
                     videoUrl: resource.url,
                     duration: resource.duration || 0,
@@ -177,28 +176,23 @@ export default function CourseDetailPage() {
       if (!content.videoUrl || preloadedVideos.has(content._id)) return;
 
       try {
-        setIsVideoLoading(true);
-        setVideoError(null);
-
         // Cache video URL
-        setVideoCache((prev) =>
+        setVideoCache((prev: Map<string, string>) =>
           new Map(prev).set(content._id, content.videoUrl!),
         );
-        setPreloadedVideos((prev) => new Set(prev).add(content._id));
+        setPreloadedVideos((prev: Set<string>) => new Set(prev).add(content._id));
 
         // Load progress from localStorage
         const savedProgress = localStorage.getItem(
           `video_progress_${content._id}`,
         );
         if (savedProgress) {
-          setVideoProgress((prev) =>
+          setVideoProgress((prev: Map<string, number>) =>
             new Map(prev).set(content._id, parseFloat(savedProgress)),
           );
         }
       } catch (error) {
-        setVideoError("Failed to load video. Please try again.");
-      } finally {
-        setIsVideoLoading(false);
+        // ignore preload errors — user will see the YouTube button regardless
       }
     };
 
@@ -328,78 +322,41 @@ export default function CourseDetailPage() {
           </div>
         );
 
-      case "video-link":
-        const cachedUrl =
-          videoCache.get(selectedContent._id) || selectedContent.videoUrl;
-        const videoUrl = getValidExternalUrl(cachedUrl);
-        const progress = videoProgress.get(selectedContent._id) || 0;
+      case "video-link": {
+        const rawUrl = videoCache.get(selectedContent._id) || selectedContent.videoUrl;
+        const videoUrl = getValidExternalUrl(rawUrl);
 
         if (!videoUrl) {
           return (
-            <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 shadow-lg p-8 text-center">
-              <p className="text-amber-800 font-semibold">
-                Invalid lesson link
-              </p>
-              <p className="text-amber-700 text-sm mt-1">
-                This video lesson URL is missing or not a valid external link.
-              </p>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+              <p className="text-amber-800 font-semibold">Invalid lesson link</p>
+              <p className="text-amber-700 text-sm mt-1">This video lesson URL is missing or invalid.</p>
             </div>
           );
         }
 
         return (
-          <div className="relative w-full rounded-2xl overflow-hidden border-2 border-blue-300 aspect-video shadow-2xl">
-            {isVideoLoading && (
-              <div className="absolute inset-0 bg-white flex items-center justify-center z-10">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-                  <p className="text-slate-600 font-medium">Loading video...</p>
-                </div>
-              </div>
-            )}
-
-            {videoError && (
-              <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10 p-6">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold mb-2">
-                    {videoError}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setVideoError(null);
-                      setIsVideoLoading(true);
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="relative w-full h-full bg-slate-900">
-              <iframe
-                src={videoUrl}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={selectedContent.title}
-                onLoad={() => setIsVideoLoading(false)}
-                onError={() => setVideoError("Failed to load video")}
-              />
-
-              {/* Progress bar */}
-              {progress > 0 && progress < 100 && (
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/80">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              )}
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 flex flex-col items-center gap-4 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+              <Play className="w-6 h-6 text-red-600 fill-red-600" />
             </div>
+            <div>
+              <p className="text-slate-800 font-semibold text-base">{selectedContent.title}</p>
+              <p className="text-slate-500 text-sm mt-1">Opens the YouTube playlist in a new tab</p>
+            </div>
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              Watch on YouTube
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           </div>
         );
+      }
 
       case "pdf":
         return (

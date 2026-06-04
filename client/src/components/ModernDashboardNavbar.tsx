@@ -43,7 +43,7 @@ export default function ModernDashboardNavbar() {
 
   const navLinks = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Content", href: "/dashboard/content", icon: BookOpen },
+    { name: "Courses", href: "/dashboard/content", icon: BookOpen },
     { name: "Profile", href: "/dashboard/profile", icon: User },
   ];
 
