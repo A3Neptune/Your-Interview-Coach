@@ -27,10 +27,19 @@ interface Booking {
   status: string;
 }
 
+interface WebinarGroup {
+  slotKey: string;           // "YYYY-MM-DDTHH:MM"
+  scheduledDate: string;
+  duration: number;
+  title: string;
+  participants: Booking[];
+}
+
 export default function MentorDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [webinarGroups, setWebinarGroups] = useState<WebinarGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -70,13 +79,27 @@ export default function MentorDashboard() {
           if (bookingsResponse.ok) {
             const data = await bookingsResponse.json();
             const allBookings = data.bookings || [];
-            const upcomingBookings = allBookings
-              .filter((b: Booking) => new Date(b.scheduledDate) > new Date() && b.status === 'confirmed')
-              .sort((a: Booking, b: Booking) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
-              .slice(0, 5);
-            setBookings(upcomingBookings);
-
             const now = new Date();
+            const upcoming = allBookings
+              .filter((b: Booking) => new Date(b.scheduledDate) > now && b.status === 'confirmed')
+              .sort((a: Booking, b: Booking) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+
+            // Split: webinars get grouped by slot, everything else shown individually
+            const nonWebinar = upcoming.filter((b: Booking) => b.sessionType !== 'webinars').slice(0, 5);
+            setBookings(nonWebinar);
+
+            // Group webinar bookings by exact slot (date + time, rounded to minute)
+            const wMap = new Map<string, WebinarGroup>();
+            upcoming.filter((b: Booking) => b.sessionType === 'webinars').forEach((b: Booking) => {
+              const d = new Date(b.scheduledDate);
+              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
+              if (!wMap.has(key)) {
+                wMap.set(key, { slotKey: key, scheduledDate: b.scheduledDate, duration: b.duration, title: b.title, participants: [] });
+              }
+              wMap.get(key)!.participants.push(b);
+            });
+            setWebinarGroups(Array.from(wMap.values()).slice(0, 5));
+
             const upcomingCount = allBookings.filter(
               (b: any) => new Date(b.scheduledDate) > now && b.status === 'confirmed'
             ).length;
@@ -173,22 +196,72 @@ export default function MentorDashboard() {
         </div>
 
         {/* Scheduled Sessions */}
-        {bookings.length > 0 && (
+        {(bookings.length > 0 || webinarGroups.length > 0) && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-white mb-6">Upcoming Scheduled Sessions</h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {bookings.map((booking) => {
-                const bookingDate = new Date(booking.scheduledDate);
-                const formattedDate = bookingDate.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                });
-                const formattedTime = bookingDate.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
 
+              {/* ── Webinar groups — one card per slot ── */}
+              {webinarGroups.map((group) => {
+                const d = new Date(group.scheduledDate);
+                const fDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const fTime = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const initials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+                return (
+                  <div key={group.slotKey} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-white">{group.title}</h3>
+                        <p className="text-xs text-zinc-500 mt-0.5">Live Webinar · {group.participants.length} registered</p>
+                      </div>
+                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400">
+                        {group.participants.length} seats
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 text-sm text-zinc-400 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
+                        <span>{fDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-blue-400 shrink-0" />
+                        <span>{fTime} · {group.duration} min</span>
+                      </div>
+                    </div>
+
+                    {/* Participant avatars */}
+                    <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+                      {group.participants.slice(0, 5).map((p) => (
+                        <div
+                          key={p._id}
+                          title={p.studentId.name}
+                          className="w-7 h-7 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-[10px] font-bold text-blue-300"
+                        >
+                          {initials(p.studentId.name)}
+                        </div>
+                      ))}
+                      {group.participants.length > 5 && (
+                        <span className="text-xs text-zinc-500">+{group.participants.length - 5} more</span>
+                      )}
+                    </div>
+
+                    <Link
+                      href="/mentor-dashboard/bookings"
+                      className="inline-block px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                    >
+                      Manage Session
+                    </Link>
+                  </div>
+                );
+              })}
+
+              {/* ── Individual non-webinar bookings ── */}
+              {bookings.map((booking) => {
+                const d = new Date(booking.scheduledDate);
+                const fDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const fTime = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 return (
                   <div key={booking._id} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 hover:border-white/20 transition-all">
                     <div className="flex items-start justify-between mb-4">
@@ -203,11 +276,11 @@ export default function MentorDashboard() {
                     <div className="space-y-2 text-sm text-zinc-400">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-blue-400" />
-                        <span>{formattedDate}</span>
+                        <span>{fDate}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-blue-400" />
-                        <span>{formattedTime} • {booking.duration} minutes</span>
+                        <span>{fTime} · {booking.duration} minutes</span>
                       </div>
                     </div>
                     <Link
@@ -219,6 +292,7 @@ export default function MentorDashboard() {
                   </div>
                 );
               })}
+
             </div>
           </div>
         )}
