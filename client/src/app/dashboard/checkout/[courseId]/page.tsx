@@ -266,22 +266,25 @@ export default function CheckoutPage() {
 
               <div className="pt-4 border-t-2 border-blue-100">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-slate-600 font-medium">Subtotal</span>
+                  <span className="text-slate-600 font-medium">Base price</span>
                   <span className="text-slate-900 font-bold">₹{course.price}</span>
                 </div>
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-1">
                   <span className="text-slate-600 font-medium">GST (18%)</span>
-                  <span className="text-slate-900 font-bold">₹{(course.price * 0.18).toFixed(2)}</span>
+                  <span className="text-slate-900 font-bold">+₹{Math.round(course.price * 0.18)}</span>
                 </div>
-                <p className="text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-2 rounded-lg mt-2">
-                  GST will be included in your Razorpay payment
+                <p className="text-xs text-slate-400 mb-3">
+                  Price shown excl. GST — tax added at checkout
                 </p>
               </div>
 
               <div className="pt-4 border-t-2 border-blue-200">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-900 font-bold text-lg">Total</span>
-                  <span className="text-3xl font-black text-blue-600">₹{(course.price * 1.18).toFixed(2)}</span>
+                  <span className="text-slate-900 font-bold text-lg">Total payable</span>
+                  <div className="text-right">
+                    <span className="text-3xl font-black text-blue-600">₹{Math.round(course.price * 1.18)}</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Incl. 18% GST</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -291,7 +294,7 @@ export default function CheckoutPage() {
               disabled={isProcessing}
               className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
-              {isProcessing ? 'Processing...' : `Pay ₹${(course.price * 1.18).toFixed(2)}`}
+              {isProcessing ? 'Processing...' : `Pay ₹${Math.round(course.price * 1.18)} (incl. GST)`}
             </button>
 
             <div className="mt-6 space-y-3">

@@ -335,25 +335,89 @@ export default function CourseDetailPage() {
           );
         }
 
+        // Extract YouTube video ID or playlist ID to show real thumbnail
+        const getYtThumbnail = (url: string): string | null => {
+          try {
+            const u = new URL(url);
+            // Standard watch?v= or short youtu.be/
+            const vid = u.searchParams.get("v") || (u.hostname === "youtu.be" ? u.pathname.slice(1) : null);
+            if (vid) return `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+            // Playlist — use a generic YT thumbnail via first video if available
+            const list = u.searchParams.get("list");
+            if (list) return `https://img.youtube.com/vi/0/hqdefault.jpg`; // playlist has no direct thumb API
+          } catch {}
+          return null;
+        };
+
+        const isYoutube = /youtube\.com|youtu\.be/i.test(videoUrl);
+        const ytThumb = isYoutube ? getYtThumbnail(videoUrl) : null;
+        const isPlaylist = /[?&]list=/i.test(videoUrl) && !/[?&]v=/.test(videoUrl);
+
         return (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 flex flex-col items-center gap-4 text-center shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
-              <Play className="w-6 h-6 text-red-600 fill-red-600" />
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            {/* Thumbnail area */}
+            <div className="relative w-full aspect-video bg-slate-900 flex items-center justify-center overflow-hidden">
+              {ytThumb && !isPlaylist ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={ytThumb}
+                  alt={selectedContent.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-white/50">
+                  <svg viewBox="0 0 90 20" className="w-28 fill-white/20">
+                    <path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 0 14.285 0 14.285 0C14.285 0 5.35042 0 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5701 5.35042 27.9727 3.12324ZM11.4253 14.2854V5.71458L18.8477 10.0001L11.4253 14.2854Z" />
+                  </svg>
+                  <p className="text-sm">{isPlaylist ? "YouTube Playlist" : "YouTube Video"}</p>
+                </div>
+              )}
+              {/* Play overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-red-600/90 flex items-center justify-center shadow-2xl">
+                  <Play className="w-7 h-7 text-white fill-white ml-1" />
+                </div>
+              </div>
+              {/* Playlist badge */}
+              {isPlaylist && (
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                  <svg viewBox="0 0 16 16" className="w-3 h-3 fill-current"><path d="M2 4h12v1.5H2V4zm0 3.5h8V9H2V7.5zm0 3.5h8V12H2v-1zm11-2.5v5l4-2.5-4-2.5z"/></svg>
+                  Playlist
+                </div>
+              )}
             </div>
-            <div>
-              <p className="text-slate-800 font-semibold text-base">{selectedContent.title}</p>
-              <p className="text-slate-500 text-sm mt-1">Opens the YouTube playlist in a new tab</p>
+
+            {/* Info row */}
+            <div className="p-5 flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-slate-900 font-semibold text-base leading-snug truncate">
+                  {selectedContent.title}
+                </p>
+                {selectedContent.description && (
+                  <p className="text-slate-500 text-sm mt-1 line-clamp-2">
+                    {selectedContent.description}
+                  </p>
+                )}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <svg viewBox="0 0 90 20" className="h-3 w-auto fill-red-600">
+                    <path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 0 14.285 0 14.285 0C14.285 0 5.35042 0 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5701 5.35042 27.9727 3.12324ZM11.4253 14.2854V5.71458L18.8477 10.0001L11.4253 14.2854Z" />
+                  </svg>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {isPlaylist ? "YouTube Playlist" : "YouTube"}
+                    {selectedContent.duration ? ` · ${selectedContent.duration} min` : ""}
+                  </span>
+                </div>
+              </div>
+              <a
+                href={videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+              >
+                Watch
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              Watch on YouTube
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
         );
       }

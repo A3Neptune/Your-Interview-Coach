@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PageTracker from "@/components/PageTracker";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -96,7 +95,6 @@ export default function RootLayout({
       <body className="font-body antialiased bg-[#030712] text-white">
         <Providers>{children}</Providers>
         <ServiceWorkerRegister />
-        <PWAInstallPrompt />
         <PageTracker />
         <Analytics />
       </body>

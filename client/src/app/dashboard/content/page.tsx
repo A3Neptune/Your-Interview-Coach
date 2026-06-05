@@ -234,12 +234,21 @@ export default function ContentPage() {
                 Continue Learning
               </Link>
             ) : isPaid ? (
-              <Link
-                href={`/dashboard/checkout/${course._id}`}
-                className="block w-full py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-center font-semibold transition-all shadow-md hover:shadow-lg text-sm"
-              >
-                Buy Now - ₹{course.price}
-              </Link>
+              <div>
+                <div className="flex items-baseline gap-1.5 mb-2">
+                  <span className="text-xl font-bold text-slate-900">₹{course.price}</span>
+                  <span className="text-[10px] text-slate-400 font-medium">excl. GST</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mb-2.5">
+                  +₹{Math.round(course.price * 0.18)} GST (18%) · Total ₹{Math.round(course.price * 1.18)}
+                </p>
+                <Link
+                  href={`/dashboard/checkout/${course._id}`}
+                  className="block w-full py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-center font-semibold transition-all shadow-md hover:shadow-lg text-sm"
+                >
+                  Buy Now
+                </Link>
+              </div>
             ) : (
               <Link
                 href={`/dashboard/content/${course._id}`}
