@@ -76,15 +76,12 @@ export default function CourseDetailPage() {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
 
-  // Video caching and rendering states
+  // Video caching
   const [videoCache, setVideoCache] = useState<Map<string, string>>(new Map());
 
-  const [videoProgress, setVideoProgress] = useState<Map<string, number>>(
-    new Map(),
-  );
-  const [preloadedVideos, setPreloadedVideos] = useState<Set<string>>(
-    new Set(),
-  );
+  // Per-item completion — stored in localStorage, synced as overall % to server
+  const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
+  const completedKey = `completed_items_${courseId}`;
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -168,52 +165,44 @@ export default function CourseDetailPage() {
     fetchCourse();
   }, [courseId, router]);
 
-  // Video caching and preloading effect
+  // Cache video URLs when selected content changes
   useEffect(() => {
-    if (!selectedContent || !isEnrolled) return;
-
-    const preloadVideo = async (content: Content) => {
-      if (!content.videoUrl || preloadedVideos.has(content._id)) return;
-
-      try {
-        // Cache video URL
-        setVideoCache((prev: Map<string, string>) =>
-          new Map(prev).set(content._id, content.videoUrl!),
-        );
-        setPreloadedVideos((prev: Set<string>) => new Set(prev).add(content._id));
-
-        // Load progress from localStorage
-        const savedProgress = localStorage.getItem(
-          `video_progress_${content._id}`,
-        );
-        if (savedProgress) {
-          setVideoProgress((prev: Map<string, number>) =>
-            new Map(prev).set(content._id, parseFloat(savedProgress)),
-          );
-        }
-      } catch (error) {
-        // ignore preload errors — user will see the YouTube button regardless
-      }
-    };
-
-    preloadVideo(selectedContent);
-
-    // Preload next video
-    const currentIndex = contents.findIndex(
-      (c) => c._id === selectedContent._id,
+    if (!selectedContent?.videoUrl) return;
+    setVideoCache((prev: Map<string, string>) =>
+      new Map(prev).set(selectedContent._id, selectedContent.videoUrl!),
     );
-    if (currentIndex >= 0 && currentIndex < contents.length - 1) {
-      const nextContent = contents[currentIndex + 1];
-      if (nextContent.videoUrl) {
-        setTimeout(() => preloadVideo(nextContent), 2000); // Preload after 2s
-      }
-    }
-  }, [selectedContent, contents, isEnrolled, preloadedVideos]);
+  }, [selectedContent]);
 
-  // Save video progress
-  const handleVideoProgress = (contentId: string, progress: number) => {
-    setVideoProgress((prev) => new Map(prev).set(contentId, progress));
-    localStorage.setItem(`video_progress_${contentId}`, progress.toString());
+  // Load completed items from localStorage once courseId is known
+  useEffect(() => {
+    if (!courseId) return;
+    try {
+      const saved = localStorage.getItem(`completed_items_${courseId}`);
+      if (saved) setCompletedItems(new Set(JSON.parse(saved)));
+    } catch {}
+  }, [courseId]);
+
+  // Sync overall progress % to server whenever completedItems or contents changes
+  useEffect(() => {
+    if (!isEnrolled || contents.length === 0) return;
+    const pct = Math.round((completedItems.size / contents.length) * 100);
+    const token = getAuthToken();
+    if (!token) return;
+    fetch(`${API_URL}/enrollments/${courseId}/progress`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ progress: pct }),
+    }).catch(() => {});
+  }, [completedItems, contents, isEnrolled, courseId]);
+
+  const toggleItemComplete = (contentId: string) => {
+    setCompletedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(contentId)) next.delete(contentId);
+      else next.add(contentId);
+      localStorage.setItem(`completed_items_${courseId}`, JSON.stringify(Array.from(next)));
+      return next;
+    });
   };
 
   const checkEnrollmentStatus = async () => {
@@ -372,25 +361,12 @@ export default function CourseDetailPage() {
                   <p className="text-sm">{isPlaylist ? "YouTube Playlist" : "YouTube Video"}</p>
                 </div>
               )}
-              {/* Play overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-red-600/90 flex items-center justify-center shadow-2xl">
-                  <Play className="w-7 h-7 text-white fill-white ml-1" />
-                </div>
-              </div>
-              {/* Playlist badge */}
-              {isPlaylist && (
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                  <svg viewBox="0 0 16 16" className="w-3 h-3 fill-current"><path d="M2 4h12v1.5H2V4zm0 3.5h8V9H2V7.5zm0 3.5h8V12H2v-1zm11-2.5v5l4-2.5-4-2.5z"/></svg>
-                  Playlist
-                </div>
-              )}
             </div>
 
-            {/* Info row */}
-            <div className="p-5 flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-slate-900 font-semibold text-base leading-snug truncate">
+            {/* Info + actions */}
+            <div className="p-5 space-y-3">
+              <div>
+                <p className="text-slate-900 font-semibold text-base leading-snug">
                   {selectedContent.title}
                 </p>
                 {selectedContent.description && (
@@ -398,25 +374,38 @@ export default function CourseDetailPage() {
                     {selectedContent.description}
                   </p>
                 )}
-                <div className="flex items-center gap-1.5 mt-2">
-                  <svg viewBox="0 0 90 20" className="h-3 w-auto fill-red-600">
-                    <path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 0 14.285 0 14.285 0C14.285 0 5.35042 0 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5701 5.35042 27.9727 3.12324ZM11.4253 14.2854V5.71458L18.8477 10.0001L11.4253 14.2854Z" />
-                  </svg>
-                  <span className="text-xs text-slate-400 font-medium">
-                    {isPlaylist ? "YouTube Playlist" : "YouTube"}
-                    {selectedContent.duration ? ` · ${selectedContent.duration} min` : ""}
-                  </span>
-                </div>
+                <p className="text-xs text-slate-400 font-medium mt-1.5">
+                  {isPlaylist ? "YouTube Playlist" : "YouTube"}
+                  {selectedContent.duration ? ` · ${selectedContent.duration} min` : ""}
+                </p>
               </div>
+
+              {/* Watch button — full width, clearly labelled */}
               <a
                 href={videoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
               >
-                Watch
-                <ExternalLink className="w-3.5 h-3.5" />
+                <Play className="w-4 h-4 fill-white" />
+                Watch on YouTube
+                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
               </a>
+
+              {/* Mark as done — only shown when enrolled */}
+              {isEnrolled && (
+                <button
+                  onClick={() => toggleItemComplete(selectedContent._id)}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-semibold transition-all ${
+                    completedItems.has(selectedContent._id)
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300"
+                  }`}
+                >
+                  <CheckCircle className={`w-4 h-4 ${completedItems.has(selectedContent._id) ? "text-emerald-500 fill-emerald-500" : "text-slate-400"}`} />
+                  {completedItems.has(selectedContent._id) ? "Completed — mark as undone" : "Mark as done"}
+                </button>
+              )}
             </div>
           </div>
         );
@@ -676,65 +665,45 @@ export default function CourseDetailPage() {
 
               <div className="divide-y divide-blue-100 max-h-96 overflow-y-auto">
                 {contents.map((content, index) => {
-                  const contentProgress = videoProgress.get(content._id) || 0;
-                  const isCompleted = contentProgress >= 90;
-                  const isInProgress =
-                    contentProgress > 0 && contentProgress < 90;
+                  const isCompleted = completedItems.has(content._id);
+                  const isActive = selectedContent?._id === content._id;
 
                   return (
                     <button
                       key={content._id}
                       onClick={() => setSelectedContent(content)}
-                      className={`w-full px-6 py-4 text-left transition-all hover:bg-blue-50 relative ${
-                        selectedContent?._id === content._id
-                          ? "bg-blue-50 border-l-4 border-blue-600"
-                          : ""
-                      }`}
+                      className={`w-full px-6 py-4 text-left transition-all hover:bg-blue-50 ${
+                        isActive ? "bg-blue-50 border-l-4 border-blue-600" : ""
+                      } ${isCompleted && !isActive ? "bg-emerald-50/40" : ""}`}
                     >
-                      {/* Progress indicator at bottom */}
-                      {isInProgress && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200">
-                          <div
-                            className="h-full bg-blue-600 transition-all"
-                            style={{ width: `${contentProgress}%` }}
-                          />
-                        </div>
-                      )}
-
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-1">
+                        <div className="flex-shrink-0 mt-0.5">
                           {isCompleted ? (
                             <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                              <CheckCircle className="w-4 h-4 text-white" />
+                              <CheckCircle className="w-4 h-4 text-white fill-white" />
                             </div>
-                          ) : selectedContent?._id === content._id ? (
+                          ) : isActive ? (
                             <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                              <Play className="w-3 h-3 text-white" />
+                              <Play className="w-3 h-3 text-white fill-white" />
                             </div>
                           ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-400 bg-white flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-slate-600">
-                                {index + 1}
-                              </span>
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-slate-500">{index + 1}</span>
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-900 text-sm line-clamp-2 leading-snug">
+                          <p className={`font-semibold text-sm line-clamp-2 leading-snug ${isCompleted ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900"}`}>
                             {content.title}
                           </p>
                           {content.duration > 0 && (
-                            <div className="flex items-center gap-3 mt-1.5">
-                              <p className="text-xs text-blue-600 font-semibold flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
-                                <Clock className="w-3 h-3" />
-                                {content.duration} mins
-                              </p>
-                              {isInProgress && (
-                                <p className="text-xs text-emerald-600 font-semibold">
-                                  {Math.round(contentProgress)}% watched
-                                </p>
-                              )}
-                            </div>
+                            <p className="text-xs text-blue-600 font-semibold flex items-center gap-1 mt-1">
+                              <Clock className="w-3 h-3" />
+                              {content.duration} mins
+                            </p>
+                          )}
+                          {isCompleted && (
+                            <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">✓ Completed</p>
                           )}
                         </div>
                       </div>
