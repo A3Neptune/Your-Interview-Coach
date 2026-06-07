@@ -5,7 +5,6 @@ import HeroSection from "@/components/sections/HeroSection";
 import GroupDiscussionSection from "@/components/sections/GroupDiscussionSection";
 import LogosSection from "@/components/sections/LogosSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import CoursesSection from "@/components/sections/CoursesSection";
 import HowItWorksSection from "@/components/sections/HowItWorksSection";
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
@@ -23,7 +22,6 @@ export default function Home() {
       <GroupDiscussionSection />
       <LogosSection />
       <TestimonialsSection />
-      <CoursesSection />
       <PricingSection />
       <HowItWorksSection />
       <FAQSection />
