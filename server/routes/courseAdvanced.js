@@ -4,9 +4,9 @@ import courseAdvancedController from '../controllers/courseAdvancedController.js
 
 const router = express.Router();
 
-// Public routes - Published courses for students
-router.get('/courses/published', verifyToken, courseAdvancedController.getPublishedCourses);
-router.get('/courses/published/:courseId', verifyToken, courseAdvancedController.getPublishedCourseById);
+// Public routes - Published courses for students (no auth required)
+router.get('/courses/published', courseAdvancedController.getPublishedCourses);
+router.get('/courses/published/:courseId', courseAdvancedController.getPublishedCourseById);
 
 // Course CRUD - All routes require mentor access
 router.get('/courses', verifyMentor, courseAdvancedController.getMentorCourses);
