@@ -94,8 +94,8 @@ export default function ServicesPopup() {
       setIsVisible(true);
       requestAnimationFrame(() => requestAnimationFrame(() => setAnimIn(true)));
     };
-    const timer = setTimeout(show, 12000);
-    const onScroll = () => { if (window.scrollY > 300) show(); };
+    const timer = setTimeout(show, 3000);
+    const onScroll = () => { if (window.scrollY > 100) show(); };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { clearTimeout(timer); window.removeEventListener("scroll", onScroll); };
   }, [hasShown]);
