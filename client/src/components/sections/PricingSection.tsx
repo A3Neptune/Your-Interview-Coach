@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { Check, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
+import { fbq } from "@/lib/fbq";
 
 interface Service {
   id: string;
@@ -33,7 +34,15 @@ export default function PricingSection() {
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
   const router = useRouter();
 
-  const handleBook = (serviceId: string) => {
+  const handleBook = (serviceId: string, serviceName?: string, price?: number) => {
+    fbq('ViewContent', {
+      content_name: serviceName || serviceId,
+      content_ids: [serviceId],
+      content_type: 'service',
+      value: price,
+      currency: 'INR',
+    });
+
     if (serviceId === "resumeAnalysis" || serviceId === "oneMentorship") {
       setUploadServiceId(serviceId);
       setShowResumeUpload(true);
@@ -431,7 +440,7 @@ export default function PricingSection() {
                     {/* CTA */}
                     <button
                       className="prc-book-btn w-full"
-                      onClick={() => handleBook(svc.id)}
+                      onClick={() => handleBook(svc.id, svc.name, svc.price)}
                       style={{
                         padding: "12px",
                         borderRadius: 12,

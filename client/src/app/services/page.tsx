@@ -14,6 +14,7 @@ import {
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
 import ResumeBookingUploadDialog from "@/components/ResumeBookingUploadDialog";
+import { fbq } from "@/lib/fbq";
 import useSWR from "swr";
 
 const swrFetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -624,6 +625,12 @@ export default function ServicesPage() {
                     <Link
                       href={(s.id === "resumeAnalysis" || s.id === "oneMentorship") ? "#" : s.href}
                       onClick={(event) => {
+                        fbq('ViewContent', {
+                          content_name: s.name,
+                          content_ids: [s.id],
+                          content_type: 'service',
+                          currency: 'INR',
+                        });
                         if (s.id === "resumeAnalysis" || s.id === "oneMentorship") {
                           event.preventDefault();
                           setUploadServiceId(s.id);

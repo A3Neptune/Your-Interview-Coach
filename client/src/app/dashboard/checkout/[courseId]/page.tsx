@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { contentAPI, paymentAPI, getAuthToken, removeAuthToken } from '@/lib/api';
+import { fbq } from '@/lib/fbq';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -64,6 +65,13 @@ export default function CheckoutPage() {
 
       if (data.success) {
         setCourse(data.data);
+        fbq('InitiateCheckout', {
+          content_name: data.data.title,
+          content_ids: [courseId],
+          content_type: 'course',
+          value: data.data.price,
+          currency: 'INR',
+        });
       } else {
         throw new Error(data.error || 'Failed to load course');
       }
@@ -115,6 +123,13 @@ export default function CheckoutPage() {
                 razorpay_signature: response.razorpay_signature,
               });
 
+              fbq('Purchase', {
+                content_name: course?.title,
+                content_ids: [courseId],
+                content_type: 'course',
+                value: Math.round((course?.price ?? 0) * 1.18),
+                currency: 'INR',
+              });
               toast.success('Payment successful!');
               router.push(`/dashboard/payment-success/${orderResponse.data.paymentId}`);
             } catch (err) {

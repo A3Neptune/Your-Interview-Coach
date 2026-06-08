@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import PageTracker from "@/components/PageTracker";
+import MetaPixelTracker from "@/components/MetaPixelTracker";
 import { Analytics } from "@vercel/analytics/next";
+
+const META_PIXEL_ID = "1316585250580373";
 
 export const viewport: Viewport = {
   themeColor: "#2563eb",
@@ -16,7 +20,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "YourInterviewCoach | Your Path to Professional Success",
   description:
-    "Connect with expert mentors, get personalized career roadmaps, and master the skills needed to land your dream job. Join 10,000+ successful professionals.",
+      "Connect with expert mentors, get personalized career roadmaps, and master the skills needed to land your dream job. Join 10,000+ successful professionals.",
   keywords: [
     "career coaching",
     "mentorship",
@@ -29,28 +33,6 @@ export const metadata: Metadata = {
     icon: "/yic-logo-sm.png",
   },
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Your Interview Coach",
-  },
-  openGraph: {
-    title: "YourInterviewCoach | Your Path to Professional Success",
-    description:
-      "Connect with expert mentors and transform your career with personalized guidance.",
-    type: "website",
-    locale: "en_US",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "YourInterviewCoach | Your Path to Professional Success",
-    description:
-      "Connect with expert mentors and transform your career with personalized guidance.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
 };
 
 export default function RootLayout({
@@ -59,45 +41,46 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        {/* DM Sans - site-wide font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400;1,9..40,500;1,9..40,600;1,9..40,700&display=swap"
-          rel="stylesheet"
-        />
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
-        {/* Apple Web App Meta Tags */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-        <meta
-          name="apple-mobile-web-app-title"
-          content="Your Interview Coach"
-        />
-        {/* Apple Launch Icons */}
-        <link rel="apple-touch-icon" href="/yic-logo-lg.png" />
-        {/* Microsoft Web App Meta Tags */}
-        <meta name="msapplication-TileColor" content="#2563eb" />
-        <meta name="msapplication-TileImage" content="/yic-logo-lg.png" />
-        {/* Google Chrome Web App Meta Tags */}
-        <meta name="theme-color" content="#2563eb" />
-      </head>
+      <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head />
+
       <body className="font-body antialiased bg-[#030712] text-white">
-        <Providers>{children}</Providers>
-        <ServiceWorkerRegister />
-        <PageTracker />
-        <Analytics />
+      <noscript>
+        <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
+            alt=""
+        />
+      </noscript>
+
+      <Providers>{children}</Providers>
+      <ServiceWorkerRegister />
+      <PageTracker />
+      <MetaPixelTracker />
+      <Analytics />
+
+      {/* Meta Pixel base code — loads once after hydration */}
+      <Script
+          id="meta-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}
+              (window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${META_PIXEL_ID}');
+            `,
+          }}
+      />
       </body>
-    </html>
+      </html>
   );
 }

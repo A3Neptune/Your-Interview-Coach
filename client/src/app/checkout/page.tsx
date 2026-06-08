@@ -438,6 +438,7 @@ import {
   Loader2, CheckCircle, ArrowLeft, Shield, Clock,
   Calendar, User, Tag, Zap, ChevronRight, Lock, Star, Users,
 } from 'lucide-react';
+import { fbq } from '@/lib/fbq';
 
 declare global {
   interface Window { Razorpay: any; }
@@ -717,6 +718,13 @@ function CheckoutContent() {
       console.log('Checkout Available IDs:', pricingRes.data.services.map((s: any) => s.id));
       if (!svc) { toast.error('Service not found'); router.push('/'); return; }
       setService(svc);
+      fbq('InitiateCheckout', {
+        content_name: svc.name,
+        content_ids: [serviceId],
+        content_type: 'service',
+        value: svc.price,
+        currency: 'INR',
+      });
       const mid = mentorRes.data.mentors[0]?._id;
       if (mid) setMentorId(mid);
     } catch {
@@ -836,6 +844,13 @@ function CheckoutContent() {
 
         // Free booking — server confirmed it without Razorpay
         if (orderRes.data.free) {
+          fbq('Purchase', {
+            content_name: service?.name,
+            content_ids: [serviceId],
+            content_type: 'service',
+            value: 0,
+            currency: 'INR',
+          });
           toast.success('Booking confirmed!');
           setPaymentDone(true);
           setIsProcessing(false);
@@ -865,6 +880,13 @@ function CheckoutContent() {
             const vr = await axios.post(verifyUrl, verifyPayload, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
             toast.dismiss(tid);
             if (vr.data.success) {
+              fbq('Purchase', {
+                content_name: service?.name,
+                content_ids: [serviceId],
+                content_type: 'service',
+                value: totalAmount,
+                currency: 'INR',
+              });
               setPaymentDone(true);
               if (isGdBooking) {
                 localStorage.removeItem('gd_members');
