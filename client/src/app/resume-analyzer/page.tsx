@@ -236,7 +236,7 @@ export default function ResumeAnalyzerPage() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("https://kpeduresumeapi.vercel.app/", {
+      const response = await fetch("https://https://resume-screening-ats.vercel.app/", {
         method: "POST",
         body: formData,
       });
