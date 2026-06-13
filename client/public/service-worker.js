@@ -33,7 +33,7 @@ self.addEventListener('fetch', (event) => {
   // Never intercept API calls or external domains
   if (
     url.pathname.startsWith('/api/') ||
-    event.request.url.includes('https://resume-screening-ats-n.vercel.app') ||
+    event.request.url.includes('https://resume-screening-ats.vercel.app') ||
     url.origin !== self.location.origin
   ) {
     return;
