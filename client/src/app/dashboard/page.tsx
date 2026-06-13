@@ -55,8 +55,9 @@ interface Service {
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const isPA = (b: Booking) => b.sessionType === 'placementAccelerator';
-const paWeekEnded = (b: Booking) => new Date(b.scheduledDate).getTime() + WEEK_MS < Date.now();
+const isPA = (b: Booking) => b.sessionType === "placementAccelerator";
+const paWeekEnded = (b: Booking) =>
+  new Date(b.scheduledDate).getTime() + WEEK_MS < Date.now();
 
 interface Booking {
   _id: string;
@@ -73,7 +74,9 @@ interface Booking {
 
 function Shimmer({ className = "" }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden bg-slate-100 rounded-lg ${className}`}>
+    <div
+      className={`relative overflow-hidden bg-slate-100 rounded-lg ${className}`}
+    >
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
     </div>
   );
@@ -175,7 +178,9 @@ export default function DashboardPage() {
   const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
-  const [uploadServiceId, setUploadServiceId] = useState<"resumeAnalysis" | "oneMentorship">("resumeAnalysis");
+  const [uploadServiceId, setUploadServiceId] = useState<
+    "resumeAnalysis" | "oneMentorship"
+  >("resumeAnalysis");
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -192,23 +197,30 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const token = getAuthToken();
-        if (!token) { router.push("/login"); return; }
+        if (!token) {
+          router.push("/login");
+          return;
+        }
 
         const response = await authAPI.getCurrentUser();
         const userData = response.data.user;
 
-        if (userData.userType === "admin") { router.push("/mentor-dashboard"); return; }
+        if (userData.userType === "admin") {
+          router.push("/mentor-dashboard");
+          return;
+        }
 
         setUser(userData);
 
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
         const servicesRes = await axios.get(
           `${API_URL}/pricing-section/public`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         const fetchedServices = servicesRes.data.services || [];
-        
+
         setServices(fetchedServices);
 
         try {
@@ -218,8 +230,18 @@ export default function DashboardPage() {
           });
           const all: Booking[] = bookingsRes.data.bookings || [];
           const upcoming = all
-            .filter((b) => b.status === "confirmed" && (isPA(b) ? !paWeekEnded(b) : new Date(b.scheduledDate) > new Date()))
-            .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+            .filter(
+              (b) =>
+                b.status === "confirmed" &&
+                (isPA(b)
+                  ? !paWeekEnded(b)
+                  : new Date(b.scheduledDate) > new Date()),
+            )
+            .sort(
+              (a, b) =>
+                new Date(a.scheduledDate).getTime() -
+                new Date(b.scheduledDate).getTime(),
+            )
             .slice(0, 3);
           setUpcomingBookings(upcoming);
           setCompletedCount(all.filter((b) => b.status === "completed").length);
@@ -236,7 +258,12 @@ export default function DashboardPage() {
 
   const getInitials = () => {
     if (!user?.name) return "U";
-    return user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const canJoinNow = (scheduledDate: string, duration: number) => {
@@ -262,10 +289,15 @@ export default function DashboardPage() {
   const getDiscountedPrice = (service: Service) => {
     if (!service.discount?.isActive || service.discount.type === "none")
       return { original: service.price, discounted: service.price, saving: 0 };
-    const saving = service.discount.type === "percentage"
-      ? (service.price * service.discount.value) / 100
-      : service.discount.value;
-    return { original: service.price, discounted: Math.max(0, service.price - saving), saving: Math.round(saving) };
+    const saving =
+      service.discount.type === "percentage"
+        ? (service.price * service.discount.value) / 100
+        : service.discount.value;
+    return {
+      original: service.price,
+      discounted: Math.max(0, service.price - saving),
+      saving: Math.round(saving),
+    };
   };
 
   if (isLoading && !user) {
@@ -281,7 +313,10 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Redirecting to login...</p>
-          <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link
+            href="/login"
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
             Back to Login
           </Link>
         </div>
@@ -290,10 +325,17 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <div
+      className="min-h-screen bg-slate-50"
+      style={{ fontFamily: "'DM Sans', sans-serif" }}
+    >
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap");
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
       `}</style>
 
       {/* ── Hero Banner ─────────────────────────────────────────────────── */}
@@ -303,7 +345,10 @@ export default function DashboardPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Fraunces', serif" }}>
+              <h1
+                className="text-3xl sm:text-4xl font-bold text-white mb-2"
+                style={{ fontFamily: "'Fraunces', serif" }}
+              >
                 Welcome back, {user.name.split(" ")[0]}! 👋
               </h1>
               <p className="text-blue-100 text-base sm:text-lg">
@@ -312,35 +357,63 @@ export default function DashboardPage() {
                   : "Continue making an impact today."}
               </p>
             </div>
-            <button
-              onClick={() => document.getElementById("services-section")?.scrollIntoView({ behavior: "smooth" })}
-              className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 text-sm"
-            >
-              <Zap className="w-4 h-4" />
-              Browse Services
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("services-section")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 text-sm"
+              >
+                <Zap className="w-4 h-4" />
+                Browse Services
+              </button>
+              <button>
+                <Link
+                  href="/resume-analyzer"
+                  className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 text-sm"
+                >
+                  Check Resume Score
+                </Link>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
-
         {/* ── Quick Stats Grid ───────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {isLoading ? <ProfileCardSkeleton /> : (
+          {isLoading ? (
+            <ProfileCardSkeleton />
+          ) : (
             <div className="col-span-2 lg:col-span-1 rounded-2xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-md transition-all">
               <div className="flex items-center gap-4">
                 {user.profileImage ? (
-                  <img src={user.profileImage} alt={user.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-50" />
+                  <img
+                    src={user.profileImage}
+                    alt={user.name}
+                    className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-50"
+                  />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-                    <span className="text-xl font-bold text-white">{getInitials()}</span>
+                    <span className="text-xl font-bold text-white">
+                      {getInitials()}
+                    </span>
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-slate-900 truncate text-sm">{user.name}</h3>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                  <Link href="/dashboard/profile" className="text-[10px] text-blue-600 hover:text-blue-700 font-bold uppercase tracking-wider mt-1 inline-block">
+                  <h3 className="font-bold text-slate-900 truncate text-sm">
+                    {user.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 truncate">
+                    {user.email}
+                  </p>
+                  <Link
+                    href="/dashboard/profile"
+                    className="text-[10px] text-blue-600 hover:text-blue-700 font-bold uppercase tracking-wider mt-1 inline-block"
+                  >
                     Edit Profile →
                   </Link>
                 </div>
@@ -348,28 +421,40 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {isLoading ? <StatCardSkeleton /> : (
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <BarChart3 className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Completed</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Completed
+                </span>
               </div>
-              <p className="text-3xl font-bold text-slate-900">{completedCount}</p>
+              <p className="text-3xl font-bold text-slate-900">
+                {completedCount}
+              </p>
               <p className="text-xs text-slate-500 mt-1">Sessions finished</p>
             </div>
           )}
 
-          {isLoading ? <StatCardSkeleton /> : (
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-emerald-50 rounded-lg">
                   <Calendar className="w-5 h-5 text-emerald-600" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upcoming</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Upcoming
+                </span>
               </div>
-              <p className="text-3xl font-bold text-slate-900">{upcomingBookings.length}</p>
+              <p className="text-3xl font-bold text-slate-900">
+                {upcomingBookings.length}
+              </p>
               <p className="text-xs text-slate-500 mt-1">Confirmed slots</p>
             </div>
           )}
@@ -381,10 +466,15 @@ export default function DashboardPage() {
             {/* Section header */}
             <div className="flex items-end justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
+                <h2
+                  className="text-2xl font-bold text-slate-900"
+                  style={{ fontFamily: "'Fraunces', serif" }}
+                >
                   Upcoming Sessions
                 </h2>
-                <p className="text-slate-400 text-sm mt-0.5">Your confirmed mentorship slots</p>
+                <p className="text-slate-400 text-sm mt-0.5">
+                  Your confirmed mentorship slots
+                </p>
               </div>
               {upcomingBookings.length > 0 && (
                 <Link
@@ -415,7 +505,9 @@ export default function DashboardPage() {
 
                   {/* copy */}
                   <div className="space-y-1.5 max-w-xs">
-                    <p className="text-slate-800 font-semibold text-base">No upcoming sessions</p>
+                    <p className="text-slate-800 font-semibold text-base">
+                      No upcoming sessions
+                    </p>
                     <p className="text-slate-400 text-sm leading-relaxed">
                       You don&apos;t have any confirmed sessions scheduled yet.
                     </p>
@@ -435,10 +527,17 @@ export default function DashboardPage() {
                 <div className="grid md:grid-cols-3 gap-5">
                   {upcomingBookings.map((booking) => {
                     const pa = isPA(booking);
-                    const joinable = !pa && canJoinNow(booking.scheduledDate, booking.duration);
-                    const countdown = !pa ? getJoinCountdown(booking.scheduledDate) : null;
+                    const joinable =
+                      !pa &&
+                      canJoinNow(booking.scheduledDate, booking.duration);
+                    const countdown = !pa
+                      ? getJoinCountdown(booking.scheduledDate)
+                      : null;
                     return (
-                      <div key={booking._id} className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden">
+                      <div
+                        key={booking._id}
+                        className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden"
+                      >
                         {/* card colour accent */}
                         <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
                         <div className="p-5 flex flex-col gap-4 flex-1">
@@ -452,16 +551,34 @@ export default function DashboardPage() {
                             </span>
                           </div>
 
-                          <h3 className="text-sm font-semibold text-slate-900 leading-snug">{booking.title}</h3>
+                          <h3 className="text-sm font-semibold text-slate-900 leading-snug">
+                            {booking.title}
+                          </h3>
 
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                              {mounted ? new Date(booking.scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : ""}
+                              {mounted
+                                ? new Date(
+                                    booking.scheduledDate,
+                                  ).toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })
+                                : ""}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                              {mounted ? new Date(booking.scheduledDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                              {mounted
+                                ? new Date(
+                                    booking.scheduledDate,
+                                  ).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : ""}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <User className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -474,8 +591,9 @@ export default function DashboardPage() {
                               <Clock className="w-3.5 h-3.5" />
                               Schedule confirmed via WhatsApp
                             </div>
-                          ) : booking.meetingLink && (
-                            joinable ? (
+                          ) : (
+                            booking.meetingLink &&
+                            (joinable ? (
                               <a
                                 href={booking.meetingLink}
                                 target="_blank"
@@ -495,14 +613,13 @@ export default function DashboardPage() {
                                 <Clock className="w-3.5 h-3.5" />
                                 Link active 10 min before
                               </div>
-                            )
+                            ))
                           )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-
               </>
             )}
           </div>
@@ -511,61 +628,99 @@ export default function DashboardPage() {
         {/* ── Services Section ───────────────────────────────────────────── */}
         <div id="services-section" className="space-y-8 scroll-mt-12">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Book a Session</h2>
-            <p className="text-slate-500 text-sm">Pick a service and choose your preferred slot</p>
+            <h2
+              className="text-2xl font-bold text-slate-900"
+              style={{ fontFamily: "'Fraunces', serif" }}
+            >
+              Book a Session
+            </h2>
+            <p className="text-slate-500 text-sm">
+              Pick a service and choose your preferred slot
+            </p>
           </div>
 
           {isLoading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => <ServiceCardSkeleton key={i} />)}
+              {[1, 2, 3].map((i) => (
+                <ServiceCardSkeleton key={i} />
+              ))}
             </div>
           ) : services.length === 0 ? (
             <div className="text-center py-16 rounded-2xl border border-dashed border-slate-200 bg-white">
               <Zap className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-              <p className="text-slate-500 text-sm">No services available yet.</p>
+              <p className="text-slate-500 text-sm">
+                No services available yet.
+              </p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service, idx) => {
                 const pricing = getDiscountedPrice(service);
-                const hasDiscount = service.discount?.isActive && service.discount.type !== "none";
+                const hasDiscount =
+                  service.discount?.isActive &&
+                  service.discount.type !== "none";
                 const totalWithGst = Math.round(pricing.discounted * 1.18);
                 const p = PALETTES[idx % PALETTES.length];
 
                 return (
-                  <div key={service.id} className="group flex flex-col rounded-3xl overflow-hidden bg-white border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300">
+                  <div
+                    key={service.id}
+                    className="group flex flex-col rounded-3xl overflow-hidden bg-white border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
                     {/* Header Panel */}
-                    <div className={`bg-gradient-to-br ${p.dark} p-6 flex flex-col gap-4 relative overflow-hidden`}>
+                    <div
+                      className={`bg-gradient-to-br ${p.dark} p-6 flex flex-col gap-4 relative overflow-hidden`}
+                    >
                       <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-8 -mt-8" />
-                      
+
                       <div className="flex items-start justify-between gap-3 relative z-10">
-                        <h3 className="text-white font-bold text-lg leading-tight">{service.name}</h3>
+                        <h3 className="text-white font-bold text-lg leading-tight">
+                          {service.name}
+                        </h3>
                         {hasDiscount && (
                           <span className="shrink-0 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-black uppercase tracking-tighter">
-                            {service.discount?.type === "percentage" ? `${service.discount.value}% OFF` : `₹${service.discount?.value} OFF`}
+                            {service.discount?.type === "percentage"
+                              ? `${service.discount.value}% OFF`
+                              : `₹${service.discount?.value} OFF`}
                           </span>
                         )}
                       </div>
 
-                      <p className={`text-xs ${p.light} leading-relaxed relative z-10 opacity-90`}>{service.title}</p>
+                      <p
+                        className={`text-xs ${p.light} leading-relaxed relative z-10 opacity-90`}
+                      >
+                        {service.title}
+                      </p>
 
                       <div className="flex flex-wrap gap-2 relative z-10">
                         <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold tracking-wide uppercase">
-                          <Clock className="w-3 h-3" />{service.duration}
+                          <Clock className="w-3 h-3" />
+                          {service.duration}
                         </span>
-                        {service.level && <span className="px-2.5 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold tracking-wide uppercase">{service.level}</span>}
+                        {service.level && (
+                          <span className="px-2.5 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold tracking-wide uppercase">
+                            {service.level}
+                          </span>
+                        )}
                       </div>
                     </div>
 
                     {/* Content Panel */}
                     <div className="flex-1 p-6 flex flex-col gap-6">
-                      <p className="text-xs text-slate-500 leading-relaxed italic">"{service.value}"</p>
-                      
+                      <p className="text-xs text-slate-500 leading-relaxed italic">
+                        "{service.value}"
+                      </p>
+
                       {service.points?.length > 0 && (
                         <ul className="space-y-2.5 flex-1">
                           {service.points.slice(0, 4).map((pt, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-xs text-slate-600 font-medium">
-                              <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${p.check}`} />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2.5 text-xs text-slate-600 font-medium"
+                            >
+                              <CheckCircle2
+                                className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${p.check}`}
+                              />
                               {pt}
                             </li>
                           ))}
@@ -576,24 +731,41 @@ export default function DashboardPage() {
                       <div className="pt-6 border-t border-slate-50 space-y-4">
                         <div className="flex items-end justify-between">
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Price</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                              Price
+                            </p>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>₹{Math.round(pricing.discounted)}</span>
-                              {hasDiscount && <span className="text-xs text-slate-400 line-through">₹{service.price}</span>}
+                              <span
+                                className="text-2xl font-black text-slate-900"
+                                style={{ fontFamily: "'Fraunces', serif" }}
+                              >
+                                ₹{Math.round(pricing.discounted)}
+                              </span>
+                              {hasDiscount && (
+                                <span className="text-xs text-slate-400 line-through">
+                                  ₹{service.price}
+                                </span>
+                              )}
                             </div>
-                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">excl. GST · +₹{Math.round(pricing.discounted * 0.18)} (18%)</p>
+                            <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+                              excl. GST · +₹
+                              {Math.round(pricing.discounted * 0.18)} (18%)
+                            </p>
                           </div>
-                          
+
                           <button
                             onClick={() => {
-                              if (service.id === "resumeAnalysis" || service.id === "oneMentorship") {
+                              if (
+                                service.id === "resumeAnalysis" ||
+                                service.id === "oneMentorship"
+                              ) {
                                 setUploadServiceId(service.id);
                                 setShowResumeUpload(true);
                               } else {
                                 router.push(
                                   service.id.startsWith("gd-")
                                     ? `/gd-booking?serviceId=${service.id}`
-                                    : `/select-slot?serviceId=${service.id}`
+                                    : `/select-slot?serviceId=${service.id}`,
                                 );
                               }
                             }}
