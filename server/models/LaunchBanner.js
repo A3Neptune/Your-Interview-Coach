@@ -36,6 +36,10 @@ const launchBannerSchema = new mongoose.Schema(
       min: 1,
       max: 168, // Max 7 days
     },
+    countdownEndsAt: {
+      type: Date,
+      default: null,
+    },
     showCountdown: {
       type: Boolean,
       default: true,

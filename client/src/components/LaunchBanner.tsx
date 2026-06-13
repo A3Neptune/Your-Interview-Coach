@@ -17,13 +17,13 @@ interface BannerData {
   ctaText: string;
   ctaLink: string;
   countdownHours: number;
+  countdownEndsAt?: string | null;
   showCountdown: boolean;
   badgeText: string;
   savePercentage: number;
 }
 
 const DISMISSED_KEY = 'yic_banner_dismissed_v2';
-const COUNTDOWN_KEY = 'yic_banner_countdown_start';
 
 export default function LaunchBanner({ onVisibilityChange, onHeightChange }: LaunchBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -58,26 +58,23 @@ export default function LaunchBanner({ onVisibilityChange, onHeightChange }: Lau
 
   /* ── countdown ── */
   useEffect(() => {
-    if (!bannerData?.showCountdown) return;
-    let start: string | null;
-    try { start = localStorage.getItem(COUNTDOWN_KEY); } catch { start = null; }
-    if (!start) {
-      start = String(Date.now());
-      try { localStorage.setItem(COUNTDOWN_KEY, start); } catch { /* ignore */ }
-    }
-    const endMs = parseInt(start) + (bannerData.countdownHours || 48) * 3_600_000;
+    if (!bannerData?.showCountdown || !bannerData.countdownEndsAt) return;
+    const endMs = new Date(bannerData.countdownEndsAt).getTime();
     const tick = () => {
       const diff = endMs - Date.now();
       if (diff > 0) {
         setTimeLeft({ h: Math.floor(diff / 3_600_000), m: Math.floor((diff % 3_600_000) / 60_000), s: Math.floor((diff % 60_000) / 1000) });
       } else {
+        // Timer expired — hide the banner
         setTimeLeft({ h: 0, m: 0, s: 0 });
+        setIsVisible(false);
+        onVisibilityChange?.(false);
       }
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [bannerData]);
+  }, [bannerData, onVisibilityChange]);
 
   /* ── report height via ResizeObserver ── */
   useEffect(() => {

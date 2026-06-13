@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, RefreshCw, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Save, RefreshCw, Eye, EyeOff, AlertCircle, RotateCcw } from 'lucide-react';
 
 interface BannerData {
   isActive: boolean;
@@ -11,6 +11,7 @@ interface BannerData {
   ctaText: string;
   ctaLink: string;
   countdownHours: number;
+  countdownEndsAt?: string | null;
   showCountdown: boolean;
   badgeText: string;
   savePercentage: number;
@@ -86,6 +87,36 @@ export default function LaunchBannerManager() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to update banner' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetCountdown = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) {
+        setMessage({ type: 'error', text: 'Authentication required. Please login.' });
+        setLoading(false);
+        return;
+      }
+      const response = await fetch(`${API_URL}/launch-banner/update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ resetCountdown: true }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setBannerData(data.data);
+        setMessage({ type: 'success', text: 'Countdown reset — all users will see a fresh timer.' });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to reset countdown' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to reset countdown' });
     } finally {
       setLoading(false);
     }
@@ -275,6 +306,27 @@ export default function LaunchBannerManager() {
             </label>
           </div>
         </div>
+
+        {/* Countdown deadline info + reset */}
+        {bannerData.showCountdown && bannerData.countdownEndsAt && (
+          <div className="flex items-center justify-between bg-zinc-800/60 border border-zinc-700 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs font-medium text-zinc-400">Global deadline (all users)</p>
+              <p className="text-sm text-white font-mono mt-0.5">
+                {new Date(bannerData.countdownEndsAt).toLocaleString()}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleResetCountdown}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg transition-all disabled:opacity-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset Timer
+            </button>
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="flex gap-3 pt-4">
