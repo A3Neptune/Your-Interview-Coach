@@ -208,30 +208,34 @@ const stepV = {
 ───────────────────────────────────────────────────────── */
 const HC_CSS =
 "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,300;1,9..40,400;1,9..40,500;1,9..40,600;1,9..40,700&display=swap');" +
-".hc-section{--brand:#2563eb;--brand-deep:#1d4ed8;--ink:#0f172a;--muted:#64748b;--rule:#0f172a;--paper:#F8F6F1;--paper-soft:#f5f2ec}" +
+".hc-section{--brand:#2563eb;--brand-deep:#1d4ed8;--ink:#0f172a;--muted:#64748b;--rule:rgba(15,23,42,0.08);--paper:#F8F6F1;--paper-soft:#f5f2ec}" +
 "@keyframes hcBarFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}" +
-".hc-bar{height:100%;transform-origin:left;animation:hcBarFill 6500ms linear forwards;border-radius:0}" +
-"@keyframes hcLiveDot{0%,100%{opacity:1}50%{opacity:0.4}}" +
+".hc-bar{height:100%;transform-origin:left;animation:hcBarFill 6500ms linear forwards;border-radius:0 2px 2px 0}" +
+"@keyframes hcHaloPulse{0%,100%{opacity:0.45;transform:scale(1)}50%{opacity:0.75;transform:scale(1.05)}}" +
+".hc-halo{position:absolute;inset:-50px;z-index:-1;border-radius:50%;filter:blur(70px);animation:hcHaloPulse 5s ease-in-out infinite;pointer-events:none}" +
+"@keyframes hcFloatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}" +
+".hc-floater-wrap{animation:hcFloatBob 4s ease-in-out infinite}" +
+"@keyframes hcLiveDot{0%,100%{opacity:1}50%{opacity:0.35}}" +
 ".hc-live-dot{animation:hcLiveDot 1.8s ease-in-out infinite}" +
-".hc-halo{display:none}" +
-".hc-floater-wrap{}" +
-".hc-cta-p{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:6px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;font-family:inherit;letter-spacing:0.02em;background:#2563eb;border:2px solid #0f172a;box-shadow:4px 4px 0 #0f172a;transition:transform 0.12s,box-shadow 0.12s;position:relative}" +
-".hc-cta-p:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 #0f172a;background:#1d4ed8}" +
-".hc-cta-p:active{transform:translate(4px,4px);box-shadow:none}" +
+"@keyframes hcShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}" +
+".hc-cta-p{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;font-family:inherit;letter-spacing:-0.005em;background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);box-shadow:0 10px 24px rgba(59,130,246,0.28),0 2px 6px rgba(37,99,235,0.18);transition:transform 0.18s,box-shadow 0.22s;position:relative;overflow:hidden}" +
+".hc-cta-p::before{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.28) 50%,transparent 70%);background-size:200% 100%;animation:hcShimmer 3.4s ease-in-out infinite;pointer-events:none}" +
+".hc-cta-p:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(59,130,246,0.38),0 4px 10px rgba(37,99,235,0.24)}" +
+".hc-cta-p:active{transform:translateY(0)}" +
 ".ga{transition:transform 0.18s;display:inline-flex}" +
-".hc-tab{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;border:none;border-top:2px solid transparent;cursor:pointer;background:transparent;transition:border-color 0.15s,background 0.15s;font-family:inherit;text-align:left}" +
-".hc-tab:hover{background:rgba(15,23,42,0.04)}" +
-".hc-hl{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(15,23,42,0.1)}" +
+".hc-tab{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;border:none;border-top:2px solid transparent;cursor:pointer;background:transparent;transition:border-color 0.22s,background 0.22s,color 0.22s;font-family:inherit;text-align:left}" +
+".hc-tab:hover{background:rgba(59,130,246,0.04)}" +
+".hc-hl{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(15,23,42,0.05)}" +
 ".hc-hl:last-child{border-bottom:none}" +
-".hc-pp{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;border:2px solid #0f172a;background:#fff;box-shadow:2px 2px 0 #0f172a;cursor:pointer;transition:all 0.12s;flex-shrink:0}" +
-".hc-pp:hover{background:#0f172a;color:#fff;transform:translate(1px,1px);box-shadow:1px 1px 0 #0f172a}" +
-".hc-stat+.hc-stat{border-left:2px solid #0f172a;padding-left:1.4rem}" +
-".hc-glass{background:#ffffff;border:2px solid #0f172a;box-shadow:8px 8px 0 #0f172a;overflow:hidden}" +
+".hc-pp{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(15,23,42,0.12);background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);cursor:pointer;transition:all 0.16s;flex-shrink:0}" +
+".hc-pp:hover{background:#fff;border-color:#2563eb;color:#2563eb}" +
+".hc-stat+.hc-stat{border-left:1px solid var(--rule);padding-left:1.4rem}" +
+".hc-glass{background:rgba(255,255,255,0.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(59,130,246,0.14);box-shadow:0 1px 0 rgba(255,255,255,0.8) inset,0 24px 60px -18px rgba(15,23,42,0.18),0 6px 20px rgba(59,130,246,0.08)}" +
 ".hc-word{display:inline-block;margin-right:0.22em;will-change:transform,opacity,filter}" +
-".hc-mega-step{font-family:'DM Sans',system-ui,sans-serif;font-weight:800;font-size:clamp(120px,16vw,220px);line-height:0.82;letter-spacing:-0.07em;color:rgba(15,23,42,0.07);pointer-events:none;user-select:none;white-space:nowrap;display:block}" +
-".hc-tab-step{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;padding:0 5px;border-radius:4px;font-size:9.5px;font-weight:700;letter-spacing:0.04em;font-variant-numeric:tabular-nums;flex-shrink:0}" +
+".hc-mega-step{font-family:'DM Sans',system-ui,sans-serif;font-weight:800;font-size:clamp(120px,16vw,220px);line-height:0.82;letter-spacing:-0.07em;color:rgba(37,99,235,0.18);pointer-events:none;user-select:none;white-space:nowrap;display:block}" +
+".hc-tab-step{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;padding:0 5px;border-radius:5px;font-size:9.5px;font-weight:700;letter-spacing:0.04em;font-variant-numeric:tabular-nums;flex-shrink:0}" +
 "@media(max-width:960px){.hc-grid{grid-template-columns:1fr!important;gap:2.5rem!important}.hc-right{justify-content:center!important}.hc-right-card{max-width:420px!important}.hc-mega-step{font-size:clamp(120px,26vw,200px)!important;top:30px!important;right:0!important}}" +
-"@media(max-width:640px){.hc-tab{padding:10px 6px 8px;gap:5px}.hc-tab-inner{flex-direction:column!important;align-items:flex-start!important;gap:5px!important}.hc-tab-label{font-size:9px!important;letter-spacing:0.03em!important}.hc-tab-meta{display:none!important}.hc-mega-step{font-size:clamp(96px,28vw,160px)!important;top:24px!important;right:0!important;color:rgba(15,23,42,0.06)!important}.hc-head-row{font-size:clamp(32px,9vw,48px)!important}.hc-eyebrow-row{flex-wrap:wrap!important;gap:8px!important}.hc-eyebrow-sub{display:none!important}.hc-cta-p{padding:12px 20px!important;font-size:13.5px!important}.hc-stats .hc-stat{padding-right:1.1rem!important}.hc-stats .hc-stat+.hc-stat{padding-left:1.1rem!important}.hc-floater{left:50%!important;transform:translateX(-50%)!important;bottom:-32px!important;min-width:240px!important}}" +
+"@media(max-width:640px){.hc-tab{padding:10px 6px 8px;gap:5px}.hc-tab-inner{flex-direction:column!important;align-items:flex-start!important;gap:5px!important}.hc-tab-label{font-size:9px!important;letter-spacing:0.03em!important}.hc-tab-meta{display:none!important}.hc-mega-step{font-size:clamp(96px,28vw,160px)!important;top:24px!important;right:0!important;color:rgba(37,99,235,0.16)!important}.hc-head-row{font-size:clamp(32px,9vw,48px)!important}.hc-eyebrow-row{flex-wrap:wrap!important;gap:8px!important}.hc-eyebrow-sub{display:none!important}.hc-cta-p{padding:12px 20px!important;font-size:13.5px!important}.hc-stats .hc-stat{padding-right:1.1rem!important}.hc-stats .hc-stat+.hc-stat{padding-left:1.1rem!important}.hc-floater{left:50%!important;transform:translateX(-50%)!important;bottom:-32px!important;min-width:240px!important}}" +
 "@media(max-width:440px){.hc-tab-label{display:none!important}.hc-tab-step{min-width:30px!important;height:24px!important;font-size:11px!important}.hc-head-row{font-size:clamp(28px,9.5vw,42px)!important}.hc-sub{font-size:13.5px!important}.hc-cta-row{gap:12px!important}.hc-stats p:first-child{font-size:18px!important}}";
 
 /* ─────────────────────────────────────────────────────────
@@ -286,36 +290,70 @@ export default function HeroCarousel() {
         className="hc-section"
         style={{
           position: "relative",
-          background: "#F8F6F1",
+          background: "var(--paper)",
           fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif",
           minHeight: "100svh",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
           color: INK,
-          borderBottom: "2px solid #0f172a",
         }}
       >
         {/* ── Top progress bar ── */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0,
-          height: 4, background: "rgba(15,23,42,0.08)", zIndex: 40,
+          height: 3, background: "rgba(59,130,246,0.08)", zIndex: 40,
         }}>
           {!paused && (
             <div
               key={tick}
               className="hc-bar"
-              style={{ background: BRAND }}
+              style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DEEP})` }}
             />
           )}
         </div>
 
-        {/* Dot-grid background pattern */}
+        {/* ── Subtle radial gradient backdrop (matches bg-gradient-radial) ── */}
         <div style={{
           position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-          backgroundImage: "radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
+          background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(59,130,246,0.10), transparent)",
         }} />
+
+        {/* Grid pattern — same as site bg-grid-pattern */}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
+          backgroundImage:
+            "linear-gradient(rgba(59,130,246,0.055) 1px, transparent 1px)," +
+            "linear-gradient(90deg, rgba(59,130,246,0.055) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
+        }} />
+
+        {/* Ambient tint blob — uses slide tint subtly */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={slide.id + "-env"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.1 }}
+            style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
+          >
+            <div style={{
+              position: "absolute", width: 720, height: 720, borderRadius: "50%",
+              filter: "blur(120px)",
+              background: `radial-gradient(circle, ${slide.tint}18 0%, transparent 65%)`,
+              top: -220, right: -180,
+            }} />
+            <div style={{
+              position: "absolute", width: 480, height: 480, borderRadius: "50%",
+              filter: "blur(100px)",
+              background: `radial-gradient(circle, ${slide.tint}0d 0%, transparent 70%)`,
+              bottom: 20, left: -100,
+            }} />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Giant ghost step number — lives at section level, behind content */}
         <div className="hc-mega-wrap" style={{
@@ -378,15 +416,14 @@ export default function HeroCarousel() {
                 <motion.div variants={itemV} className="hc-eyebrow-row" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
                   <div style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "4px 10px",
-                    borderRadius: 4,
-                    background: slide.tint,
-                    border: "2px solid #0f172a",
-                    boxShadow: "2px 2px 0 #0f172a",
+                    padding: "4px 10px 4px 8px",
+                    borderRadius: 99,
+                    background: "rgba(59,130,246,0.08)",
+                    border: "1px solid rgba(59,130,246,0.2)",
                   }}>
                     <span style={{
-                      fontSize: 10, fontWeight: 800, color: "#fff",
-                      letterSpacing: "0.1em",
+                      fontSize: 10, fontWeight: 700, color: BRAND,
+                      letterSpacing: "0.08em",
                     }}>
                       {slide.step} · {slide.service.toUpperCase()}
                     </span>
@@ -394,14 +431,13 @@ export default function HeroCarousel() {
                       className="hc-live-dot"
                       style={{
                         width: 5, height: 5, borderRadius: "50%",
-                        background: "#fff", flexShrink: 0,
+                        background: BRAND, flexShrink: 0,
                       }}
                     />
                   </div>
                   <span className="hc-eyebrow-sub" style={{
-                    fontSize: 12, color: MUTED, fontWeight: 600,
-                    letterSpacing: "0.01em",
-                    borderBottom: "2px solid rgba(15,23,42,0.2)",
+                    fontSize: 12, color: MUTED, fontWeight: 500,
+                    letterSpacing: "-0.005em",
                   }}>
                     {slide.eyebrow}
                   </span>
@@ -412,15 +448,15 @@ export default function HeroCarousel() {
                   variants={headContainer}
                   style={{
                     margin: "0 0 20px",
-                    lineHeight: 1.0,
-                    letterSpacing: "-0.03em",
+                    lineHeight: 1.02,
+                    letterSpacing: "-0.04em",
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                   }}
                 >
                   <span style={{
                     display: "block",
-                    fontSize: "clamp(40px, 5.6vw, 76px)",
-                    fontWeight: 900,
+                    fontSize: "clamp(38px, 5.4vw, 72px)",
+                    fontWeight: 700,
                     color: INK,
                     paddingBottom: 2,
                   }}>
@@ -430,11 +466,10 @@ export default function HeroCarousel() {
                   </span>
                   <span style={{
                     display: "block",
-                    fontSize: "clamp(40px, 5.6vw, 76px)",
-                    fontWeight: 900,
-                    color: "transparent",
-                    WebkitTextStroke: `2px ${slide.tint}`,
-                  } as React.CSSProperties}>
+                    fontSize: "clamp(38px, 5.4vw, 72px)",
+                    fontWeight: 300,
+                    color: MUTED,
+                  }}>
                     {headLightWords.map((w, i) => (
                       <motion.span key={i} variants={wordV} className="hc-word">{w}</motion.span>
                     ))}
@@ -471,7 +506,7 @@ export default function HeroCarousel() {
                   style={{
                     display: "flex", gap: 0, alignItems: "flex-start",
                     paddingTop: "1.2rem",
-                    borderTop: "2px solid #0f172a",
+                    borderTop: "1px solid var(--rule)",
                   }}
                 >
                   {[
@@ -546,23 +581,21 @@ export default function HeroCarousel() {
                   >
                     {/* Accent top bar */}
                     <div style={{
-                      height: 5,
-                      background: slide.tint,
-                      borderBottom: "2px solid #0f172a",
+                      height: 3,
+                      background: `linear-gradient(90deg, ${slide.tint}, ${BRAND_DEEP})`,
                     }} />
 
                     {/* Card header */}
                     <div style={{ padding: "22px 24px 0" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 18 }}>
                         <div style={{
-                          width: 46, height: 46, borderRadius: 6,
-                          background: slide.tint,
+                          width: 46, height: 46, borderRadius: 12,
+                          background: `linear-gradient(135deg, ${slide.tint}14, ${slide.tint}26)`,
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          border: "2px solid #0f172a",
-                          boxShadow: "3px 3px 0 #0f172a",
+                          border: `1px solid ${slide.tint}33`,
                           flexShrink: 0,
                         }}>
-                          <slide.Icon size={22} style={{ color: "#fff" }} />
+                          <slide.Icon size={22} style={{ color: slide.tint }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -620,8 +653,8 @@ export default function HeroCarousel() {
                     {/* Card footer — proof */}
                     <div style={{
                       marginTop: 18, padding: "13px 24px",
-                      background: slide.tint + "14",
-                      borderTop: "2px solid #0f172a",
+                      background: "rgba(59,130,246,0.05)",
+                      borderTop: "1px solid rgba(59,130,246,0.1)",
                       display: "flex", alignItems: "center", gap: 8,
                     }}>
                       <Sparkles size={12} style={{ color: slide.tint, flexShrink: 0 }} />
@@ -644,21 +677,21 @@ export default function HeroCarousel() {
                         position: "absolute",
                         bottom: -22, left: -28,
                         background: "#fff",
-                        borderRadius: 6,
+                        borderRadius: 14,
                         padding: "10px 14px",
-                        boxShadow: "4px 4px 0 #0f172a",
-                        border: "2px solid #0f172a",
+                        boxShadow: "0 16px 40px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.05)",
+                        border: "1px solid rgba(59,130,246,0.14)",
                         display: "flex", alignItems: "center", gap: 10,
                         minWidth: 220,
                         zIndex: 20,
                       }}
                     >
                       <div style={{
-                        width: 34, height: 34, borderRadius: 5,
-                        background: slide.tint,
-                        border: "2px solid #0f172a",
+                        width: 34, height: 34, borderRadius: "50%",
+                        background: `linear-gradient(135deg, ${slide.tint}18, ${slide.tint}30)`,
+                        border: `1px solid ${slide.tint}30`,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 11, fontWeight: 800, color: "#fff",
+                        fontSize: 11, fontWeight: 700, color: slide.tint,
                         flexShrink: 0,
                       }}>
                         {slide.floater.avatar}
@@ -687,7 +720,7 @@ export default function HeroCarousel() {
           {/* ────── BOTTOM TAB STRIP ────── */}
           <div style={{
             marginTop: "clamp(2.5rem, 5vw, 4rem)",
-            borderTop: "2px solid #0f172a",
+            borderTop: "1px solid var(--rule)",
             display: "flex", alignItems: "stretch",
             position: "relative", zIndex: 10,
           }}>
@@ -718,9 +751,8 @@ export default function HeroCarousel() {
                   goTo(i);
                 }}
                 style={{
-                  borderTopColor: i === idx ? BRAND : "rgba(15,23,42,0.12)",
-                  borderTopWidth: i === idx ? 3 : 2,
-                  background: i === idx ? BRAND + "0d" : "transparent",
+                  borderTopColor: i === idx ? BRAND : "rgba(15,23,42,0.09)",
+                  background: i === idx ? "rgba(59,130,246,0.04)" : "transparent",
                 }}
               >
                 <span className="hc-tab-inner" style={{

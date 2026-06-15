@@ -70,8 +70,10 @@ export default function Navbar() {
         className="nav-root fixed left-0 right-0 z-50 w-full"
         style={{
           top: bannerHeight,
-          background: "#F8F6F1",
-          borderBottom: "2px solid #0f172a",
+          background: "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
         }}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
@@ -101,26 +103,34 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className="relative px-3.5 py-1.5 text-[13px] font-semibold transition-all"
-                    style={{
-                      color: active ? "#1d4ed8" : "#0f172a",
-                      borderBottom: active ? "2px solid #1d4ed8" : "2px solid transparent",
-                      paddingBottom: "4px",
-                    }}
+                    className="relative px-3.5 py-1.5 rounded-lg text-[13px] font-medium"
+                    style={{ color: active ? "#1d4ed8" : "#475569" }}
                   >
+                    {active && (
+                      <span
+                        className="absolute inset-0 rounded-lg"
+                        style={{ background: "rgba(29,78,216,0.08)" }}
+                      />
+                    )}
                     {hasFreeBadge && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-sm bg-red-600 px-1.5 py-[2px] text-[9px] font-bold leading-none text-white" style={{ border: "1.5px solid #0f172a" }}>
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-full bg-red-600 px-1.5 py-[2px] text-[9px] font-semibold leading-none text-white shadow-sm">
                         Free
                       </span>
                     )}
                     {hasNewBadge && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-sm px-1.5 py-[2px] text-[9px] font-bold leading-none text-white" style={{ background: "#2563eb", border: "1.5px solid #0f172a" }}>
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 inline-flex shrink-0 rounded-full px-1.5 py-[2px] text-[9px] font-semibold leading-none text-white shadow-sm" style={{ background: "#2563eb" }}>
                         New
                       </span>
                     )}
                     <span className="relative text-center whitespace-nowrap">
                       {link.name}
                     </span>
+                    {active && (
+                      <span
+                        className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+                        style={{ background: "#1d4ed8", opacity: 0.6 }}
+                      />
+                    )}
                   </Link>
                 );
               })}
@@ -142,15 +152,14 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className="px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 rounded-md"
-                    style={{ border: "2px solid #0f172a", background: "#fff", boxShadow: "2px 2px 0 #0f172a" }}
+                    className="px-3.5 py-1.5 text-[13px] font-medium text-slate-600 rounded-lg"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
-                    className="inline-flex items-center gap-1.5 text-white text-[13px] font-bold rounded-md transition-all"
-                    style={{ padding: "8px 18px", background: "#2563eb", border: "2px solid #0f172a", boxShadow: "3px 3px 0 #0f172a" }}
+                    className="inline-flex items-center gap-1.5 text-white text-[13px] font-semibold rounded-xl"
+                    style={{ padding: "8px 16px", background: "#1d4ed8" }}
                   >
                     Sign up
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -162,13 +171,21 @@ export default function Navbar() {
             {/* ── HAMBURGER ── */}
             <button
               onClick={() => setMobileMenu((p) => !p)}
-              className="lg:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9"
+              className="lg:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 rounded-xl"
               aria-label="Toggle menu"
-              style={{ border: "2px solid #0f172a", borderRadius: 6, background: "#fff", boxShadow: "2px 2px 0 #0f172a" }}
             >
-              <span className="block w-4 h-[2px]" style={{ background: "#0f172a" }} />
-              <span className="block w-4 h-[2px]" style={{ background: "#0f172a" }} />
-              <span className="block w-4 h-[2px]" style={{ background: "#0f172a" }} />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
+              <span
+                className="block w-5 h-0.5 rounded-sm"
+                style={{ background: "#1e3a8a" }}
+              />
             </button>
           </div>
         </div>
@@ -184,7 +201,10 @@ export default function Navbar() {
         {/* backdrop */}
         <div
           className="absolute inset-0"
-          style={{ background: "rgba(15,23,42,0.4)" }}
+          style={{
+            background: "rgba(15,23,42,0.15)",
+            backdropFilter: "blur(4px)",
+          }}
           onClick={() => setMobileMenu(false)}
         />
 
@@ -194,10 +214,11 @@ export default function Navbar() {
           style={{
             top: `calc(${bannerHeight}px + 76px)`,
             maxHeight: "calc(100dvh - 100px)",
-            background: "#F8F6F1",
-            border: "2px solid #0f172a",
-            borderRadius: 8,
-            boxShadow: "6px 6px 0 #0f172a",
+            background: "rgba(255, 255, 255, 0.97)",
+            border: "1px solid rgba(29, 78, 216, 0.14)",
+            borderRadius: 18,
+            boxShadow:
+              "0 12px 48px rgba(29,78,216,0.12), 0 2px 8px rgba(29,78,216,0.06)",
           }}
         >
           {/* nav links */}
@@ -211,10 +232,9 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setMobileMenu(false)}
-                  className="flex items-center justify-between px-4 py-3.5 rounded-md"
+                  className="flex items-center justify-between px-4 py-3.5 rounded-xl"
                   style={{
-                    background: active ? "#2563eb14" : "transparent",
-                    borderLeft: active ? "3px solid #2563eb" : "3px solid transparent",
+                    background: active ? "rgba(29,78,216,0.07)" : "transparent",
                   }}
                 >
                   <span className="flex flex-col items-start gap-0.5">
@@ -255,8 +275,8 @@ export default function Navbar() {
 
           {/* divider */}
           <div
-            className="mx-4 my-1 h-[2px]"
-            style={{ background: "#0f172a" }}
+            className="mx-4 my-1 h-px"
+            style={{ background: "rgba(29,78,216,0.08)" }}
           />
 
           {/* auth buttons */}
@@ -286,16 +306,16 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenu(false)}
-                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-bold text-slate-800 rounded-md"
-                  style={{ border: "2px solid #0f172a", background: "#fff", boxShadow: "3px 3px 0 #0f172a" }}
+                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-slate-700 rounded-xl border hover:bg-blue-50 hover:text-blue-600"
+                  style={{ borderColor: "rgba(29,78,216,0.14)" }}
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/signup"
                   onClick={() => setMobileMenu(false)}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-bold text-white rounded-md"
-                  style={{ background: "#2563eb", border: "2px solid #0f172a", boxShadow: "3px 3px 0 #0f172a" }}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white rounded-xl"
+                  style={{ background: "#1d4ed8" }}
                 >
                   Get started <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -305,8 +325,8 @@ export default function Navbar() {
 
           {/* bottom links */}
           <div
-            className="flex items-center justify-center gap-5 px-4 py-3 border-t-2"
-            style={{ borderColor: "#0f172a" }}
+            className="flex items-center justify-center gap-5 px-4 py-3 border-t"
+            style={{ borderColor: "rgba(29,78,216,0.06)" }}
           >
             {[
               ["Privacy", "/privacy"],
