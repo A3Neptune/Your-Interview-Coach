@@ -380,17 +380,31 @@ export default function CourseDetailPage() {
                 </p>
               </div>
 
-              {/* Watch button — full width, clearly labelled */}
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                Watch on YouTube
-                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-              </a>
+              {/* Watch button — disabled for unenrolled paid/exclusive courses */}
+              {(() => {
+                const isPaidCourse = course?.contentType === "paid" || course?.contentType === "exclusive";
+                const canWatch = !isPaidCourse || isEnrolled;
+                if (canWatch) {
+                  return (
+                    <a
+                      href={videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      Watch on YouTube
+                      <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                    </a>
+                  );
+                }
+                return (
+                  <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 font-semibold text-sm cursor-not-allowed select-none">
+                    <Lock className="w-4 h-4" />
+                    Enroll to Watch
+                  </div>
+                );
+              })()}
 
               {/* Mark as done — only shown when enrolled */}
               {isEnrolled && (
@@ -667,18 +681,26 @@ export default function CourseDetailPage() {
                 {contents.map((content, index) => {
                   const isCompleted = completedItems.has(content._id);
                   const isActive = selectedContent?._id === content._id;
+                  const isPaidCourse = course?.contentType === "paid" || course?.contentType === "exclusive";
+                  const locked = isPaidCourse && !isEnrolled;
 
                   return (
                     <button
                       key={content._id}
-                      onClick={() => setSelectedContent(content)}
-                      className={`w-full px-6 py-4 text-left transition-all hover:bg-blue-50 ${
-                        isActive ? "bg-blue-50 border-l-4 border-blue-600" : ""
+                      onClick={() => !locked && setSelectedContent(content)}
+                      disabled={locked}
+                      className={`w-full px-6 py-4 text-left transition-all ${
+                        locked ? "cursor-not-allowed opacity-60" : "hover:bg-blue-50"
+                      } ${isActive && !locked ? "bg-blue-50 border-l-4 border-blue-600" : ""
                       } ${isCompleted && !isActive ? "bg-emerald-50/40" : ""}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-0.5">
-                          {isCompleted ? (
+                          {locked ? (
+                            <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center">
+                              <Lock className="w-2.5 h-2.5 text-slate-400" />
+                            </div>
+                          ) : isCompleted ? (
                             <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
                               <CheckCircle className="w-4 h-4 text-white fill-white" />
                             </div>
@@ -693,7 +715,7 @@ export default function CourseDetailPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-semibold text-sm line-clamp-2 leading-snug ${isCompleted ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900"}`}>
+                          <p className={`font-semibold text-sm line-clamp-2 leading-snug ${isCompleted ? "text-slate-500 line-through decoration-slate-300" : locked ? "text-slate-400" : "text-slate-900"}`}>
                             {content.title}
                           </p>
                           {content.duration > 0 && (
