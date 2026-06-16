@@ -8,10 +8,11 @@ import { useAuth } from "@/context/AuthContext";
 import ProfileDropdown from "./ProfileDropdown";
 import LaunchBanner from "./LaunchBanner";
 
-const navLinks = [
+const NAV_LINKS_BASE = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
+  { name: "Courses", href: "" }, // href filled dynamically below
   { name: "Placement Prep", href: "/placement-prep" },
   { name: "Check Resume Score", href: "/resume-analyzer" },
   { name: "Contact", href: "/contact" },
@@ -24,6 +25,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
   const logoHref = isLoggedIn ? "/dashboard" : "/";
+  const navLinks = NAV_LINKS_BASE.map((l) =>
+    l.name === "Courses" ? { ...l, href: "/courses" } : l
+  );
 
   const handleBannerHeight = useCallback((h: number) => {
     setBannerHeight(h);
@@ -96,9 +100,10 @@ export default function Navbar() {
             {/* ── DESKTOP LINKS ── */}
             <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
-                const active = pathname === link.href;
+                const coursesActive = link.name === "Courses" && (pathname === "/courses" || pathname === "/dashboard/content");
+                const active = coursesActive || pathname === link.href;
                 const hasFreeBadge = link.name === "Check Resume Score";
-                const hasNewBadge = link.name === "Placement Prep";
+                const hasNewBadge = link.name === "Placement Prep" || link.name === "Courses";
                 return (
                   <Link
                     key={link.name}
@@ -224,9 +229,10 @@ export default function Navbar() {
           {/* nav links */}
           <div className="p-2 pb-1">
             {navLinks.map((link) => {
-              const active = pathname === link.href;
+              const coursesActiveMobile = link.name === "Courses" && (pathname === "/courses" || pathname === "/dashboard/content");
+              const active = coursesActiveMobile || pathname === link.href;
               const hasFreeBadge = link.name === "Check Resume Score";
-              const hasNewBadge = link.name === "Placement Prep";
+              const hasNewBadge = link.name === "Placement Prep" || link.name === "Courses";
               return (
                 <Link
                   key={link.name}
