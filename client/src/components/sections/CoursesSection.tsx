@@ -392,7 +392,7 @@ export default function CoursesSection() {
             </div>
 
             <Link
-              href="/login"
+              href="/courses"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 20px", borderRadius: 8, flexShrink: 0, alignSelf: "flex-start",

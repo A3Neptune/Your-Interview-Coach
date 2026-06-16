@@ -4,7 +4,10 @@ import courseAdvancedController from '../controllers/courseAdvancedController.js
 
 const router = express.Router();
 
-// Public routes - Published courses for students
+// Public routes - no auth required (for homepage courses section)
+router.get('/courses/public', courseAdvancedController.getPublishedCourses);
+
+// Auth-required published routes for students
 router.get('/courses/published', verifyToken, courseAdvancedController.getPublishedCourses);
 router.get('/courses/published/:courseId', verifyToken, courseAdvancedController.getPublishedCourseById);
 
