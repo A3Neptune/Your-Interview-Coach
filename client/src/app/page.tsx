@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/sections/HeroSection";
 import GroupDiscussionSection from "@/components/sections/GroupDiscussionSection";
 import LogosSection from "@/components/sections/LogosSection";
+import CoursesSection from "@/components/sections/CoursesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import HowItWorksSection from "@/components/sections/HowItWorksSection";
 import PricingSection from "@/components/sections/PricingSection";
@@ -21,6 +22,7 @@ export default function Home() {
       <HeroSection />
       <GroupDiscussionSection />
       <LogosSection />
+      <CoursesSection />
       <TestimonialsSection />
       <PricingSection />
       <HowItWorksSection />
