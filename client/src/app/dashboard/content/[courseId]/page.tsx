@@ -1,928 +1,777 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-  ArrowLeft, Clock, CheckCircle, ExternalLink, Play, Lock, BookOpen,
-  Award, ChevronRight, TrendingUp,
-} from "lucide-react";
-import { toast } from "sonner";
-import { getAuthToken, removeAuthToken } from "@/lib/api";
+  Play, Lock, BookOpen, Clock, ArrowRight, Sparkles,
+  TrendingUp, CheckCircle, Star, Award, ChevronRight, Info,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { getAuthToken, removeAuthToken } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-const BRAND      = "#2563eb";
-const BRAND_DEEP = "#1d4ed8";
-const PAPER      = "#F8F6F1";
-const INK        = "#0f172a";
-const MUTED      = "#64748b";
-
-interface Content {
-  _id: string;
-  title: string;
-  description: string;
-  contentType: "google-doc" | "google-sheet" | "video-link" | "pdf" | "other";
-  embedUrl?: string;
-  videoUrl?: string;
-  duration: number;
-  order: number;
-}
+const BRAND      = '#2563eb';
+const BRAND_DEEP = '#1d4ed8';
+const PAPER      = '#F8F6F1';
+const INK        = '#0f172a';
+const MUTED      = '#64748b';
 
 interface Course {
   _id: string;
   title: string;
   shortDescription?: string;
-  contentType: "free" | "paid" | "exclusive";
+  fullDescription?: string;
+  description?: string;
+  contentType: 'free' | 'paid' | 'exclusive';
+  price: number;
   category: string;
+  thumbnail?: string;
   difficulty?: string;
-  price?: number;
-  modules?: Array<{
-    title: string;
-    description?: string;
-    order: number;
-    resources?: Array<{
-      type: string;
-      title: string;
-      url?: string;
-      embedUrl?: string;
-      duration?: number;
-      description?: string;
-    }>;
-  }>;
+  certificateEnabled?: boolean;
+  tags?: string[];
+  totalDuration?: number;
+  analytics?: { enrollments: number; averageRating: number };
   mentorId: {
-    _id: string;
     name: string;
     designation: string;
-    company: string;
+    profileImage?: string;
+    company?: string;
+  };
+  enrollment?: {
+    progress: number;
+    lastAccessedAt: string;
   };
 }
 
 const CAT_LABEL: Record<string, string> = {
-  "mock-interview":  "Mock Interview",
-  "resume-building": "Resume Building",
-  "gd-practice":     "Group Discussion",
-  "placement-prep":  "Placement Prep",
-  "coding":          "Coding",
-  "behavioral":      "Behavioral",
-  "career-growth":   "Career Growth",
-  "skills":          "Skills",
-  "system-design":   "System Design",
+  'mock-interview':  'Mock Interview',
+  'resume-building': 'Resume',
+  'gd-practice':     'Group Discussion',
+  'placement-prep':  'Placement Prep',
+  'coding':          'Coding',
+  'behavioral':      'Behavioral',
+  'career-growth':   'Career Growth',
+  'skills':          'Skills',
+  'system-design':   'System Design',
+  'other':           'Other',
 };
 
-// ── YouTube helpers ────────────────────────────────────────────────────────
-function getYtVideoId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0];
-    if (/youtube\.com/.test(u.hostname)) return u.searchParams.get("v");
-  } catch {}
-  return null;
+const DIFF_COLOR: Record<string, string> = {
+  beginner:     '#10b981',
+  intermediate: '#2563eb',
+  advanced:     '#f97316',
+  expert:       '#ef4444',
+};
+
+function initials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function getYtPlaylistId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    return u.searchParams.get("list");
-  } catch {}
-  return null;
+// ── Enrolled / "Continue Learning" card — horizontal bento style ─────────────
+function EnrolledCard({ course }: { course: Course }) {
+  const [hovered, setHovered] = useState(false);
+  const pct = course.enrollment?.progress ?? 0;
+  const isDone = pct >= 100;
+
+  return (
+    <Link
+      href={`/dashboard/content/${course._id}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', flexDirection: 'column',
+        borderRadius: 20, overflow: 'hidden',
+        background: hovered ? '#fff' : 'rgba(255,255,255,0.82)',
+        border: hovered ? '1px solid rgba(29,78,216,0.22)' : '1px solid rgba(29,78,216,0.11)',
+        boxShadow: hovered
+          ? '0 20px 52px rgba(29,78,216,0.12), 0 4px 14px rgba(29,78,216,0.06)'
+          : '0 2px 12px rgba(29,78,216,0.05)',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.3s cubic-bezier(.23,1,.32,1)',
+        textDecoration: 'none', height: '100%',
+        position: 'relative',
+      }}
+    >
+      {/* Top accent */}
+      <div style={{
+        height: 3,
+        background: hovered
+          ? isDone
+            ? 'linear-gradient(90deg,#10b981,#059669)'
+            : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`
+          : 'transparent',
+        transition: 'background 0.3s',
+      }} />
+
+      {/* Thumbnail */}
+      <div style={{
+        position: 'relative', height: 140, flexShrink: 0,
+        background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
+        overflow: 'hidden',
+      }}>
+        {course.thumbnail
+          ? <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.88 }} />
+          : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen style={{ width: 40, height: 40, color: 'rgba(255,255,255,0.22)' }} />
+            </div>
+        }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(15,23,42,0.45),transparent)' }} />
+
+        {/* Play overlay on hover */}
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: hovered ? 1 : 0, transition: 'opacity 0.2s',
+          background: 'rgba(15,23,42,0.2)',
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.92)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+          }}>
+            <Play style={{ width: 18, height: 18, color: BRAND, fill: BRAND, marginLeft: 2 }} />
+          </div>
+        </div>
+
+        {/* Done badge */}
+        {isDone && (
+          <div style={{
+            position: 'absolute', top: 10, right: 10,
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: '#059669', color: '#fff',
+            fontSize: 10, fontWeight: 700,
+            padding: '3px 9px', borderRadius: 99,
+            boxShadow: '0 2px 8px rgba(5,150,105,0.4)',
+          }}>
+            <CheckCircle style={{ width: 9, height: 9 }} /> Completed
+          </div>
+        )}
+
+        {/* Category chip */}
+        <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase',
+            padding: '3px 8px', borderRadius: 99,
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.28)',
+            color: '#fff', backdropFilter: 'blur(4px)',
+          }}>
+            {CAT_LABEL[course.category] ?? course.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '16px 18px 18px', gap: 10 }}>
+        <h3 style={{
+          fontSize: 14.5, fontWeight: 700, color: hovered ? BRAND_DEEP : INK,
+          lineHeight: 1.3, margin: 0, letterSpacing: '-0.015em',
+          transition: 'color 0.2s',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>
+          {course.title}
+        </h3>
+
+        {/* Instructor */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+            background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: 8.5, fontWeight: 700,
+          }}>
+            {initials(course.mentorId.name)}
+          </div>
+          <span style={{ fontSize: 11.5, fontWeight: 500, color: MUTED }}>
+            {course.mentorId.name}
+          </span>
+        </div>
+
+        {/* Progress */}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: MUTED }}>Progress</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: isDone ? '#059669' : BRAND }}>{pct}%</span>
+          </div>
+          <div style={{ height: 5, borderRadius: 99, background: 'rgba(29,78,216,0.1)', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 99, width: `${pct}%`,
+              background: isDone
+                ? 'linear-gradient(90deg,#10b981,#059669)'
+                : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`,
+              transition: 'width 0.5s ease',
+            }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <Link
+            href={`/dashboard/content/${course._id}`}
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '9px 0', borderRadius: 11,
+              background: hovered
+                ? isDone
+                  ? 'linear-gradient(135deg,#10b981,#059669)'
+                  : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`
+                : 'linear-gradient(135deg,#1e3a8a22,#2563eb22)',
+              color: hovered ? '#fff' : BRAND_DEEP,
+              fontWeight: 700, fontSize: 12,
+              border: `1px solid ${hovered ? 'transparent' : 'rgba(29,78,216,0.18)'}`,
+              transition: 'all 0.25s cubic-bezier(.23,1,.32,1)',
+              boxShadow: hovered ? '0 8px 20px rgba(37,99,235,0.28)' : 'none',
+              textDecoration: 'none',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <Play style={{ width: 10, height: 10, fill: hovered ? '#fff' : BRAND_DEEP }} />
+            {isDone ? 'Review' : pct > 0 ? 'Continue' : 'Start'}
+          </Link>
+          <Link
+            href={`/dashboard/content/${course._id}`}
+            title="Course details"
+            style={{
+              flexShrink: 0, width: 36, height: 36, borderRadius: 11,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(29,78,216,0.18)',
+              color: BRAND, textDecoration: 'none',
+              transition: 'all 0.2s',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <Info style={{ width: 14, height: 14 }} />
+          </Link>
+        </div>
+      </div>
+    </Link>
+  );
 }
 
-function buildYtEmbedUrl(rawUrl: string): string | null {
-  const vid = getYtVideoId(rawUrl);
-  if (vid) return `https://www.youtube.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1`;
-  const list = getYtPlaylistId(rawUrl);
-  if (list) return `https://www.youtube.com/embed/videoseries?list=${list}&rel=0`;
-  return null;
+// ── Catalogue card — for all / free / paid tabs ───────────────────────────────
+function CatalogueCard({ course }: { course: Course }) {
+  const [hovered, setHovered] = useState(false);
+  const isPaid    = course.contentType === 'paid' || course.contentType === 'exclusive';
+  const isEnrolled = !!course.enrollment;
+  const pct       = course.enrollment?.progress ?? 0;
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', flexDirection: 'column', height: '100%',
+        borderRadius: 20, overflow: 'hidden',
+        background: hovered ? '#fff' : 'rgba(255,255,255,0.78)',
+        border: hovered ? '1px solid rgba(29,78,216,0.22)' : '1px solid rgba(29,78,216,0.1)',
+        boxShadow: hovered
+          ? '0 20px 52px rgba(29,78,216,0.11), 0 4px 14px rgba(29,78,216,0.06)'
+          : '0 2px 12px rgba(29,78,216,0.05)',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.3s cubic-bezier(.23,1,.32,1)',
+      }}
+    >
+      {/* Hover top accent */}
+      <div style={{
+        height: 2,
+        background: hovered ? `linear-gradient(90deg,${BRAND},rgba(29,78,216,0.3),transparent)` : 'transparent',
+        transition: 'background 0.3s',
+      }} />
+
+      {/* Thumbnail */}
+      <div style={{
+        position: 'relative', height: 155, flexShrink: 0,
+        background: 'linear-gradient(135deg,#1e3a8a,#2563eb)', overflow: 'hidden',
+      }}>
+        {course.thumbnail
+          ? <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.87 }} />
+          : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen style={{ width: 44, height: 44, color: 'rgba(255,255,255,0.2)' }} />
+            </div>
+        }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(15,23,42,0.48),transparent)' }} />
+
+        <div style={{ position: 'absolute', top: 10, left: 10 }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase',
+            padding: '3px 9px', borderRadius: 99,
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.28)',
+            color: '#fff', backdropFilter: 'blur(4px)',
+          }}>
+            {CAT_LABEL[course.category] ?? course.category}
+          </span>
+        </div>
+
+        <div style={{ position: 'absolute', top: 10, right: 10 }}>
+          {isPaid
+            ? <span style={{
+                fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99,
+                background: BRAND, color: '#fff',
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+                boxShadow: '0 2px 8px rgba(37,99,235,0.4)',
+              }}><Lock style={{ width: 8, height: 8 }} /> {course.price > 0 ? `₹${course.price}` : 'Paid'}</span>
+            : <span style={{
+                fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99,
+                background: '#10b981', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
+              }}>Free</span>
+          }
+        </div>
+
+        {isEnrolled && (
+          <div style={{
+            position: 'absolute', bottom: 10, right: 10,
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'rgba(16,185,129,0.92)', color: '#fff',
+            fontSize: 9.5, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
+          }}>
+            <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
+          </div>
+        )}
+      </div>
+
+      {/* Body */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '16px 18px 18px', gap: 10 }}>
+        {/* Difficulty */}
+        {course.difficulty && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 600, color: MUTED }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: DIFF_COLOR[course.difficulty] ?? MUTED, display: 'inline-block', flexShrink: 0 }} />
+            {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
+          </span>
+        )}
+
+        <h3 style={{
+          fontSize: 15, fontWeight: 700, color: hovered ? BRAND_DEEP : INK,
+          lineHeight: 1.3, margin: 0, letterSpacing: '-0.018em',
+          transition: 'color 0.2s',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>
+          {course.title}
+        </h3>
+
+        {(course.shortDescription || course.description) && (
+          <p style={{
+            fontSize: 12.5, color: MUTED, lineHeight: 1.6, margin: 0,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            {course.shortDescription || course.description}
+          </p>
+        )}
+
+        {/* Stats row */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingTop: 8, borderTop: '1px solid rgba(29,78,216,0.07)', marginTop: 'auto' }}>
+          {(course.analytics?.enrollments ?? 0) > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
+              <TrendingUp style={{ width: 11, height: 11 }} />
+              {course.analytics!.enrollments.toLocaleString('en-IN')}
+            </span>
+          )}
+          {(course.analytics?.averageRating ?? 0) > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
+              <Star style={{ width: 11, height: 11, color: '#f59e0b', fill: '#f59e0b' }} />
+              {course.analytics!.averageRating.toFixed(1)}
+            </span>
+          )}
+          {course.certificateEnabled && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#059669', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 7px', borderRadius: 99 }}>
+              <Award style={{ width: 8, height: 8 }} /> Cert
+            </span>
+          )}
+        </div>
+
+        {/* Instructor */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+            background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: 9.5, fontWeight: 700,
+            boxShadow: '0 2px 8px rgba(29,78,216,0.22)',
+          }}>
+            {initials(course.mentorId.name)}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 11.5, fontWeight: 600, color: INK, margin: 0 }}>{course.mentorId.name}</p>
+            {course.mentorId.company && <p style={{ fontSize: 10, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>}
+          </div>
+        </div>
+
+        {/* Progress if enrolled */}
+        {isEnrolled && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: MUTED }}>Progress</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? '#059669' : BRAND }}>{pct}%</span>
+            </div>
+            <div style={{ height: 4, borderRadius: 99, background: 'rgba(29,78,216,0.1)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`, transition: 'width 0.5s ease' }} />
+            </div>
+          </div>
+        )}
+
+        {/* CTA row */}
+        <div style={{ marginTop: 4, display: 'flex', gap: 8 }}>
+          {/* Primary action */}
+          {isEnrolled ? (
+            <Link href={`/dashboard/content/${course._id}`} style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              padding: '10px 0', borderRadius: 12,
+              background: hovered ? `linear-gradient(135deg,${BRAND},${BRAND_DEEP})` : 'linear-gradient(135deg,#1e3a8a22,#2563eb22)',
+              border: `1px solid ${hovered ? BRAND : 'rgba(29,78,216,0.2)'}`,
+              color: hovered ? '#fff' : BRAND_DEEP,
+              fontWeight: 700, fontSize: 13, textDecoration: 'none',
+              transition: 'all 0.25s cubic-bezier(.23,1,.32,1)',
+              boxShadow: hovered ? '0 8px 20px rgba(37,99,235,0.28)' : 'none',
+            }}>
+              <Play style={{ width: 11, height: 11, fill: hovered ? '#fff' : BRAND_DEEP }} />
+              {pct >= 100 ? 'Review' : pct > 0 ? 'Continue' : 'Start'}
+            </Link>
+          ) : isPaid ? (
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 7 }}>
+                <span style={{ fontSize: 19, fontWeight: 800, color: INK, letterSpacing: '-0.03em' }}>₹{course.price}</span>
+                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>+ GST</span>
+              </div>
+              <Link href={`/dashboard/checkout/${course._id}`} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                padding: '10px 0', borderRadius: 12,
+                background: hovered ? 'linear-gradient(135deg,#059669,#047857)' : 'linear-gradient(135deg,#10b98122,#05966922)',
+                border: `1px solid ${hovered ? '#059669' : 'rgba(16,185,129,0.3)'}`,
+                color: hovered ? '#fff' : '#059669',
+                fontWeight: 700, fontSize: 13, textDecoration: 'none',
+                transition: 'all 0.25s cubic-bezier(.23,1,.32,1)',
+                boxShadow: hovered ? '0 8px 20px rgba(5,150,105,0.28)' : 'none',
+              }}>
+                <Lock style={{ width: 11, height: 11 }} /> Buy Now
+              </Link>
+            </div>
+          ) : (
+            <Link href={`/dashboard/content/${course._id}`} style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              padding: '10px 0', borderRadius: 12,
+              background: hovered ? `linear-gradient(135deg,${BRAND},${BRAND_DEEP})` : 'linear-gradient(135deg,#1e3a8a22,#2563eb22)',
+              border: `1px solid ${hovered ? BRAND : 'rgba(29,78,216,0.2)'}`,
+              color: hovered ? '#fff' : BRAND_DEEP,
+              fontWeight: 700, fontSize: 13, textDecoration: 'none',
+              transition: 'all 0.25s cubic-bezier(.23,1,.32,1)',
+              boxShadow: hovered ? '0 8px 20px rgba(37,99,235,0.28)' : 'none',
+            }}>
+              <Play style={{ width: 11, height: 11, fill: hovered ? '#fff' : BRAND_DEEP }} /> View Free
+            </Link>
+          )}
+
+          {/* Details button */}
+          <Link
+            href={`/dashboard/content/${course._id}`}
+            title="Course details"
+            style={{
+              flexShrink: 0, width: 40, borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              alignSelf: 'flex-end',
+              background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(29,78,216,0.18)',
+              color: BRAND, textDecoration: 'none',
+              transition: 'all 0.18s',
+              padding: '10px 0',
+            }}
+          >
+            <Info style={{ width: 14, height: 14 }} />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function getYtThumb(rawUrl: string): string | null {
-  const vid = getYtVideoId(rawUrl);
-  return vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : null;
+function SkeletonCard({ tall = false }: { tall?: boolean }) {
+  return (
+    <div style={{
+      height: tall ? 320 : 400, borderRadius: 20,
+      background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(29,78,216,0.08)',
+    }} className="animate-pulse" />
+  );
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
-export default function CourseDetailPage() {
-  const params   = useParams();
-  const router   = useRouter();
-  const courseId = params.courseId as string;
-
-  const [course, setCourse]             = useState<Course | null>(null);
-  const [contents, setContents]         = useState<Content[]>([]);
-  const [selected, setSelected]         = useState<Content | null>(null);
-  const [isLoading, setLoading]         = useState(true);
-  const [isEnrolled, setIsEnrolled]     = useState(false);
-  const [isEnrolling, setEnrolling]     = useState(false);
-  const [showModal, setShowModal]       = useState(false);
-  const [completedItems, setCompleted]  = useState<Set<string>>(new Set());
-  const [playing, setPlaying]           = useState(false);
-
-  // reset play state on lesson change
-  useEffect(() => { setPlaying(false); }, [selected?._id]);
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default function ContentPage() {
+  const router = useRouter();
+  const [allCourses, setCourses]       = useState<Course[]>([]);
+  const [enrolledCourses, setEnrolled] = useState<Course[]>([]);
+  const [activeTab, setTab]            = useState<'all' | 'free' | 'paid' | 'enrolled'>('all');
+  const [isLoading, setLoading]        = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const token = getAuthToken();
-      if (!token) { router.push("/login"); return; }
+      if (!token) { router.push('/login'); return; }
       setLoading(true);
       try {
-        const res  = await fetch(`${API_URL}/advanced/courses/published/${courseId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || "Failed");
-        const cd = data.data;
-        setCourse(cd);
+        const [coursesRes, enrollRes] = await Promise.all([
+          fetch(`${API_URL}/advanced/courses/published?limit=100`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/enrollments/my-enrollments`,            { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-        const items: Content[] = [];
-        cd.modules?.forEach((mod: any, mi: number) => {
-          mod.resources?.forEach((r: any, ri: number) => {
-            items.push({
-              _id: `${mod._id || mi}-${r._id || ri}`,
-              title: r.title || r.type,
-              description: r.description || mod.description || "",
-              contentType: (r.type === "video" || r.type === "youtube") ? "video-link" : "other",
-              embedUrl: r.embedUrl || r.url,
-              videoUrl: r.url,
-              duration: r.duration || 0,
-              order: r.order || ri,
-            });
+        const [coursesData, enrollData] = await Promise.all([coursesRes.json(), enrollRes.json()]);
+
+        const courses: Course[] = coursesData.success ? (coursesData.data.courses || []) : [];
+
+        // Build enrollment map
+        const enrollMap = new Map<string, { progress: number; lastAccessedAt: string }>();
+        if (enrollData.success) {
+          enrollData.data.forEach((e: any) => {
+            if (e.courseId?._id) {
+              enrollMap.set(e.courseId._id, { progress: e.progress || 0, lastAccessedAt: e.lastAccessedAt || e.enrolledAt });
+            }
           });
-        });
-        setContents(items);
-        if (items.length > 0) setSelected(items[0]);
-
-        const er = await fetch(`${API_URL}/enrollments/${courseId}/check`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const ed = await er.json();
-        if (ed.success) setIsEnrolled(ed.isEnrolled);
-      } catch (err: any) {
-        if (err.response?.status === 401 || err.message?.includes("token")) {
-          removeAuthToken(); router.push("/login");
-        } else if (err.response?.status === 403) {
-          toast.error("Purchase this course to access it");
-          router.push("/dashboard/content");
-        } else {
-          toast.error("Failed to load course");
-          router.push("/dashboard/content");
         }
+
+        const merged = courses.map((c: Course) => ({
+          ...c,
+          enrollment: enrollMap.get(c._id) || c.enrollment,
+        }));
+
+        setCourses(merged);
+
+        const enrolled = enrollData.success
+          ? enrollData.data
+              .filter((e: any) => e.courseId)
+              .map((e: any) => ({ ...e.courseId, enrollment: { progress: e.progress || 0, lastAccessedAt: e.lastAccessedAt || e.enrolledAt } }))
+          : [];
+        setEnrolled(enrolled);
+      } catch (err: any) {
+        if (err?.status === 401) { removeAuthToken(); router.push('/login'); }
+        else toast.error('Failed to load courses');
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [courseId, router]);
+  }, [router]);
 
-  useEffect(() => {
-    if (!courseId) return;
-    try {
-      const saved = localStorage.getItem(`completed_items_${courseId}`);
-      if (saved) setCompleted(new Set(JSON.parse(saved)));
-    } catch {}
-  }, [courseId]);
+  const free = allCourses.filter(c => c.contentType === 'free');
+  const paid = allCourses.filter(c => c.contentType === 'paid' || c.contentType === 'exclusive');
+  const totalDone = enrolledCourses.filter(c => (c.enrollment?.progress ?? 0) >= 100).length;
+  const inProgress = enrolledCourses.filter(c => {
+    const p = c.enrollment?.progress ?? 0;
+    return p > 0 && p < 100;
+  });
 
-  useEffect(() => {
-    if (!isEnrolled || contents.length === 0) return;
-    const pct   = Math.round((completedItems.size / contents.length) * 100);
-    const token = getAuthToken();
-    if (!token) return;
-    fetch(`${API_URL}/enrollments/${courseId}/progress`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ progress: pct }),
-    }).catch(() => {});
-  }, [completedItems, contents, isEnrolled, courseId]);
+  const TABS = [
+    { key: 'all',      label: 'All Courses',   count: allCourses.length },
+    { key: 'free',     label: 'Free',           count: free.length },
+    { key: 'paid',     label: 'Premium',        count: paid.length },
+    { key: 'enrolled', label: 'My Learning',    count: enrolledCourses.length },
+  ] as const;
 
-  const toggleDone = (id: string) => {
-    setCompleted(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      localStorage.setItem(`completed_items_${courseId}`, JSON.stringify([...next]));
-      return next;
-    });
-  };
+  const tabCourses = {
+    all:      allCourses,
+    free:     free,
+    paid:     paid,
+    enrolled: enrolledCourses,
+  }[activeTab];
 
-  const handleEnroll = async () => {
-    if (!course) return;
-    if (course.contentType === "paid" || course.contentType === "exclusive") {
-      setShowModal(true); return;
-    }
-    try {
-      setEnrolling(true);
-      const token = getAuthToken();
-      const res   = await fetch(`${API_URL}/enrollments/${courseId}/enroll`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      const d = await res.json();
-      if (d.success) { toast.success(d.message || "Enrolled!"); setIsEnrolled(true); setShowModal(false); }
-      else toast.error(d.error || "Failed to enroll");
-    } catch { toast.error("Failed to enroll"); }
-    finally { setEnrolling(false); }
-  };
-
-  const getValidUrl = (raw?: string) => {
-    if (!raw?.trim()) return null;
-    const n = /^www\./i.test(raw.trim()) ? `https://${raw.trim()}` : raw.trim();
-    return /^https?:\/\//i.test(n) ? n : null;
-  };
-
-  const FREE_PREVIEW_COUNT = 2;
-  const isPaidCourse = course?.contentType === "paid" || course?.contentType === "exclusive";
-  const selectedIndex = selected ? contents.findIndex(c => c._id === selected._id) : -1;
-  const isPreviewLesson = selectedIndex >= 0 && selectedIndex < FREE_PREVIEW_COUNT;
-  const canWatch     = !isPaidCourse || isEnrolled || isPreviewLesson;
-  const initials     = course?.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) ?? "?";
-  const progressPct  = contents.length > 0 ? Math.round((completedItems.size / contents.length) * 100) : 0;
-
-  // ── Player tile ────────────────────────────────────────────────────────────
-  const renderPlayer = () => {
-    // loading skeleton
-    if (isLoading) return (
-      <div className="player-skeleton" style={{
-        borderRadius: 20, aspectRatio: "16/9",
-        background: "rgba(255,255,255,0.72)", border: "1px solid rgba(29,78,216,0.09)",
-        overflow: "hidden", position: "relative",
-      }}>
-        <div className="skeleton-shimmer" style={{ position: "absolute", inset: 0 }} />
-      </div>
-    );
-
-    if (!selected) return (
-      <div style={{
-        borderRadius: 20, aspectRatio: "16/9",
-        background: "rgba(255,255,255,0.72)", border: "1px solid rgba(29,78,216,0.09)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12,
-      }}>
-        <BookOpen style={{ width: 44, height: 44, color: "#cbd5e1" }} />
-        <p style={{ color: MUTED, fontWeight: 600, margin: 0 }}>Select a lesson to start watching</p>
-      </div>
-    );
-
-    // lock wall
-    if (!canWatch) return (
-      <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(29,78,216,0.14)", boxShadow: "0 8px 32px rgba(29,78,216,0.08)" }}>
-        <div style={{
-          position: "relative", aspectRatio: "16/9",
-          background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.5)" }} />
-          <div style={{ position: "relative", textAlign: "center", color: "#fff" }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%", margin: "0 auto 12px",
-              background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Lock style={{ width: 28, height: 28 }} />
-            </div>
-            <p style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Course Locked</p>
-            <p style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-              {isPaidCourse ? `Enroll for ₹${course?.price} to unlock` : "Enroll for free to unlock"}
-            </p>
-          </div>
-        </div>
-        <div style={{ padding: "22px 28px", textAlign: "center", background: "#fff" }}>
-          <button onClick={handleEnroll} disabled={isEnrolling} style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "12px 30px", borderRadius: 13,
-            background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-            color: "#fff", fontWeight: 700, fontSize: 14, border: "none",
-            cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
-            boxShadow: "0 10px 28px rgba(37,99,235,0.32)",
-          }}>
-            {isEnrolling
-              ? <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} /> Enrolling…</>
-              : isPaidCourse ? <><Lock style={{ width: 14, height: 14 }} /> Enroll — ₹{course?.price}</> : <><Play style={{ width: 14, height: 14, fill: "#fff" }} /> Enroll for Free</>
-            }
-          </button>
-        </div>
-      </div>
-    );
-
-    // free preview banner
-    const previewBanner = isPreviewLesson && isPaidCourse && !isEnrolled ? (
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8,
-        padding: "10px 16px", borderRadius: 12, marginBottom: 8,
-        background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
-        border: "1px solid #bbf7d0",
-      }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#059669" }}>
-          <Play style={{ width: 11, height: 11, fill: "#059669" }} />
-          Free Preview — Lesson {selectedIndex + 1} of {FREE_PREVIEW_COUNT}
-        </span>
-        <button onClick={handleEnroll} style={{
-          display: "inline-flex", alignItems: "center", gap: 5,
-          padding: "5px 12px", borderRadius: 9,
-          background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-          color: "#fff", fontWeight: 700, fontSize: 11.5, border: "none",
-          cursor: "pointer", fontFamily: "inherit",
-          boxShadow: "0 3px 10px rgba(37,99,235,0.28)",
-        }}>
-          <Lock style={{ width: 10, height: 10 }} /> Enroll for full access
-        </button>
-      </div>
-    ) : null;
-
-    // google doc / sheet
-    if (selected.contentType === "google-doc" || selected.contentType === "google-sheet") {
-      const docUrl = getValidUrl(selected.embedUrl);
-      if (!docUrl) return <div style={{ borderRadius: 16, border: "1px solid #fde68a", background: "#fffbeb", padding: 28, textAlign: "center" }}><p style={{ color: "#92400e", fontWeight: 600, margin: 0 }}>Invalid lesson link</p></div>;
-      return (
-        <>{previewBanner}
-        <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(29,78,216,0.14)", background: "#fff", boxShadow: "0 4px 20px rgba(29,78,216,0.06)" }}>
-          <iframe src={docUrl} style={{ width: "100%", height: 520, display: "block" }} allow="fullscreen" title={selected.title} />
-          {isEnrolled && (
-            <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(29,78,216,0.08)" }}>
-              <button onClick={() => toggleDone(selected._id)} style={{
-                display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
-                border: "1px solid", borderColor: completedItems.has(selected._id) ? "#6ee7b7" : "rgba(29,78,216,0.18)",
-                background: completedItems.has(selected._id) ? "#f0fdf4" : "#f8faff",
-                color: completedItems.has(selected._id) ? "#059669" : MUTED,
-                fontWeight: 600, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit",
-              }}>
-                <CheckCircle style={{ width: 13, height: 13, ...(completedItems.has(selected._id) ? { fill: "#059669", color: "#059669" } : {}) }} />
-                {completedItems.has(selected._id) ? "Marked as done" : "Mark as done"}
-              </button>
-            </div>
-          )}
-        </div>
-        </>
-      );
-    }
-
-    // video-link
-    if (selected.contentType === "video-link") {
-      const rawUrl    = selected.videoUrl;
-      const videoUrl  = getValidUrl(rawUrl);
-      if (!videoUrl) return <div style={{ borderRadius: 16, border: "1px solid #fde68a", background: "#fffbeb", padding: 28, textAlign: "center" }}><p style={{ color: "#92400e", fontWeight: 600, margin: 0 }}>Invalid video link</p></div>;
-
-      const isYT      = /youtube\.com|youtu\.be/i.test(videoUrl);
-      const thumb     = isYT ? getYtThumb(videoUrl) : null;
-      const embedUrl  = isYT ? buildYtEmbedUrl(videoUrl) : null;
-
-      return (<>{previewBanner}
-        <div style={{ borderRadius: 20, overflow: "hidden", background: "#fff", border: "1px solid rgba(29,78,216,0.1)", boxShadow: "0 4px 20px rgba(29,78,216,0.06)" }}>
-          <div style={{ position: "relative", aspectRatio: "16/9", background: "#0f172a", overflow: "hidden" }}>
-            {isYT && embedUrl && playing ? (
-              <iframe
-                src={embedUrl}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                title={selected.title}
-              />
-            ) : isYT && thumb ? (
-              <>
-                <img src={thumb} alt={selected.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)" }} />
-                <button
-                  onClick={() => setPlaying(true)}
-                  style={{
-                    position: "absolute", inset: 0, width: "100%", height: "100%",
-                    background: "none", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                  aria-label="Play video"
-                >
-                  <div className="play-btn-inner" style={{
-                    width: 68, height: 68, borderRadius: "50%",
-                    background: "rgba(255,255,255,0.95)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
-                    transition: "transform 0.18s",
-                  }}>
-                    <Play style={{ width: 28, height: 28, fill: "#dc2626", color: "#dc2626", marginLeft: 4 }} />
-                  </div>
-                </button>
-              </>
-            ) : (
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "rgba(255,255,255,0.4)" }}>
-                <Play style={{ width: 44, height: 44 }} />
-                <p style={{ fontSize: 12, margin: 0 }}>External video</p>
-              </div>
-            )}
-          </div>
-
-          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: INK, margin: 0, letterSpacing: "-0.01em" }}>{selected.title}</p>
-              {selected.description && <p style={{ fontSize: 12.5, color: MUTED, margin: "5px 0 0", lineHeight: 1.6 }}>{selected.description}</p>}
-              {selected.duration > 0 && (
-                <p style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 500, margin: "6px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
-                  <Clock style={{ width: 11, height: 11 }} /> {selected.duration} min
-                </p>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {isYT && !playing && embedUrl && (
-                <button onClick={() => setPlaying(true)} style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                  padding: "10px 0", borderRadius: 11, minWidth: 140,
-                  background: "linear-gradient(135deg,#dc2626,#b91c1c)",
-                  color: "#fff", fontWeight: 700, fontSize: 13, border: "none",
-                  cursor: "pointer", fontFamily: "inherit",
-                  boxShadow: "0 5px 16px rgba(220,38,38,0.28)",
-                }}>
-                  <Play style={{ width: 13, height: 13, fill: "#fff" }} /> Play Video
-                </button>
-              )}
-              {!isYT && (
-                <a href={videoUrl} target="_blank" rel="noopener noreferrer" style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                  padding: "10px 0", borderRadius: 11, minWidth: 120,
-                  background: "#f1f5f9", border: "1px solid #e2e8f0",
-                  color: INK, fontWeight: 600, fontSize: 13, textDecoration: "none",
-                }}>
-                  <ExternalLink style={{ width: 12, height: 12 }} /> Open Video
-                </a>
-              )}
-              {isEnrolled && (
-                <button onClick={() => toggleDone(selected._id)} style={{
-                  display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 11,
-                  border: "1px solid", flexShrink: 0,
-                  borderColor: completedItems.has(selected._id) ? "#6ee7b7" : "rgba(29,78,216,0.18)",
-                  background: completedItems.has(selected._id) ? "#f0fdf4" : "#f8faff",
-                  color: completedItems.has(selected._id) ? "#059669" : MUTED,
-                  fontWeight: 600, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit",
-                }}>
-                  <CheckCircle style={{ width: 13, height: 13, ...(completedItems.has(selected._id) ? { fill: "#059669", color: "#059669" } : {}) }} />
-                  {completedItems.has(selected._id) ? "Done" : "Mark done"}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </>);
-    }
-
-    // pdf
-    if (selected.contentType === "pdf") return (
-      <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(29,78,216,0.14)" }}>
-        <embed src={selected.videoUrl} type="application/pdf" width="100%" height="600" />
-      </div>
-    );
-
-    // other
-    return (
-      <div style={{ borderRadius: 16, border: "1px solid rgba(29,78,216,0.14)", background: "#fff", padding: 28, textAlign: "center" }}>
-        <p style={{ color: MUTED, margin: 0 }}>Content type not supported for preview</p>
-        {selected.videoUrl && <a href={selected.videoUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, color: BRAND, fontWeight: 600, textDecoration: "none", fontSize: 13 }}>Open content <ExternalLink style={{ width: 12, height: 12 }} /></a>}
-      </div>
-    );
-  };
-
-  // ── Error state (after load completes with no course) ─────────────────────
-  if (!isLoading && !course) return (
-    <div style={{ minHeight: "100vh", background: PAPER, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center" }}>
-        <BookOpen style={{ width: 48, height: 48, color: "#cbd5e1", margin: "0 auto 16px" }} />
-        <p style={{ color: MUTED, fontWeight: 600, marginBottom: 16 }}>Course not found</p>
-        <Link href="/dashboard/content" style={{ color: BRAND, fontWeight: 600, textDecoration: "none" }}>← Back to courses</Link>
-      </div>
-    </div>
-  );
-
-  // ── Page ──────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes shimmer {
-          0%   { background-position: -600px 0 }
-          100% { background-position: 600px 0 }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px) }
-          to   { opacity: 1; transform: translateY(0) }
-        }
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
-
-        .lesson-tile:hover { background: rgba(37,99,235,0.06) !important; border-color: rgba(29,78,216,0.25) !important; }
-        .play-btn-inner:hover { transform: scale(1.08); }
-
-        .skeleton-shimmer {
-          background: linear-gradient(90deg, #f0f2f5 25%, #e8eaed 50%, #f0f2f5 75%);
-          background-size: 600px 100%;
-          animation: shimmer 1.4s ease-in-out infinite;
-        }
-        .tile-appear {
-          animation: fadeUp 0.28s ease both;
-        }
-
-        /* ── Bento grid ── */
-        @media(min-width: 1024px) {
-          .lg\\:bento-grid {
-            grid-template-columns: 1fr 340px !important;
-            grid-template-rows: auto auto !important;
-          }
-          /* Player spans the full width */
-          .bento-player  { grid-column: 1 / 3; grid-row: 1; }
-          /* Lessons left, info right — both in row 2 */
-          .bento-lessons { grid-column: 1; grid-row: 2; }
-          .bento-info    { grid-column: 2; grid-row: 2; }
-        }
+        .cd-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: PAPER, fontFamily: "'DM Sans',system-ui,sans-serif" }}>
+      <div style={{ minHeight: '100vh', background: PAPER, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+
         {/* Ambient blobs */}
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          <div style={{ position: "absolute", top: "5%", left: "5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(29,78,216,0.05) 0%,transparent 70%)", filter: "blur(80px)" }} />
-          <div style={{ position: "absolute", bottom: "10%", right: "5%", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle,rgba(8,145,178,0.04) 0%,transparent 70%)", filter: "blur(80px)" }} />
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+          <div style={{ position: 'absolute', top: '5%', left: '8%', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle,rgba(29,78,216,0.055) 0%,transparent 70%)', filter: 'blur(90px)' }} />
+          <div style={{ position: 'absolute', bottom: '10%', right: '8%', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,0.045) 0%,transparent 70%)', filter: 'blur(90px)' }} />
         </div>
 
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "clamp(16px,3vw,28px) clamp(14px,3vw,24px)" }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: 'clamp(20px,4vw,40px) clamp(16px,4vw,32px)' }}>
 
-          {/* ── Breadcrumb ── */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-            <Link href="/dashboard/content" style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 12.5, fontWeight: 600, color: BRAND, textDecoration: "none",
-              padding: "5px 12px", borderRadius: 10,
-              background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.15)",
-            }}>
-              <ArrowLeft style={{ width: 12, height: 12 }} /> All Courses
-            </Link>
-            <ChevronRight style={{ width: 12, height: 12, color: "#94a3b8" }} />
-            {isLoading ? (
-              <div className="skeleton-shimmer" style={{ width: 220, height: 18, borderRadius: 8 }} />
-            ) : (
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: INK, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {course?.title}
-              </span>
-            )}
-          </div>
-
-          {/* ══════════════════════════════════════════════════════════════
-              BENTO MASTER GRID
-              Desktop:
-                Row 1 → Player (full width, both columns)
-                Row 2 → Lessons (left col) | Course Info (right col)
-              Mobile: stacks vertically
-          ══════════════════════════════════════════════════════════════ */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridTemplateRows: "auto",
-            gap: 14,
-          }} className="lg:bento-grid">
-
-            {/* ── PLAYER TILE (full width on desktop) ── */}
-            <div className="bento-player" style={{ minWidth: 0 }}>
-              {renderPlayer()}
+          {/* ── Page header ── */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <span style={{ width: 'clamp(20px,4vw,32px)', height: 1, background: 'linear-gradient(90deg,transparent,#2563eb)' }} />
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 13px', borderRadius: 99, background: '#2563eb14', border: '1px solid #2563eb33' }}>
+                <Sparkles size={10} style={{ color: BRAND }} />
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: BRAND, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Learning Hub</span>
+              </div>
+              <span style={{ width: 'clamp(20px,4vw,32px)', height: 1, background: 'linear-gradient(90deg,#2563eb,transparent)' }} />
             </div>
 
-            {/* ── LESSONS BENTO TILE ── */}
-            <div className="bento-lessons" style={{
-              borderRadius: 20,
-              background: "rgba(255,255,255,0.88)",
-              border: "1px solid rgba(29,78,216,0.12)",
-              boxShadow: "0 4px 20px rgba(29,78,216,0.07)",
-              overflow: "hidden",
-            }}>
-              {/* Header */}
-              <div style={{
-                padding: "14px 20px",
-                borderBottom: "1px solid rgba(29,78,216,0.08)",
-                background: "linear-gradient(to right,rgba(37,99,235,0.04),transparent)",
-                display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <BookOpen style={{ width: 14, height: 14, color: BRAND }} />
-                  {isLoading ? (
-                    <div className="skeleton-shimmer" style={{ width: 100, height: 16, borderRadius: 6 }} />
-                  ) : (
-                    <h3 style={{ fontSize: 13.5, fontWeight: 700, color: INK, margin: 0 }}>
-                      Lessons <span style={{ fontWeight: 500, color: "#94a3b8" }}>({contents.length})</span>
-                    </h3>
-                  )}
-                  {!isLoading && isPaidCourse && !isEnrolled && (
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700,
-                      color: "#92400e", background: "#fef3c7", border: "1px solid #fde68a", padding: "2px 7px", borderRadius: 99,
-                    }}>
-                      <Lock style={{ width: 8, height: 8 }} /> Locked
-                    </span>
-                  )}
-                </div>
-                {!isLoading && isEnrolled && (
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: progressPct === 100 ? "#059669" : MUTED }}>
-                    {completedItems.size}/{contents.length} done · {progressPct}%
-                  </span>
-                )}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h1 style={{ fontSize: 'clamp(26px,4vw,42px)', fontWeight: 700, color: INK, margin: 0, letterSpacing: '-0.033em', lineHeight: 1.1 }}>
+                  Your Courses
+                </h1>
+                <p style={{ fontSize: 14, color: MUTED, margin: '8px 0 0', fontWeight: 400 }}>
+                  Track progress, continue learning, and explore new content.
+                </p>
               </div>
 
-              {/* Skeleton tiles while loading */}
-              {isLoading ? (
+              {/* Quick stats pill */}
+              {!isLoading && (
                 <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-                  gap: 1,
-                  background: "rgba(29,78,216,0.07)",
+                  display: 'inline-flex', alignItems: 'center', gap: 'clamp(12px,3vw,28px)',
+                  flexWrap: 'wrap',
+                  padding: '11px 18px', borderRadius: 99,
+                  background: '#fff', border: '1px solid rgba(29,78,216,0.12)',
+                  boxShadow: '0 4px 16px rgba(29,78,216,0.07)',
                 }}>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} style={{
-                      background: "#fff", padding: "15px 15px 13px",
-                      display: "flex", flexDirection: "column", gap: 8, minHeight: 90,
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div className="skeleton-shimmer" style={{ width: 22, height: 22, borderRadius: "50%" }} />
-                        <div className="skeleton-shimmer" style={{ width: 28, height: 12, borderRadius: 6 }} />
-                      </div>
-                      <div className="skeleton-shimmer" style={{ width: "90%", height: 12, borderRadius: 6 }} />
-                      <div className="skeleton-shimmer" style={{ width: "60%", height: 10, borderRadius: 6 }} />
+                  {[
+                    { val: String(enrolledCourses.length), label: 'Enrolled' },
+                    { val: String(inProgress.length),      label: 'In Progress' },
+                    { val: String(totalDone),               label: 'Completed' },
+                  ].map(s => (
+                    <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: BRAND, letterSpacing: '-0.03em', lineHeight: 1 }}>{s.val}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{s.label}</span>
                     </div>
                   ))}
                 </div>
-              ) : (
-                /* Lesson tiles — auto-populate when contents arrive */
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-                  gap: 1,
-                  background: "rgba(29,78,216,0.07)",
-                }}>
-                  {contents.map((c, i) => {
-                    const done      = completedItems.has(c._id);
-                    const active    = selected?._id === c._id;
-                    const isPreview = i < FREE_PREVIEW_COUNT;
-                    const locked    = isPaidCourse && !isEnrolled && !isPreview;
-
-                    return (
-                      <button
-                        key={c._id}
-                        onClick={() => !locked && setSelected(c)}
-                        disabled={locked}
-                        className={!locked ? "lesson-tile tile-appear" : "tile-appear"}
-                        style={{
-                          animationDelay: `${i * 35}ms`,
-                          background: active && !locked ? "rgba(37,99,235,0.08)" : done ? "rgba(16,185,129,0.04)" : "#fff",
-                          border: "none",
-                          borderLeft: active && !locked ? `3px solid ${BRAND}` : "3px solid transparent",
-                          padding: "15px 15px 13px",
-                          textAlign: "left",
-                          cursor: locked ? "not-allowed" : "pointer",
-                          opacity: locked ? 0.6 : 1,
-                          fontFamily: "inherit",
-                          display: "flex", flexDirection: "column", gap: 8,
-                          transition: "background 0.14s, border-color 0.14s",
-                          minHeight: 90,
-                          position: "relative",
-                        }}
-                      >
-                        {/* Number / status circle + duration */}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{
-                            width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            ...(locked
-                              ? { background: "#f1f5f9", border: "1.5px solid #e2e8f0" }
-                              : done
-                                ? { background: "#10b981" }
-                                : active
-                                  ? { background: BRAND }
-                                  : isPreview && isPaidCourse && !isEnrolled
-                                    ? { background: "#f0fdf4", border: "1.5px solid #6ee7b7" }
-                                    : { background: "rgba(29,78,216,0.07)", border: "1.5px solid rgba(29,78,216,0.2)" }
-                            ),
-                          }}>
-                            {locked
-                              ? <Lock style={{ width: 9, height: 9, color: "#94a3b8" }} />
-                              : done
-                                ? <CheckCircle style={{ width: 12, height: 12, color: "#fff", fill: "#fff" }} />
-                                : active
-                                  ? <Play style={{ width: 8, height: 8, color: "#fff", fill: "#fff", marginLeft: 1 }} />
-                                  : isPreview && isPaidCourse && !isEnrolled
-                                    ? <Play style={{ width: 8, height: 8, color: "#10b981", fill: "#10b981", marginLeft: 1 }} />
-                                    : <span style={{ fontSize: 9, fontWeight: 700, color: BRAND }}>{i + 1}</span>
-                            }
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                            {isPreview && isPaidCourse && !isEnrolled && (
-                              <span style={{
-                                fontSize: 8.5, fontWeight: 700, color: "#059669",
-                                background: "#f0fdf4", border: "1px solid #bbf7d0",
-                                padding: "1px 5px", borderRadius: 99,
-                              }}>FREE</span>
-                            )}
-                            {c.duration > 0 && (
-                              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
-                                <Clock style={{ width: 9, height: 9 }} />{c.duration}m
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Title */}
-                        <p style={{
-                          fontSize: 12, fontWeight: active ? 700 : 600,
-                          color: done ? "#94a3b8" : active ? BRAND_DEEP : locked ? "#94a3b8" : INK,
-                          margin: 0, lineHeight: 1.4, flex: 1,
-                          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                          textDecoration: done ? "line-through" : "none",
-                        }}>
-                          {c.title}
-                        </p>
-
-                        {done && <span style={{ fontSize: 9.5, color: "#059669", fontWeight: 700 }}>✓ Done</span>}
-                        {locked && (
-                          <span style={{ fontSize: 9.5, color: "#94a3b8", fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
-                            <Lock style={{ width: 8, height: 8 }} /> Enroll to unlock
-                          </span>
-                        )}
-
-                        {active && !locked && (
-                          <div style={{
-                            position: "absolute", bottom: 9, right: 11,
-                            width: 6, height: 6, borderRadius: "50%", background: BRAND,
-                            boxShadow: "0 0 0 2px rgba(37,99,235,0.2)",
-                          }} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
               )}
-            </div>
-
-            {/* ── COURSE INFO TILE (right col, row 2 on desktop) ── */}
-            <div className="bento-info" style={{
-              borderRadius: 20,
-              background: "rgba(255,255,255,0.9)",
-              border: "1px solid rgba(29,78,216,0.12)",
-              boxShadow: "0 4px 20px rgba(29,78,216,0.07)",
-              overflow: "hidden",
-              display: "flex", flexDirection: "column",
-            }}>
-              <div style={{ height: 3, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`, flexShrink: 0 }} />
-
-              {isLoading ? (
-                /* Info skeleton */
-                <div style={{ padding: "20px 20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div className="skeleton-shimmer" style={{ width: 70, height: 20, borderRadius: 99 }} />
-                  <div className="skeleton-shimmer" style={{ width: "85%", height: 20, borderRadius: 8 }} />
-                  <div className="skeleton-shimmer" style={{ width: "65%", height: 14, borderRadius: 6 }} />
-                  <div className="skeleton-shimmer" style={{ width: "100%", height: 44, borderRadius: 13 }} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-                    {[80, 60, 70].map((w, i) => (
-                      <div key={i} className="skeleton-shimmer" style={{ width: `${w}%`, height: 12, borderRadius: 6 }} />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ padding: "20px 20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
-
-                  {/* Category + title */}
-                  <div>
-                    <span style={{
-                      display: "inline-block", fontSize: 10, fontWeight: 700,
-                      color: BRAND, background: "#eff6ff", border: "1px solid #bfdbfe",
-                      padding: "2px 9px", borderRadius: 99, textTransform: "capitalize", marginBottom: 8,
-                    }}>
-                      {CAT_LABEL[course!.category] ?? course!.category.replace(/-/g, " ")}
-                    </span>
-                    <h2 style={{ fontSize: "clamp(15px,1.4vw,17px)", fontWeight: 700, color: INK, margin: 0, letterSpacing: "-0.022em", lineHeight: 1.3 }}>
-                      {course!.title}
-                    </h2>
-                    {course!.shortDescription && (
-                      <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.65, margin: "8px 0 0" }}>{course!.shortDescription}</p>
-                    )}
-                  </div>
-
-                  {/* Enroll */}
-                  {isEnrolled ? (
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 12,
-                      background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#059669", fontWeight: 600, fontSize: 13,
-                    }}>
-                      <CheckCircle style={{ width: 15, height: 15, fill: "#059669" }} /> Enrolled
-                    </div>
-                  ) : (
-                    <button onClick={handleEnroll} disabled={isEnrolling} style={{
-                      width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                      padding: "11px 0", borderRadius: 13,
-                      background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-                      color: "#fff", fontWeight: 700, fontSize: 13.5, border: "none",
-                      cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
-                      boxShadow: "0 8px 22px rgba(37,99,235,0.28)",
-                    }}>
-                      {isEnrolling
-                        ? <><span style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} /> Enrolling…</>
-                        : isPaidCourse ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{course!.price}</> : <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Enroll for Free</>
-                      }
-                    </button>
-                  )}
-
-                  {/* Progress */}
-                  {isEnrolled && contents.length > 0 && (
-                    <div style={{ borderRadius: 14, padding: "14px 16px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(29,78,216,0.1)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: INK }}>
-                          <TrendingUp style={{ width: 12, height: 12, color: BRAND }} /> Progress
-                        </span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: progressPct === 100 ? "#059669" : BRAND }}>{progressPct}%</span>
-                      </div>
-                      <div style={{ height: 7, borderRadius: 99, background: "rgba(29,78,216,0.1)", overflow: "hidden", marginBottom: 8 }}>
-                        <div style={{
-                          height: "100%", borderRadius: 99, width: `${progressPct}%`, transition: "width 0.5s ease",
-                          background: progressPct === 100 ? "linear-gradient(90deg,#10b981,#059669)" : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`,
-                        }} />
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 11, color: MUTED, fontWeight: 500 }}>{completedItems.size} of {contents.length} done</span>
-                        {progressPct === 100 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#059669", fontWeight: 700 }}>
-                            <Award style={{ width: 11, height: 11 }} /> Complete!
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Currently playing */}
-                  {selected && (
-                    <div style={{ borderRadius: 14, padding: "12px 14px", background: "#f8faff", border: "1px solid rgba(29,78,216,0.1)" }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 6px" }}>Now Playing</p>
-                      <p style={{ fontSize: 12.5, fontWeight: 600, color: INK, margin: 0, lineHeight: 1.4 }}>{selected.title}</p>
-                      {selected.duration > 0 && (
-                        <p style={{ fontSize: 11, color: MUTED, margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
-                          <Clock style={{ width: 10, height: 10 }} />{selected.duration} min
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Instructor */}
-                  <div style={{ marginTop: "auto", paddingTop: 16, borderTop: "1px solid rgba(29,78,216,0.08)" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 10px" }}>Instructor</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{
-                        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                        background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#fff", fontSize: 13, fontWeight: 700,
-                        boxShadow: "0 3px 10px rgba(29,78,216,0.25)",
-                      }}>{initials}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: 0 }}>{course!.mentorId.name}</p>
-                        <p style={{ fontSize: 11, color: MUTED, margin: "2px 0 0" }}>{course!.mentorId.designation}</p>
-                        {course!.mentorId.company && <p style={{ fontSize: 10.5, color: BRAND, fontWeight: 600, margin: "1px 0 0" }}>{course!.mentorId.company}</p>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>{/* /bento master grid */}
-        </div>
-
-        {/* ── Payment modal ── */}
-        {showModal && isPaidCourse && (
-          <div style={{
-            position: "fixed", inset: 0, zIndex: 50,
-            background: "rgba(15,23,42,0.55)", backdropFilter: "blur(6px)",
-            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-          }}>
-            <div style={{
-              background: "#fff", borderRadius: 22, width: "100%", maxWidth: 420,
-              border: "1px solid rgba(29,78,216,0.18)",
-              boxShadow: "0 24px 64px rgba(29,78,216,0.18)",
-              overflow: "hidden",
-            }}>
-              <div style={{ height: 3, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP})` }} />
-              <div style={{ padding: "26px 26px 22px" }}>
-                <h3 style={{ fontSize: 19, fontWeight: 700, color: INK, margin: "0 0 18px", letterSpacing: "-0.025em" }}>Enroll in Course</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
-                  <div style={{ background: "#f8faff", border: "1px solid rgba(29,78,216,0.12)", borderRadius: 12, padding: "12px 16px" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 4px" }}>Course</p>
-                    <p style={{ fontWeight: 700, color: INK, margin: 0, fontSize: 13.5 }}>{course!.title}</p>
-                  </div>
-                  <div style={{ background: "#f8faff", border: "1px solid rgba(29,78,216,0.12)", borderRadius: 12, padding: "12px 16px" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 4px" }}>Amount</p>
-                    <p style={{ fontSize: 26, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>₹{course!.price}</p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => setShowModal(false)} style={{
-                    flex: 1, padding: "11px 0", borderRadius: 12,
-                    background: "#f1f5f9", border: "1px solid #e2e8f0", color: INK,
-                    fontWeight: 600, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit",
-                  }}>Cancel</button>
-                  <button onClick={() => router.push(`/dashboard/checkout/${courseId}`)} style={{
-                    flex: 1, padding: "11px 0", borderRadius: 12,
-                    background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-                    border: "none", color: "#fff",
-                    fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit",
-                    boxShadow: "0 8px 20px rgba(37,99,235,0.28)",
-                  }}>Proceed to Payment</button>
-                </div>
-              </div>
             </div>
           </div>
-        )}
+
+          {/* ── Bento: Continue Learning spotlight ── */}
+          {!isLoading && inProgress.length > 0 && (
+            <div style={{ marginBottom: 36 }}>
+              {/* Section label */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <TrendingUp style={{ width: 15, height: 15, color: BRAND }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Continue Learning</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, background: 'rgba(29,78,216,0.07)', padding: '2px 8px', borderRadius: 99 }}>{inProgress.length}</span>
+                </div>
+                <button onClick={() => setTab('enrolled')} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  fontSize: 12, fontWeight: 600, color: BRAND, background: 'none', border: 'none',
+                  cursor: 'pointer', fontFamily: 'inherit', padding: '4px 8px', borderRadius: 8,
+                }}>
+                  See all <ChevronRight style={{ width: 13, height: 13 }} />
+                </button>
+              </div>
+
+              {/* Bento grid: first card wide, rest compact */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
+                gap: 16,
+              }} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {inProgress.slice(0, 4).map(c => (
+                  <EnrolledCard key={c._id} course={c} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Bento: Recently completed ── */}
+          {!isLoading && totalDone > 0 && (
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <CheckCircle style={{ width: 15, height: 15, color: '#059669' }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Completed</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: '#059669', background: '#f0fdf4', padding: '2px 8px', borderRadius: 99, border: '1px solid #bbf7d0' }}>{totalDone}</span>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
+                gap: 16,
+              }} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {enrolledCourses.filter(c => (c.enrollment?.progress ?? 0) >= 100).slice(0, 4).map(c => (
+                  <EnrolledCard key={c._id} course={c} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Divider before catalogue ── */}
+          {!isLoading && (inProgress.length > 0 || totalDone > 0) && (
+            <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(29,78,216,0.14),transparent)', margin: '0 0 32px' }} />
+          )}
+
+          {/* ── Tabs ── */}
+          <div style={{ marginBottom: 24 }}>
+            <div className="cd-scroll" style={{
+              display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2,
+            }}>
+              {TABS.map(t => {
+                const active = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    style={{
+                      flexShrink: 0,
+                      padding: '8px 18px', borderRadius: 99,
+                      fontSize: 13, fontWeight: 600,
+                      border: '1px solid',
+                      borderColor: active ? BRAND : 'rgba(29,78,216,0.16)',
+                      background: active ? BRAND : 'rgba(255,255,255,0.9)',
+                      color: active ? '#fff' : MUTED,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'all 0.18s',
+                      boxShadow: active ? '0 4px 14px rgba(37,99,235,0.24)' : 'none',
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                    }}
+                  >
+                    {t.label}
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 700,
+                      padding: '1px 6px', borderRadius: 99,
+                      background: active ? 'rgba(255,255,255,0.2)' : 'rgba(29,78,216,0.08)',
+                      color: active ? '#fff' : BRAND,
+                    }}>
+                      {t.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Course grid ── */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : tabCourses.length === 0 ? (
+            <div style={{
+              borderRadius: 20, padding: 'clamp(40px,6vw,64px) clamp(24px,6vw,48px)',
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.72)',
+              border: '1px solid rgba(29,78,216,0.09)',
+              boxShadow: '0 4px 20px rgba(29,78,216,0.05)',
+            }}>
+              <BookOpen style={{ width: 48, height: 48, color: '#cbd5e1', margin: '0 auto 16px' }} />
+              <p style={{ fontWeight: 700, fontSize: 17, color: INK, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+                {activeTab === 'enrolled' ? "You haven't enrolled yet" : 'No courses here yet'}
+              </p>
+              <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, maxWidth: 340, margin: '0 auto 20px' }}>
+                {activeTab === 'enrolled'
+                  ? 'Explore the catalogue and enroll in a course to start tracking your progress.'
+                  : 'Check back soon — new content is added regularly.'}
+              </p>
+              {activeTab === 'enrolled' && (
+                <button onClick={() => setTab('all')} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '11px 24px', borderRadius: 12,
+                  background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+                  color: '#fff', fontWeight: 700, fontSize: 13, border: 'none',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 8px 20px rgba(37,99,235,0.28)',
+                }}>
+                  Browse all courses <ArrowRight style={{ width: 14, height: 14 }} />
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {tabCourses.map((c, i) =>
+                activeTab === 'enrolled'
+                  ? <EnrolledCard key={c._id} course={c} />
+                  : <CatalogueCard key={c._id} course={c} />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
