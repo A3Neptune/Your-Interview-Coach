@@ -439,6 +439,7 @@ export default function CoursesSection() {
                 </h2>
                 <p style={{ marginTop: 12, fontSize: 15, color: MUTED, fontWeight: 400, lineHeight: 1.65, maxWidth: 440 }}>
                   Expert-crafted courses for every stage &mdash; mock interviews, resume, GD, coding &amp; more.
+                  Expert-crafted courses for every stage — mock interviews, resume, GD, coding &amp; more.
                 </p>
               </div>
 
