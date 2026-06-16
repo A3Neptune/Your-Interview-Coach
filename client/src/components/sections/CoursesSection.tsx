@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  BookOpen, Clock, Users, Star, Lock, ArrowRight, Sparkles, Tag, Award,
+  BookOpen, Clock, Users, Star, Lock, ArrowRight, Sparkles, Award,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-/* ── Palette — matches site-wide tokens ── */
-const BRAND   = "#2563eb";
-const PAPER   = "#F8F6F1";
-const INK     = "#0f172a";
-const MUTED   = "#64748b";
+const BRAND      = "#2563eb";
+const BRAND_DEEP = "#1d4ed8";
+const PAPER      = "#F8F6F1";
+const INK        = "#0f172a";
+const MUTED      = "#64748b";
 
 interface Course {
   _id: string;
@@ -23,21 +23,11 @@ interface Course {
   category: string;
   difficulty?: string;
   price?: number;
-  tags?: string[];
   thumbnail?: string;
   totalDuration?: number;
-  totalLectures?: number;
   certificateEnabled?: boolean;
-  analytics?: {
-    enrollments: number;
-    averageRating: number;
-    totalRatings: number;
-  };
-  mentorId: {
-    name: string;
-    designation: string;
-    company?: string;
-  };
+  analytics?: { enrollments: number; averageRating: number; totalRatings: number };
+  mentorId: { name: string; designation: string; company?: string };
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -53,207 +43,247 @@ const CAT_LABEL: Record<string, string> = {
   "other":           "Other",
 };
 
-const DIFF_COLOR: Record<string, { dot: string; text: string }> = {
-  beginner:     { dot: "#10b981", text: "#065f46" },
-  intermediate: { dot: "#2563eb", text: "#1e3a8a" },
-  advanced:     { dot: "#f97316", text: "#9a3412" },
-  expert:       { dot: "#ef4444", text: "#7f1d1d" },
+const DIFF_DOT: Record<string, string> = {
+  beginner:     "#10b981",
+  intermediate: "#2563eb",
+  advanced:     "#f97316",
+  expert:       "#ef4444",
 };
 
-/* ─────────── Featured (large) card ─────────── */
+/* ── Featured (tall) card ── */
 function FeaturedCard({ course }: { course: Course }) {
+  const [hovered, setHovered] = useState(false);
   const isPaid = course.contentType === "paid" || course.contentType === "exclusive";
-  const diff   = DIFF_COLOR[course.difficulty ?? ""] ?? { dot: MUTED, text: MUTED };
   const initials = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex flex-col h-full"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: "#fff",
-        border: `2px solid ${INK}`,
-        borderRadius: 16,
-        boxShadow: `6px 6px 0 ${INK}`,
+        display: "flex", flexDirection: "column", height: "100%",
+        borderRadius: 20,
+        background: hovered ? "#ffffff" : "rgba(255,255,255,0.72)",
+        border: hovered ? "1px solid rgba(29,78,216,0.20)" : "1px solid rgba(29,78,216,0.09)",
+        boxShadow: hovered
+          ? "0 20px 56px rgba(29,78,216,0.13), 0 6px 16px rgba(29,78,216,0.07)"
+          : "0 4px 20px rgba(29,78,216,0.06)",
+        transform: hovered ? "translateY(-4px)" : "translateY(0)",
+        transition: "all 0.35s cubic-bezier(.23,1,.32,1)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         overflow: "hidden",
-        transition: "transform 0.14s, box-shadow 0.14s",
       }}
-      whileHover={{ x: 2, y: 2 }}
     >
-      {/* Thumbnail */}
-      <div
-        className="relative w-full flex-shrink-0 overflow-hidden"
-        style={{ height: 200, background: `linear-gradient(135deg, ${BRAND} 0%, #1d4ed8 100%)` }}
-      >
-        {course.thumbnail
-          ? <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover opacity-80" />
-          : <div className="absolute inset-0 flex items-center justify-center"><BookOpen style={{ color: "rgba(255,255,255,0.25)", width: 64, height: 64 }} /></div>
-        }
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(15,23,42,0.55), transparent)" }} />
+      {/* Top accent line */}
+      <div style={{
+        height: 2,
+        background: hovered
+          ? `linear-gradient(90deg, ${BRAND}, rgba(29,78,216,0.3), transparent)`
+          : "transparent",
+        transition: "background 0.35s ease",
+      }} />
 
-        {/* Category chip */}
-        <div className="absolute top-3 left-3">
+      {/* Thumbnail */}
+      <div style={{
+        position: "relative", height: 220, flexShrink: 0, overflow: "hidden",
+        background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+      }}>
+        {course.thumbnail
+          ? <img src={course.thumbnail} alt={course.title} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
+          : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BookOpen style={{ width: 64, height: 64, color: "rgba(255,255,255,0.2)" }} />
+            </div>
+        }
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.5), transparent)" }} />
+        <div style={{ position: "absolute", top: 12, left: 12 }}>
           <span style={{
             fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-            padding: "3px 9px", borderRadius: 4,
-            background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.35)",
+            padding: "3px 10px", borderRadius: 99,
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)",
             color: "#fff", backdropFilter: "blur(6px)",
           }}>
             {CAT_LABEL[course.category] ?? course.category}
           </span>
         </div>
-
-        {/* Price badge */}
-        <div className="absolute top-3 right-3">
+        <div style={{ position: "absolute", top: 12, right: 12 }}>
           {isPaid
             ? <span style={{
-                fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 5,
-                background: BRAND, border: `2px solid ${INK}`, boxShadow: `2px 2px 0 ${INK}`, color: "#fff",
-                display: "inline-flex", alignItems: "center", gap: 4,
-              }}><Lock style={{ width: 10, height: 10 }} /> ₹{course.price}</span>
+                fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                background: BRAND, color: "#fff",
+                display: "inline-flex", alignItems: "center", gap: 3,
+                boxShadow: "0 2px 8px rgba(37,99,235,0.4)",
+              }}><Lock style={{ width: 8, height: 8 }} /> ₹{course.price}</span>
             : <span style={{
-                fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 5,
-                background: "#10b981", border: `2px solid ${INK}`, boxShadow: `2px 2px 0 ${INK}`, color: "#fff",
+                fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                background: "#10b981", color: "#fff", boxShadow: "0 2px 8px rgba(16,185,129,0.35)",
               }}>Free</span>
           }
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col flex-1 gap-3 p-5">
-        {/* Difficulty + cert */}
-        <div className="flex items-center gap-2 flex-wrap">
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "20px 22px 22px", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {course.difficulty && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: diff.text }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: diff.dot, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: MUTED }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: DIFF_DOT[course.difficulty] ?? MUTED, display: "inline-block" }} />
               {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
             </span>
           )}
           {course.certificateEnabled && (
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700,
-              color: "#059669", background: "#ecfdf5", border: "1.5px solid #6ee7b7",
-              padding: "2px 7px", borderRadius: 99,
+              color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0",
+              padding: "2px 8px", borderRadius: 99,
             }}>
-              <Award style={{ width: 10, height: 10 }} /> Certificate
+              <Award style={{ width: 9, height: 9 }} /> Certificate
             </span>
           )}
         </div>
 
-        <h3 style={{ fontSize: 20, fontWeight: 800, color: INK, lineHeight: 1.18, letterSpacing: "-0.02em", margin: 0 }}
-            className="line-clamp-2 group-hover:text-blue-700 transition-colors">
+        <h3 style={{
+          fontSize: 20, fontWeight: 700, color: hovered ? BRAND_DEEP : INK,
+          lineHeight: 1.2, letterSpacing: "-0.025em", margin: 0,
+          transition: "color 0.2s",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }} className="line-clamp-2">
           {course.title}
         </h3>
 
         {course.shortDescription && (
-          <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.65, margin: 0 }} className="line-clamp-2">
+          <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.65, margin: 0 }} className="line-clamp-2">
             {course.shortDescription}
           </p>
         )}
 
-        {/* Stats */}
-        <div className="flex flex-wrap gap-4 mt-auto pt-3" style={{ borderTop: `2px solid ${INK}` }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: "auto", paddingTop: 14, borderTop: "1px solid rgba(29,78,216,0.07)" }}>
           {(course.analytics?.enrollments ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: MUTED }}>
-              <Users style={{ width: 13, height: 13 }} />
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: MUTED, fontWeight: 500 }}>
+              <Users style={{ width: 12, height: 12 }} />
               {course.analytics!.enrollments.toLocaleString("en-IN")} enrolled
             </span>
           )}
           {(course.analytics?.averageRating ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: MUTED }}>
-              <Star style={{ width: 13, height: 13, color: "#eab308", fill: "#eab308" }} />
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: MUTED, fontWeight: 500 }}>
+              <Star style={{ width: 12, height: 12, color: "#f59e0b", fill: "#f59e0b" }} />
               {course.analytics!.averageRating.toFixed(1)}
             </span>
           )}
           {(course.totalDuration ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: MUTED }}>
-              <Clock style={{ width: 13, height: 13 }} />
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: MUTED, fontWeight: 500 }}>
+              <Clock style={{ width: 12, height: 12 }} />
               {course.totalDuration} min
             </span>
           )}
         </div>
 
-        {/* Instructor row */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
-            width: 32, height: 32, borderRadius: 7, flexShrink: 0,
-            background: BRAND, border: `2px solid ${INK}`,
+            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+            background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: 11, fontWeight: 800,
+            color: "#fff", fontSize: 11, fontWeight: 700,
+            boxShadow: "0 3px 10px rgba(29,78,216,0.22)",
           }}>
             {initials}
           </div>
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: INK, margin: 0, lineHeight: 1.3 }}>{course.mentorId.name}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: INK, margin: 0, lineHeight: 1.3 }}>{course.mentorId.name}</p>
             {course.mentorId.company && (
-              <p style={{ fontSize: 10, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>
+              <p style={{ fontSize: 11, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>
             )}
           </div>
         </div>
 
-        {/* CTA */}
         <Link
           href="/login"
           style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            padding: "11px 0", borderRadius: 8,
-            background: BRAND, border: `2px solid ${INK}`, boxShadow: `3px 3px 0 ${INK}`,
-            color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
-            transition: "transform 0.12s, box-shadow 0.12s",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+            padding: "11px 0", borderRadius: 12,
+            background: hovered
+              ? `linear-gradient(135deg, ${BRAND}, ${BRAND_DEEP})`
+              : "linear-gradient(135deg, #1e3a8a22, #2563eb22)",
+            border: `1px solid ${hovered ? BRAND : "rgba(29,78,216,0.2)"}`,
+            color: hovered ? "#fff" : BRAND_DEEP,
+            fontWeight: 700, fontSize: 13, textDecoration: "none",
+            transition: "all 0.25s cubic-bezier(.23,1,.32,1)",
+            boxShadow: hovered ? "0 8px 20px rgba(37,99,235,0.28)" : "none",
           }}
-          className="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_#0f172a]"
         >
-          {isPaid ? <><Lock style={{ width: 13, height: 13 }} /> Enroll Now</> : <>View Course <ArrowRight style={{ width: 13, height: 13 }} /></>}
+          {isPaid ? <><Lock style={{ width: 12, height: 12 }} /> Enroll Now</> : <>View Course <ArrowRight style={{ width: 12, height: 12 }} /></>}
         </Link>
       </div>
     </motion.div>
   );
 }
 
-/* ─────────── Compact card ─────────── */
+/* ── Compact card ── */
 function CompactCard({ course, delay = 0 }: { course: Course; delay?: number }) {
+  const [hovered, setHovered] = useState(false);
   const isPaid = course.contentType === "paid" || course.contentType === "exclusive";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: "#fff",
-        border: `2px solid ${INK}`,
-        borderRadius: 14,
-        boxShadow: `3px 3px 0 ${INK}`,
-        padding: "16px",
         display: "flex", flexDirection: "column", gap: 10,
-        transition: "transform 0.12s, box-shadow 0.12s",
+        padding: "18px 20px",
+        borderRadius: 18,
+        background: hovered ? "#ffffff" : "rgba(255,255,255,0.72)",
+        border: hovered ? "1px solid rgba(29,78,216,0.20)" : "1px solid rgba(29,78,216,0.09)",
+        boxShadow: hovered
+          ? "0 12px 36px rgba(29,78,216,0.10), 0 3px 8px rgba(29,78,216,0.05)"
+          : "0 2px 10px rgba(29,78,216,0.04)",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        transition: "all 0.32s cubic-bezier(.23,1,.32,1)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        overflow: "hidden",
+        position: "relative",
       }}
-      className="group hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_#0f172a]"
     >
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 2,
+        background: hovered
+          ? `linear-gradient(90deg, ${BRAND}, rgba(29,78,216,0.3), transparent)`
+          : "transparent",
+        transition: "background 0.32s ease",
+      }} />
+
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: MUTED }}>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "#94a3b8" }}>
           {CAT_LABEL[course.category] ?? course.category}
         </span>
         {isPaid
-          ? <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 4, background: "#eff6ff", border: "1.5px solid #bfdbfe", color: BRAND, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3 }}>
-              <Lock style={{ width: 9, height: 9 }} /> ₹{course.price}
+          ? <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 99, background: "#eff6ff", border: "1px solid #bfdbfe", color: BRAND, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <Lock style={{ width: 8, height: 8 }} /> ₹{course.price}
             </span>
-          : <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 4, background: "#ecfdf5", border: "1.5px solid #6ee7b7", color: "#065f46", flexShrink: 0 }}>
+          : <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#059669", flexShrink: 0 }}>
               Free
             </span>
         }
       </div>
 
-      <h3 style={{ fontSize: 14, fontWeight: 800, color: INK, lineHeight: 1.3, margin: 0, letterSpacing: "-0.01em" }}
-          className="line-clamp-2 group-hover:text-blue-700 transition-colors">
+      <h3 style={{
+        fontSize: 14.5, fontWeight: 700, color: hovered ? BRAND_DEEP : INK,
+        lineHeight: 1.3, margin: 0, letterSpacing: "-0.015em",
+        transition: "color 0.2s",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }} className="line-clamp-2">
         {course.title}
       </h3>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: "auto", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: "auto", flexWrap: "wrap" }}>
         {(course.analytics?.enrollments ?? 0) > 0 && (
           <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: MUTED, fontWeight: 500 }}>
             <Users style={{ width: 11, height: 11 }} />{course.analytics!.enrollments}
@@ -261,12 +291,7 @@ function CompactCard({ course, delay = 0 }: { course: Course; delay?: number }) 
         )}
         {(course.analytics?.averageRating ?? 0) > 0 && (
           <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: MUTED, fontWeight: 500 }}>
-            <Star style={{ width: 11, height: 11, color: "#eab308", fill: "#eab308" }} />{course.analytics!.averageRating.toFixed(1)}
-          </span>
-        )}
-        {(course.totalDuration ?? 0) > 0 && (
-          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: MUTED, fontWeight: 500 }}>
-            <Clock style={{ width: 11, height: 11 }} />{course.totalDuration}m
+            <Star style={{ width: 11, height: 11, color: "#f59e0b", fill: "#f59e0b" }} />{course.analytics!.averageRating.toFixed(1)}
           </span>
         )}
       </div>
@@ -274,12 +299,16 @@ function CompactCard({ course, delay = 0 }: { course: Course; delay?: number }) 
       <Link
         href="/login"
         style={{
-          display: "block", textAlign: "center", padding: "8px 0", borderRadius: 7,
-          background: INK, border: `2px solid ${INK}`, boxShadow: `2px 2px 0 #64748b`,
-          color: "#fff", fontWeight: 700, fontSize: 11, textDecoration: "none",
-          transition: "transform 0.12s, box-shadow 0.12s",
+          display: "block", textAlign: "center", padding: "8px 0", borderRadius: 10,
+          background: hovered
+            ? `linear-gradient(135deg, ${BRAND}, ${BRAND_DEEP})`
+            : "linear-gradient(135deg, #1e3a8a22, #2563eb22)",
+          border: `1px solid ${hovered ? BRAND : "rgba(29,78,216,0.2)"}`,
+          color: hovered ? "#fff" : BRAND_DEEP,
+          fontWeight: 700, fontSize: 12, textDecoration: "none",
+          transition: "all 0.22s cubic-bezier(.23,1,.32,1)",
+          boxShadow: hovered ? "0 6px 16px rgba(37,99,235,0.25)" : "none",
         }}
-        className="hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#64748b]"
       >
         {isPaid ? "Enroll Now" : "View Free"}
       </Link>
@@ -287,9 +316,9 @@ function CompactCard({ course, delay = 0 }: { course: Course; delay?: number }) 
   );
 }
 
-/* ─────────── Stat tile ─────────── */
-function StatTile({ icon: Icon, value, label, accent, delay }: {
-  icon: React.ElementType; value: string; label: string; accent: string; delay: number;
+/* ── Stat tile ── */
+function StatTile({ icon: Icon, value, label, delay }: {
+  icon: React.ElementType; value: string; label: string; delay: number;
 }) {
   return (
     <motion.div
@@ -298,19 +327,27 @@ function StatTile({ icon: Icon, value, label, accent, delay }: {
       viewport={{ once: true }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay }}
       style={{
-        background: accent, border: `2px solid ${INK}`, borderRadius: 14,
-        boxShadow: `3px 3px 0 ${INK}`, padding: "18px",
+        borderRadius: 18, padding: "20px",
+        background: "rgba(255,255,255,0.72)",
+        border: "1px solid rgba(29,78,216,0.09)",
+        boxShadow: "0 2px 12px rgba(29,78,216,0.05)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
         display: "flex", flexDirection: "column", gap: 6,
       }}
     >
-      <Icon style={{ width: 22, height: 22, color: INK, opacity: 0.55 }} />
-      <p style={{ fontSize: 30, fontWeight: 900, color: INK, lineHeight: 1, margin: 0, letterSpacing: "-0.04em" }}>{value}</p>
-      <p style={{ fontSize: 10, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", margin: 0 }}>{label}</p>
+      <Icon style={{ width: 20, height: 20, color: BRAND, opacity: 0.75 }} />
+      <p style={{
+        fontSize: 30, fontWeight: 800, color: INK, lineHeight: 1, margin: 0,
+        letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}>{value}</p>
+      <p style={{ fontSize: 10.5, fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.09em", margin: 0 }}>{label}</p>
     </motion.div>
   );
 }
 
-/* ─────────── Section ─────────── */
+/* ── Section ── */
 export default function CoursesSection() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -329,157 +366,189 @@ export default function CoursesSection() {
   const freeCnt  = courses.filter(c => c.contentType === "free").length;
 
   return (
-    <section
-      style={{
-        background: PAPER,
-        borderTop:  `2px solid ${INK}`,
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        position:   "relative",
-        overflow:   "hidden",
-      }}
-    >
-      {/* Dot-grid background — matches hero section */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
-        backgroundImage: "radial-gradient(circle, rgba(15,23,42,0.1) 1px, transparent 1px)",
-        backgroundSize: "28px 28px",
-      }} />
+    <>
+      <style>{`
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @keyframes t-grain { 0%,100%{opacity:0.025} 50%{opacity:0.035} }
+      `}</style>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+      <section
+        style={{
+          background: PAPER,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Ambient blobs — same as TestimonialsSection */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+          <div style={{ position: "absolute", top: "5%", left: "10%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle,rgba(29,78,216,0.06) 0%,transparent 70%)", filter: "blur(80px)" }} />
+          <div style={{ position: "absolute", bottom: "5%", right: "10%", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle,rgba(8,145,178,0.05) 0%,transparent 70%)", filter: "blur(80px)" }} />
+        </div>
 
-        {/* ── Section header — same pattern as hero eyebrow chips ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-10"
-        >
-          {/* Eyebrow */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "5px 12px", marginBottom: 20, borderRadius: 5,
-            background: BRAND, border: `2px solid ${INK}`, boxShadow: `3px 3px 0 ${INK}`,
-            color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
-          }}>
-            <Sparkles style={{ width: 12, height: 12 }} />
-            Courses
-          </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
 
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
-            <div>
-              {/* Headline — same weight / style as hero */}
-              <h2 style={{
-                fontSize: "clamp(34px, 4.5vw, 58px)",
-                fontWeight: 900, color: INK, lineHeight: 1.0,
-                letterSpacing: "-0.04em", margin: 0,
-                fontFamily: "'DM Sans', system-ui, sans-serif",
+          {/* ── Section header — same eyebrow pattern as TestimonialsSection ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            style={{ marginBottom: 48 }}
+          >
+            {/* Eyebrow with gradient lines */}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <span style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "linear-gradient(90deg,transparent,#2563eb)" }} />
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "6px 14px", borderRadius: 99,
+                background: "#2563eb14", border: "1px solid #2563eb33",
               }}>
-                Learn from{" "}
-                <span style={{
-                  color: "transparent",
-                  WebkitTextStroke: `2.5px ${BRAND}`,
-                } as React.CSSProperties}>
-                  the best.
+                <Sparkles size={11} style={{ color: BRAND }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: BRAND, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  Courses
                 </span>
-              </h2>
-              <p style={{
-                marginTop: 12, fontSize: 15, color: MUTED,
-                fontWeight: 400, lineHeight: 1.65, maxWidth: 440,
-              }}>
-                Expert-crafted courses for every stage — mock interviews, resume, GD, coding &amp; more.
-              </p>
+              </div>
+              <span style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
             </div>
 
-            <Link
-              href="/login"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "10px 20px", borderRadius: 8, flexShrink: 0, alignSelf: "flex-start",
-                background: "#fff", border: `2px solid ${INK}`, boxShadow: `3px 3px 0 ${INK}`,
-                color: INK, fontWeight: 700, fontSize: 13, textDecoration: "none",
-                transition: "transform 0.12s, box-shadow 0.12s",
-              }}
-              className="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_#0f172a]"
-            >
-              Browse all <ArrowRight style={{ width: 14, height: 14 }} />
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* ── Bento grid ── */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} style={{ height: 260, borderRadius: 14, border: `2px solid ${INK}`, background: "#e2e8f0" }} className="animate-pulse" />
-            ))}
-          </div>
-        ) : courses.length === 0 ? (
-          <div style={{
-            borderRadius: 16, border: `2px solid ${INK}`, boxShadow: `4px 4px 0 ${INK}`,
-            background: "#fff", padding: "48px", textAlign: "center",
-          }}>
-            <BookOpen style={{ width: 48, height: 48, color: "#cbd5e1", margin: "0 auto 12px" }} />
-            <p style={{ color: MUTED, fontWeight: 600, fontSize: 15 }}>Courses coming soon</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
-            {/* Featured — spans 2 cols × 2 rows on desktop */}
-            {featured && (
-              <div className="sm:col-span-2 lg:row-span-2">
-                <FeaturedCard course={featured} />
-              </div>
-            )}
-
-            {/* Stat tiles */}
-            <StatTile icon={Users} value={totalEnrollments > 0 ? `${totalEnrollments.toLocaleString("en-IN")}+` : "0+"} label="Students enrolled" accent="#dbeafe" delay={0.06} />
-            <StatTile icon={Tag}   value={`${freeCnt}`} label="Free courses"      accent="#d1fae5" delay={0.12} />
-
-            {/* Compact cards */}
-            {rest.map((c, i) => (
-              <CompactCard key={c._id} course={c} delay={0.07 * (i + 1)} />
-            ))}
-
-            {/* Full-width bottom CTA — slate-900 banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.18 }}
-              className="col-span-full"
-              style={{
-                background: INK, border: `2px solid ${INK}`, borderRadius: 16,
-                boxShadow: `4px 4px 0 ${BRAND}`,
-                padding: "20px 28px",
-                display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16,
-              }}
-            >
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
               <div>
-                <p style={{ color: "#fff", fontWeight: 900, fontSize: 18, margin: 0, letterSpacing: "-0.02em" }}>
-                  Full access — sign in once, learn forever.
-                </p>
-                <p style={{ color: "#94a3b8", fontSize: 13, marginTop: 4, fontWeight: 400 }}>
-                  Track progress, earn certificates, and unlock every premium course.
+                <h2 style={{
+                  fontSize: "clamp(34px, 4.5vw, 58px)",
+                  fontWeight: 700, color: INK, lineHeight: 1.04,
+                  letterSpacing: "-0.035em", margin: 0,
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}>
+                  Learn from{" "}
+                  <span style={{ position: "relative", display: "inline-block", color: BRAND }}>
+                    the best.
+                    <motion.span
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        position: "absolute", left: 0, right: 0, bottom: -3,
+                        height: 3, borderRadius: 2,
+                        background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DEEP})`,
+                        transformOrigin: "left", display: "block",
+                      }}
+                    />
+                  </span>
+                </h2>
+                <p style={{ marginTop: 12, fontSize: 15, color: MUTED, fontWeight: 400, lineHeight: 1.65, maxWidth: 440 }}>
+                  Expert-crafted courses for every stage — mock interviews, resume, GD, coding &amp; more.
                 </p>
               </div>
+
               <Link
-                href="/login"
+                href="/courses"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "11px 24px", borderRadius: 8, flexShrink: 0,
-                  background: "#fff", border: `2px solid #94a3b8`,
-                  boxShadow: `3px 3px 0 rgba(255,255,255,0.15)`,
-                  color: INK, fontWeight: 800, fontSize: 13, textDecoration: "none",
-                  transition: "transform 0.12s, box-shadow 0.12s",
+                  padding: "10px 22px", borderRadius: 12, flexShrink: 0, alignSelf: "flex-start",
+                  background: "rgba(255,255,255,0.9)",
+                  border: "1px solid rgba(29,78,216,0.18)",
+                  boxShadow: "0 2px 10px rgba(29,78,216,0.06)",
+                  color: BRAND_DEEP, fontWeight: 700, fontSize: 13, textDecoration: "none",
+                  transition: "all 0.22s cubic-bezier(.23,1,.32,1)",
                 }}
-                className="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                className="hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(29,78,216,0.12)]"
               >
-                Sign in to get started <ArrowRight style={{ width: 14, height: 14 }} />
+                Browse all <ArrowRight style={{ width: 13, height: 13 }} />
               </Link>
-            </motion.div>
-          </div>
-        )}
-      </div>
-    </section>
+            </div>
+          </motion.div>
+
+          {/* ── Grid ── */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{
+                  height: 260, borderRadius: 18,
+                  background: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(29,78,216,0.08)",
+                }} className="animate-pulse" />
+              ))}
+            </div>
+          ) : courses.length === 0 ? (
+            <div style={{
+              borderRadius: 20, padding: "48px", textAlign: "center",
+              background: "rgba(255,255,255,0.72)",
+              border: "1px solid rgba(29,78,216,0.09)",
+              boxShadow: "0 4px 20px rgba(29,78,216,0.05)",
+              backdropFilter: "blur(12px)",
+            }}>
+              <BookOpen style={{ width: 48, height: 48, color: "#cbd5e1", margin: "0 auto 12px" }} />
+              <p style={{ color: MUTED, fontWeight: 600, fontSize: 15 }}>Courses coming soon</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-auto">
+              {/* Featured — spans 2 cols × 2 rows on desktop */}
+              {featured && (
+                <div className="sm:col-span-2 lg:row-span-2">
+                  <FeaturedCard course={featured} />
+                </div>
+              )}
+
+              {/* Stat tiles */}
+              <StatTile icon={Users} value={totalEnrollments > 0 ? `${totalEnrollments.toLocaleString("en-IN")}+` : "0+"} label="Students enrolled" delay={0.06} />
+              <StatTile icon={BookOpen} value={`${freeCnt}`} label="Free courses" delay={0.12} />
+
+              {/* Compact cards */}
+              {rest.map((c, i) => (
+                <CompactCard key={c._id} course={c} delay={0.07 * (i + 1)} />
+              ))}
+
+              {/* Full-width bottom CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.18 }}
+                className="col-span-full"
+                style={{
+                  borderRadius: 20, padding: "22px 32px",
+                  background: "rgba(255,255,255,0.82)",
+                  border: "1px solid rgba(29,78,216,0.14)",
+                  boxShadow: "0 8px 32px rgba(29,78,216,0.07)",
+                  backdropFilter: "blur(14px)",
+                  display: "flex", flexWrap: "wrap", alignItems: "center",
+                  justifyContent: "space-between", gap: 16,
+                  position: "relative", overflow: "hidden",
+                }}
+              >
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0, height: 2,
+                  background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DEEP})`,
+                }} />
+                <div>
+                  <p style={{ color: INK, fontWeight: 700, fontSize: 17, margin: 0, letterSpacing: "-0.02em" }}>
+                    Full access &mdash; sign in once, learn forever.
+                  </p>
+                  <p style={{ color: MUTED, fontSize: 13, marginTop: 4, fontWeight: 400 }}>
+                    Track progress, earn certificates, and unlock every premium course.
+                  </p>
+                </div>
+                <Link
+                  href="/login"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "11px 24px", borderRadius: 12, flexShrink: 0,
+                    background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DEEP})`,
+                    color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
+                    boxShadow: "0 8px 20px rgba(37,99,235,0.28)",
+                    transition: "transform 0.18s, box-shadow 0.2s",
+                  }}
+                  className="hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(37,99,235,0.38)]"
+                >
+                  Sign in to get started <ArrowRight style={{ width: 13, height: 13 }} />
+                </Link>
+              </motion.div>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
