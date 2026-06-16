@@ -413,6 +413,69 @@ export default function CoursesSection() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+            <Link
+              href="/courses"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 8, flexShrink: 0, alignSelf: "flex-start",
+                background: "#fff", border: `2px solid ${INK}`, boxShadow: `3px 3px 0 ${INK}`,
+                color: INK, fontWeight: 700, fontSize: 13, textDecoration: "none",
+                transition: "transform 0.12s, box-shadow 0.12s",
+              }}
+              className="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_#0f172a]"
+            >
+              Browse all <ArrowRight style={{ width: 14, height: 14 }} />
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* ── Bento grid ── */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} style={{ height: 260, borderRadius: 14, border: `2px solid ${INK}`, background: "#e2e8f0" }} className="animate-pulse" />
+            ))}
+          </div>
+        ) : courses.length === 0 ? (
+          <div style={{
+            borderRadius: 16, border: `2px solid ${INK}`, boxShadow: `4px 4px 0 ${INK}`,
+            background: "#fff", padding: "48px", textAlign: "center",
+          }}>
+            <BookOpen style={{ width: 48, height: 48, color: "#cbd5e1", margin: "0 auto 12px" }} />
+            <p style={{ color: MUTED, fontWeight: 600, fontSize: 15 }}>Courses coming soon</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
+            {/* Featured — spans 2 cols × 2 rows on desktop */}
+            {featured && (
+              <div className="sm:col-span-2 lg:row-span-2">
+                <FeaturedCard course={featured} />
+              </div>
+            )}
+
+            {/* Stat tiles */}
+            <StatTile icon={Users} value={totalEnrollments > 0 ? `${totalEnrollments.toLocaleString("en-IN")}+` : "0+"} label="Students enrolled" accent="#dbeafe" delay={0.06} />
+            <StatTile icon={Tag}   value={`${freeCnt}`} label="Free courses"      accent="#d1fae5" delay={0.12} />
+
+            {/* Compact cards */}
+            {rest.map((c, i) => (
+              <CompactCard key={c._id} course={c} delay={0.07 * (i + 1)} />
+            ))}
+
+            {/* Full-width bottom CTA — slate-900 banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.18 }}
+              className="col-span-full"
+              style={{
+                background: INK, border: `2px solid ${INK}`, borderRadius: 16,
+                boxShadow: `4px 4px 0 ${BRAND}`,
+                padding: "20px 28px",
+                display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16,
+              }}
+            >
               <div>
                 <h2 style={{
                   fontSize: "clamp(34px, 4.5vw, 58px)",
