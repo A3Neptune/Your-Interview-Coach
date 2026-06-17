@@ -10,6 +10,7 @@ import {
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
 import { useAuth } from "@/context/AuthContext";
+import { getAuthToken } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -98,21 +99,40 @@ export default function PublicCourseDetailPage() {
   const courseId  = params.courseId as string;
   const { isLoggedIn } = useAuth();
 
-  const [course, setCourse]     = useState<Course | null>(null);
-  const [isLoading, setLoading] = useState(true);
-  const [lessons, setLessons]   = useState<Array<{ title: string; duration: number; index: number; url?: string; isYT: boolean }>>([]);
-  const [selected, setSelected] = useState<typeof lessons[0] | null>(null);
-  const [playing, setPlaying]   = useState(false);
+  const [course, setCourse]       = useState<Course | null>(null);
+  const [isLoading, setLoading]   = useState(true);
+  const [isEnrolled, setEnrolled] = useState(false);
+  const [lessons, setLessons]     = useState<Array<{ title: string; duration: number; index: number; url?: string; isYT: boolean }>>([]);
+  const [selected, setSelected]   = useState<typeof lessons[0] | null>(null);
+  const [playing, setPlaying]     = useState(false);
 
   useEffect(() => { setPlaying(false); }, [selected?.index]);
 
   useEffect(() => {
-    fetch(`${API_URL}/advanced/courses/public/${courseId}`)
-      .then(r => r.json())
-      .then(d => {
+    const token = getAuthToken();
+
+    const courseFetch = fetch(`${API_URL}/advanced/courses/public/${courseId}`)
+      .then(r => r.json());
+
+    const enrollFetch = token
+      ? fetch(`${API_URL}/enrollments/my-enrollments`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json()).catch(() => ({ success: false }))
+      : Promise.resolve({ success: false });
+
+    Promise.all([courseFetch, enrollFetch])
+      .then(([d, enrollData]) => {
         if (!d.success) { router.push("/courses"); return; }
         const cd: Course = d.data;
         setCourse(cd);
+
+        // Check if this course is enrolled
+        if (enrollData.success && Array.isArray(enrollData.data)) {
+          const enrolled = enrollData.data.some((e: any) => {
+            const id = e.courseId?._id ?? e.courseId;
+            return id === courseId;
+          });
+          setEnrolled(enrolled);
+        }
 
         // flatten modules → flat lesson list
         const flat: typeof lessons = [];
@@ -147,12 +167,20 @@ export default function PublicCourseDetailPage() {
 
   const isPaid     = course.contentType === "paid" || course.contentType === "exclusive";
   const initials   = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const dashHref   = `/dashboard/content/${courseId}`;
+  // For logged-out users: send to checkout (paid) or content (free) after login
   const enrollHref = isPaid
     ? `/login?redirect=/dashboard/checkout/${courseId}`
     : `/login?redirect=/dashboard/content/${courseId}`;
-  const dashHref   = `/dashboard/content/${courseId}`;
+  // For logged-in users: enrolled → content, not enrolled + paid → checkout, free → content
+  const loggedInCtaHref = isEnrolled
+    ? dashHref
+    : isPaid
+      ? `/dashboard/checkout/${courseId}`
+      : dashHref;
 
-  const canPreview = (idx: number) => idx < FREE_PREVIEW_COUNT;
+  // Enrolled users can watch everything; everyone else gets first FREE_PREVIEW_COUNT lessons
+  const canPreview = (idx: number) => isEnrolled || idx < FREE_PREVIEW_COUNT;
 
   // ── Player ────────────────────────────────────────────────────────────────
   const renderPreviewPlayer = () => {
@@ -174,21 +202,31 @@ export default function PublicCourseDetailPage() {
             </div>
             <p style={{ fontWeight: 700, fontSize: 17, margin: 0 }}>Lesson Locked</p>
             <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
-              {isPaid ? `Enroll for ₹${course.price} to unlock all ${lessons.length} lessons` : "Sign in to access this lesson"}
+              {!isLoggedIn
+                ? `Sign in & enroll to unlock all ${lessons.length} lessons`
+                : isPaid
+                  ? `Enroll for ₹${course.price} to unlock all ${lessons.length} lessons`
+                  : "Enroll for free to access this lesson"}
             </p>
           </div>
         </div>
         <div style={{ padding: "20px 24px", textAlign: "center", background: "#fff" }}>
-          <Link href={isLoggedIn ? dashHref : enrollHref} style={{
+          <Link href={isLoggedIn ? loggedInCtaHref : enrollHref} style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "12px 28px", borderRadius: 13,
-            background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+            background: isEnrolled
+              ? "linear-gradient(135deg,#10b981,#059669)"
+              : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
             color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
-            boxShadow: "0 10px 28px rgba(37,99,235,0.32)",
+            boxShadow: isEnrolled ? "0 10px 28px rgba(5,150,105,0.32)" : "0 10px 28px rgba(37,99,235,0.32)",
           }}>
-            {isLoggedIn
-              ? <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> {isPaid ? `Enroll — ₹${course.price}` : "Enroll for Free"}</>
-              : <><LogIn style={{ width: 13, height: 13 }} /> Sign in to enroll</>
+            {!isLoggedIn
+              ? <><LogIn style={{ width: 13, height: 13 }} /> Sign in to enroll</>
+              : isEnrolled
+                ? <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Continue Learning</>
+                : isPaid
+                  ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{course.price}</>
+                  : <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Enroll for Free</>
             }
           </Link>
         </div>
@@ -343,9 +381,14 @@ export default function PublicCourseDetailPage() {
                       Lessons <span style={{ fontWeight: 500, color: "#94a3b8" }}>({lessons.length})</span>
                     </h3>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "3px 9px", borderRadius: 99 }}>
-                    {FREE_PREVIEW_COUNT} free previews
-                  </span>
+                  {isEnrolled
+                    ? <span style={{ fontSize: 11, fontWeight: 600, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "3px 9px", borderRadius: 99 }}>
+                        Full access
+                      </span>
+                    : <span style={{ fontSize: 11, fontWeight: 600, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "3px 9px", borderRadius: 99 }}>
+                        {FREE_PREVIEW_COUNT} free previews
+                      </span>
+                  }
                 </div>
 
                 {/* Tile grid */}
@@ -414,7 +457,7 @@ export default function PublicCourseDetailPage() {
 
                         {!preview && (
                           <span style={{ fontSize: 9.5, color: BRAND, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
-                            <Lock style={{ width: 8, height: 8 }} /> Enroll to unlock
+                            <Lock style={{ width: 8, height: 8 }} /> {!isLoggedIn ? "Sign in to unlock" : "Enroll to unlock"}
                           </span>
                         )}
 
@@ -479,8 +522,23 @@ export default function PublicCourseDetailPage() {
                 </div>
 
                 {/* Price + CTA */}
-                <div style={{ borderRadius: 16, padding: "16px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(29,78,216,0.1)" }}>
-                  {isPaid ? (
+                <div style={{ borderRadius: 16, padding: "16px", background: isEnrolled ? "rgba(5,150,105,0.04)" : "rgba(37,99,235,0.04)", border: `1px solid ${isEnrolled ? "rgba(5,150,105,0.15)" : "rgba(29,78,216,0.1)"}` }}>
+                  {isEnrolled ? (
+                    <>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#059669", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 5 }}>
+                        <CheckCircle style={{ width: 14, height: 14, fill: "#059669" }} /> Already Enrolled
+                      </p>
+                      <Link href={dashHref} style={{
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                        padding: "12px 0", borderRadius: 13,
+                        background: "linear-gradient(135deg,#10b981,#059669)",
+                        color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
+                        boxShadow: "0 8px 24px rgba(5,150,105,0.30)",
+                      }}>
+                        <Play style={{ width: 13, height: 13, fill: "#fff" }} /> Continue Learning
+                      </Link>
+                    </>
+                  ) : isPaid ? (
                     <>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 12 }}>
                         <span style={{ fontSize: 28, fontWeight: 800, color: INK, letterSpacing: "-0.03em" }}>
@@ -488,7 +546,7 @@ export default function PublicCourseDetailPage() {
                         </span>
                         {(course.price ?? 0) > 0 && <span style={{ fontSize: 11, color: MUTED }}>+ GST</span>}
                       </div>
-                      <Link href={isLoggedIn ? dashHref : enrollHref} style={{
+                      <Link href={isLoggedIn ? loggedInCtaHref : enrollHref} style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                         padding: "12px 0", borderRadius: 13,
                         background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
@@ -503,7 +561,7 @@ export default function PublicCourseDetailPage() {
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#059669", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 5 }}>
                         <CheckCircle style={{ width: 14, height: 14, fill: "#059669" }} /> Free Course
                       </p>
-                      <Link href={isLoggedIn ? dashHref : enrollHref} style={{
+                      <Link href={isLoggedIn ? loggedInCtaHref : enrollHref} style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                         padding: "12px 0", borderRadius: 13,
                         background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
