@@ -137,7 +137,7 @@ export default function CourseDetailPage() {
               _id: `${mod._id || mi}-${r._id || ri}`,
               title: r.title || r.type,
               description: r.description || mod.description || "",
-              contentType: (r.type === "video" || r.type === "youtube") ? "video-link" : "other",
+              contentType: /^(video|youtube|video-link)$/i.test(r.type || "") ? "video-link" : "other",
               embedUrl: r.embedUrl || r.url,
               videoUrl: r.url,
               duration: r.duration || 0,
@@ -293,21 +293,31 @@ export default function CourseDetailPage() {
           </div>
         </div>
         <div style={{ padding: "18px 22px", textAlign: "center", background: "#fff" }}>
-          <button onClick={handleEnroll} disabled={isEnrolling} style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "11px 28px", borderRadius: 12,
-            background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-            color: "#fff", fontWeight: 700, fontSize: 14, border: "none",
-            cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
-            boxShadow: "0 8px 24px rgba(37,99,235,0.3)",
-          }}>
-            {isEnrolling
-              ? <><span className="spinner" /> Enrolling…</>
-              : isPaidCourse
-                ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{course?.price}</>
+          {isPaidCourse ? (
+            <Link href={`/dashboard/checkout/${courseId}`} style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "11px 28px", borderRadius: 12,
+              background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+              color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
+              boxShadow: "0 8px 24px rgba(37,99,235,0.3)",
+            }}>
+              <Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{effectivePrice}
+            </Link>
+          ) : (
+            <button onClick={handleEnroll} disabled={isEnrolling} style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "11px 28px", borderRadius: 12,
+              background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+              color: "#fff", fontWeight: 700, fontSize: 14, border: "none",
+              cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
+              boxShadow: "0 8px 24px rgba(37,99,235,0.3)",
+            }}>
+              {isEnrolling
+                ? <><span className="spinner" /> Enrolling…</>
                 : <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Enroll for Free</>
-            }
-          </button>
+              }
+            </button>
+          )}
         </div>
       </div>
     );
@@ -326,15 +336,14 @@ export default function CourseDetailPage() {
           <Eye style={{ width: 11, height: 11 }} />
           Free Preview · Lesson {selectedIndex + 1} of {FREE_PREVIEW_COUNT}
         </span>
-        <button onClick={handleEnroll} style={{
+        <Link href={`/dashboard/checkout/${courseId}`} style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "5px 11px", borderRadius: 8,
           background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-          color: "#fff", fontWeight: 700, fontSize: 11.5, border: "none",
-          cursor: "pointer", fontFamily: "inherit",
+          color: "#fff", fontWeight: 700, fontSize: 11.5, textDecoration: "none",
         }}>
           <Lock style={{ width: 9, height: 9 }} /> Enroll for full access
-        </button>
+        </Link>
       </div>
     ) : null;
 
@@ -632,21 +641,31 @@ export default function CourseDetailPage() {
                     </div>
                   ) : (
                     /* Only shown to logged-in users who are definitively NOT enrolled */
-                    <button onClick={handleEnroll} disabled={isEnrolling} style={{
-                      width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                      padding: "10px 0", borderRadius: 11,
-                      background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-                      color: "#fff", fontWeight: 700, fontSize: 13.5, border: "none",
-                      cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
-                      boxShadow: "0 6px 18px rgba(37,99,235,0.28)",
-                    }}>
-                      {isEnrolling
-                        ? <><span className="spinner" style={{ width: 13, height: 13 }} /> Enrolling…</>
-                        : isPaidCourse
-                          ? <><Lock style={{ width: 12, height: 12 }} /> Enroll — ₹{course.price}</>
+                    isPaidCourse ? (
+                      <Link href={`/dashboard/checkout/${courseId}`} style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                        padding: "10px 0", borderRadius: 11,
+                        background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+                        color: "#fff", fontWeight: 700, fontSize: 13.5, textDecoration: "none",
+                        boxShadow: "0 6px 18px rgba(37,99,235,0.28)",
+                      }}>
+                        <Lock style={{ width: 12, height: 12 }} /> Enroll — ₹{effectivePrice}
+                      </Link>
+                    ) : (
+                      <button onClick={handleEnroll} disabled={isEnrolling} style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                        padding: "10px 0", borderRadius: 11,
+                        background: isEnrolling ? "#93c5fd" : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+                        color: "#fff", fontWeight: 700, fontSize: 13.5, border: "none",
+                        cursor: isEnrolling ? "not-allowed" : "pointer", fontFamily: "inherit",
+                        boxShadow: "0 6px 18px rgba(37,99,235,0.28)",
+                      }}>
+                        {isEnrolling
+                          ? <><span className="spinner" style={{ width: 13, height: 13 }} /> Enrolling…</>
                           : <><Play style={{ width: 12, height: 12, fill: "#fff" }} /> Enroll for Free</>
-                      }
-                    </button>
+                        }
+                      </button>
+                    )
                   )}
 
                   {/* Progress bar */}
