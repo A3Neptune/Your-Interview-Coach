@@ -793,6 +793,7 @@ const CAT_LABEL: Record<string, string> = {
     "gd-practice":     "Group Discussion",
     "placement-prep":  "Placement Prep",
     "skills":          "Skills",
+    "soft-skills":     "Soft Skills",
     "career-growth":   "Career Growth",
     "coding":          "Coding",
     "system-design":   "System Design",
@@ -829,13 +830,17 @@ const PREP_TRACKS: { value: string; label: string; blurb: string; icon: React.El
     { value: "career-growth",   label: "Career Growth",    blurb: "Beyond your first job",  icon: TrendingUp },
 ];
 
-/* Dummy placeholders — tracks in the works, not real course records from the API */
+/* Dummy placeholders — soft-skill tracks in the works, not real course records from the API */
 type ComingSoonItem = { id: string; title: string; category: string; difficulty: string; blurb: string; eta: string };
 const COMING_SOON: ComingSoonItem[] = [
-    { id: "cs-1", title: "System Design for Interviews",       category: "system-design", difficulty: "advanced",     blurb: "Scalable architecture walkthroughs and whiteboard frameworks used in real interview loops.", eta: "Aug 2026" },
-    { id: "cs-2", title: "Data Structures & Algorithms Sprint", category: "coding",        difficulty: "intermediate", blurb: "A focused sprint through the patterns that show up most often in coding rounds.",            eta: "Aug 2026" },
-    { id: "cs-3", title: "Salary Negotiation Workshop",         category: "career-growth", difficulty: "beginner",     blurb: "Frameworks and scripts for negotiating offers, raises, and counter-offers.",                 eta: "Sep 2026" },
-    { id: "cs-4", title: "Behavioral Rounds with STAR",         category: "behavioral",    difficulty: "beginner",     blurb: "Turn your experience into structured, memorable answers for behavioral interviews.",         eta: "Sep 2026" },
+    { id: "cs-1", title: "Professional Communication Masterclass",  category: "soft-skills", difficulty: "beginner",     blurb: "Build clear, confident communication for emails, meetings, and one-on-ones with stakeholders.",  eta: "Aug 2026" },
+    { id: "cs-2", title: "Public Speaking & Presentation Skills",   category: "soft-skills", difficulty: "intermediate", blurb: "Conquer stage fright and deliver compelling presentations that keep every audience engaged.",    eta: "Aug 2026" },
+    { id: "cs-3", title: "Emotional Intelligence at Work",          category: "soft-skills", difficulty: "beginner",     blurb: "Understand and manage emotions — yours and your team's — to build stronger working relationships.", eta: "Sep 2026" },
+    { id: "cs-4", title: "Leadership & Team Management",            category: "soft-skills", difficulty: "intermediate", blurb: "Practical frameworks for leading teams, giving feedback, and driving outcomes without authority.",   eta: "Sep 2026" },
+    { id: "cs-5", title: "Conflict Resolution & Negotiation",       category: "soft-skills", difficulty: "intermediate", blurb: "Navigate disagreements and negotiate outcomes that work for everyone — in interviews and at work.", eta: "Oct 2026" },
+    { id: "cs-6", title: "Time Management & Productivity",          category: "soft-skills", difficulty: "beginner",     blurb: "Proven systems to prioritise ruthlessly, eliminate distractions, and ship work that matters.",       eta: "Oct 2026" },
+    { id: "cs-7", title: "Networking & Personal Branding",          category: "soft-skills", difficulty: "beginner",     blurb: "Build a professional network that opens doors — LinkedIn, referrals, industry events, and beyond.",  eta: "Nov 2026" },
+    { id: "cs-8", title: "Critical Thinking & Problem Solving",     category: "soft-skills", difficulty: "advanced",     blurb: "Structured mental models to break down ambiguous problems and communicate solutions under pressure.",  eta: "Nov 2026" },
 ];
 
 const STEPS = [
@@ -1841,8 +1846,8 @@ export default function CoursesPage() {
                                     Coming soon
                                 </h2>
                             </div>
-                            <p style={{ maxWidth: 380, color: MUTED, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-                                New tracks we're building next. Tap notify and we'll let you know the moment one goes live.
+                            <p style={{ maxWidth: 420, color: MUTED, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                                Soft-skill tracks we're building next — communication, leadership, EQ, and more. Tap notify and we'll let you know the moment one goes live.
                             </p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
