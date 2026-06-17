@@ -830,18 +830,17 @@ const PREP_TRACKS: { value: string; label: string; blurb: string; icon: React.El
     { value: "career-growth",   label: "Career Growth",    blurb: "Beyond your first job",  icon: TrendingUp },
 ];
 
-/* Dummy placeholders — soft-skill tracks in the works, not real course records from the API.
-   Images are stock placeholders (Lorem Picsum); swap in real thumbnails when these go live. */
-type ComingSoonItem = { id: string; title: string; category: string; difficulty: string; blurb: string; image: string };
+/* Dummy placeholders — soft-skill tracks in the works, not real course records from the API */
+type ComingSoonItem = { id: string; title: string; category: string; difficulty: string; blurb: string; eta: string };
 const COMING_SOON: ComingSoonItem[] = [
-    { id: "cs-1", title: "Professional Communication Masterclass", category: "soft-skills", difficulty: "beginner",     blurb: "Build clear, confident communication for emails, meetings, and one-on-ones with stakeholders.",  image: "https://picsum.photos/id/1011/600/760" },
-    { id: "cs-2", title: "Public Speaking & Presentation Skills",  category: "soft-skills", difficulty: "intermediate", blurb: "Conquer stage fright and deliver compelling presentations that keep every audience engaged.",    image: "https://picsum.photos/id/1015/600/760" },
-    { id: "cs-3", title: "Emotional Intelligence at Work",         category: "soft-skills", difficulty: "beginner",     blurb: "Understand and manage emotions — yours and your team's — to build stronger working relationships.", image: "https://picsum.photos/id/1025/600/760" },
-    { id: "cs-4", title: "Leadership & Team Management",           category: "soft-skills", difficulty: "intermediate", blurb: "Practical frameworks for leading teams, giving feedback, and driving outcomes without authority.",   image: "https://picsum.photos/id/1035/600/760" },
-    { id: "cs-5", title: "Conflict Resolution & Negotiation",      category: "soft-skills", difficulty: "intermediate", blurb: "Navigate disagreements and negotiate outcomes that work for everyone — in interviews and at work.", image: "https://picsum.photos/id/1043/600/760" },
-    { id: "cs-6", title: "Time Management & Productivity",         category: "soft-skills", difficulty: "beginner",     blurb: "Proven systems to prioritise ruthlessly, eliminate distractions, and ship work that matters.",       image: "https://picsum.photos/id/1050/600/760" },
-    { id: "cs-7", title: "Networking & Personal Branding",         category: "soft-skills", difficulty: "beginner",     blurb: "Build a professional network that opens doors — LinkedIn, referrals, industry events, and beyond.",  image: "https://picsum.photos/id/1062/600/760" },
-    { id: "cs-8", title: "Critical Thinking & Problem Solving",    category: "soft-skills", difficulty: "advanced",     blurb: "Structured mental models to break down ambiguous problems and communicate solutions under pressure.",  image: "https://picsum.photos/id/1074/600/760" },
+    { id: "cs-1", title: "Professional Communication Masterclass",  category: "soft-skills", difficulty: "beginner",     blurb: "Build clear, confident communication for emails, meetings, and one-on-ones with stakeholders.",  eta: "Aug 2026" },
+    { id: "cs-2", title: "Public Speaking & Presentation Skills",   category: "soft-skills", difficulty: "intermediate", blurb: "Conquer stage fright and deliver compelling presentations that keep every audience engaged.",    eta: "Aug 2026" },
+    { id: "cs-3", title: "Emotional Intelligence at Work",          category: "soft-skills", difficulty: "beginner",     blurb: "Understand and manage emotions — yours and your team's — to build stronger working relationships.", eta: "Sep 2026" },
+    { id: "cs-4", title: "Leadership & Team Management",            category: "soft-skills", difficulty: "intermediate", blurb: "Practical frameworks for leading teams, giving feedback, and driving outcomes without authority.",   eta: "Sep 2026" },
+    { id: "cs-5", title: "Conflict Resolution & Negotiation",       category: "soft-skills", difficulty: "intermediate", blurb: "Navigate disagreements and negotiate outcomes that work for everyone — in interviews and at work.", eta: "Oct 2026" },
+    { id: "cs-6", title: "Time Management & Productivity",          category: "soft-skills", difficulty: "beginner",     blurb: "Proven systems to prioritise ruthlessly, eliminate distractions, and ship work that matters.",       eta: "Oct 2026" },
+    { id: "cs-7", title: "Networking & Personal Branding",          category: "soft-skills", difficulty: "beginner",     blurb: "Build a professional network that opens doors — LinkedIn, referrals, industry events, and beyond.",  eta: "Nov 2026" },
+    { id: "cs-8", title: "Critical Thinking & Problem Solving",     category: "soft-skills", difficulty: "advanced",     blurb: "Structured mental models to break down ambiguous problems and communicate solutions under pressure.",  eta: "Nov 2026" },
 ];
 
 const STEPS = [
@@ -882,14 +881,14 @@ function ReadinessCard() {
             }}
         >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 9.5, fontWeight: 700, color: BRAND, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-      <motion.span
-          animate={{ opacity: [1, 0.35, 1] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          style={{ width: 6, height: 6, borderRadius: "50%", background: SUCCESS, display: "inline-block" }}
-      />
-      Readiness Tracker
-    </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 9.5, fontWeight: 700, color: BRAND, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <motion.span
+              animate={{ opacity: [1, 0.35, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              style={{ width: 6, height: 6, borderRadius: "50%", background: SUCCESS, display: "inline-block" }}
+          />
+          Readiness Tracker
+        </span>
                 <span style={{ fontFamily: MONO, fontSize: 9, color: MUTED, letterSpacing: "0.04em" }}>SAMPLE</span>
             </div>
 
@@ -987,31 +986,31 @@ function CourseCard({ course, delay = 0, isLoggedIn = false }: { course: Course;
 
                 {/* Chips — category + type + difficulty + cert inline */}
                 <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-      <span style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
-          padding: "2px 8px", borderRadius: 99,
-          background: "rgba(37,99,235,0.08)", color: BRAND, border: "1px solid rgba(37,99,235,0.15)",
-      }}>
-        {CAT_LABEL[course.category] ?? course.category}
-      </span>
+          <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
+              padding: "2px 8px", borderRadius: 99,
+              background: "rgba(37,99,235,0.08)", color: BRAND, border: "1px solid rgba(37,99,235,0.15)",
+          }}>
+            {CAT_LABEL[course.category] ?? course.category}
+          </span>
                     {isEnrolled
                         ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: green, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
-            <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
-          </span>
+                <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
+              </span>
                         : isPaid
                             ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#eff6ff", color: BRAND, border: "1px solid rgba(37,99,235,0.2)" }}>Paid</span>
                             : <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", color: green, border: "1px solid #bbf7d0" }}>Free</span>
                     }
                     {course.difficulty && (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 600, color: MUTED }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: DIFF_DOT[course.difficulty] ?? MUTED, display: "inline-block" }} />
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: DIFF_DOT[course.difficulty] ?? MUTED, display: "inline-block" }} />
                             {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
-        </span>
+            </span>
                     )}
                     {course.certificateEnabled && (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: green, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 6px", borderRadius: 99 }}>
-          <Award style={{ width: 8, height: 8 }} /> Cert
-        </span>
+              <Award style={{ width: 8, height: 8 }} /> Cert
+            </span>
                     )}
                 </div>
 
@@ -1045,27 +1044,27 @@ function CourseCard({ course, delay = 0, isLoggedIn = false }: { course: Course;
                             {inits}
                         </div>
                         <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {course.mentorId.name}
-        </span>
+              {course.mentorId.name}
+            </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                         {(course.analytics?.averageRating ?? 0) > 0 && (
                             <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: MUTED, fontFamily: MONO }}>
-            <Star style={{ width: 10, height: 10, color: "#f59e0b", fill: "#f59e0b" }} />
+                <Star style={{ width: 10, height: 10, color: "#f59e0b", fill: "#f59e0b" }} />
                                 {course.analytics!.averageRating.toFixed(1)}
-          </span>
+              </span>
                         )}
                         {(course.modules?.length ?? 0) > 0 && (
                             <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 500, color: MUTED, fontFamily: MONO }}>
-            <BookOpen style={{ width: 10, height: 10 }} />
+                <BookOpen style={{ width: 10, height: 10 }} />
                                 {course.modules!.length} mod
-          </span>
+              </span>
                         )}
                         {(course.totalDuration ?? 0) > 0 && (
                             <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 500, color: MUTED, fontFamily: MONO }}>
-            <Clock style={{ width: 10, height: 10 }} />
+                <Clock style={{ width: 10, height: 10 }} />
                                 {course.totalDuration}m
-          </span>
+              </span>
                         )}
                     </div>
                 </div>
@@ -1099,8 +1098,8 @@ function CourseCard({ course, delay = 0, isLoggedIn = false }: { course: Course;
                         )}
                         {discountLabel && (
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg,#f97316,#ea580c)", padding: "2px 7px", borderRadius: 99, fontFamily: MONO }}>
-            <Tag style={{ width: 7, height: 7 }} />{discountLabel}
-          </span>
+                <Tag style={{ width: 7, height: 7 }} />{discountLabel}
+              </span>
                         )}
                     </div>
 
@@ -1154,7 +1153,7 @@ function CourseCard({ course, delay = 0, isLoggedIn = false }: { course: Course;
     );
 }
 
-/* ─── Coming-soon card — redesigned as an image poster, dummy / illustrative only ─── */
+/* ─── Coming-soon card — dummy / illustrative, not fetched from the API ─── */
 function ComingSoonCard({ item, delay = 0 }: { item: ComingSoonItem; delay?: number }) {
     const [notified, setNotified] = useState(false);
 
@@ -1165,96 +1164,75 @@ function ComingSoonCard({ item, delay = 0 }: { item: ComingSoonItem; delay?: num
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }}
             style={{
-                position: "relative", flexShrink: 0, scrollSnapAlign: "start",
-                width: 252, height: 340, borderRadius: 20, overflow: "hidden",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.2)",
+                display: "flex", flexDirection: "column", height: "100%",
+                borderRadius: 20, overflow: "hidden",
+                background: "#fff",
+                border: "1.5px dashed rgba(100,116,139,0.4)",
             }}
         >
-            <img
-                src={item.image}
-                alt={item.title}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-            />
-            <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.6) 40%, rgba(15,23,42,0.05) 68%)",
-            }} />
-
-            {/* Top row — coming soon + category */}
-            <div style={{ position: "absolute", top: 12, left: 12, right: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-            <span style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
-                padding: "4px 9px", borderRadius: 99,
-                background: BRAND, color: "#fff",
-            }}>
-                <CalendarClock style={{ width: 9, height: 9 }} /> Coming Soon
-            </span>
-                <span style={{
-                    fontSize: 8.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
-                    padding: "4px 8px", borderRadius: 99,
-                    background: "rgba(255,255,255,0.16)", color: "#fff",
-                    border: "1px solid rgba(255,255,255,0.32)",
+            {/* Thumbnail */}
+            <div style={{ height: 172, flexShrink: 0, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#94a3b8,#64748b)" }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Lock style={{ width: 36, height: 36, color: "rgba(255,255,255,0.35)" }} />
+                </div>
+                <div style={{
+                    position: "absolute", top: 12, left: 12,
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
+                    padding: "4px 10px", borderRadius: 99,
+                    background: "#0f172a", color: "#fff",
                 }}>
-                {CAT_LABEL[item.category] ?? item.category}
-            </span>
+                    <CalendarClock style={{ width: 10, height: 10 }} /> Coming Soon
+                </div>
             </div>
 
-            {/* Bottom content */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 14px 14px" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: DIFF_DOT[item.difficulty] ?? "#fff", display: "inline-block" }} />
-                {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
-            </span>
+            {/* Body */}
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "16px 18px 18px", gap: 9 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+          <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
+              padding: "2px 8px", borderRadius: 99,
+              background: "rgba(100,116,139,0.1)", color: MUTED, border: "1px solid rgba(100,116,139,0.18)",
+          }}>
+            {CAT_LABEL[item.category] ?? item.category}
+          </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 600, color: MUTED }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: DIFF_DOT[item.difficulty] ?? MUTED, display: "inline-block" }} />
+                        {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
+          </span>
+                </div>
 
-                <h3 style={{
-                    fontSize: 14, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-0.01em", margin: "0 0 6px", color: "#fff",
-                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                }}>
+                <h3 style={{ fontSize: 15.5, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-0.02em", margin: 0, color: INK }}>
                     {item.title}
                 </h3>
 
-                <p style={{
-                    fontSize: 11, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, margin: "0 0 12px",
-                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                }}>
+                <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.6, margin: 0, flex: 1 }}>
                     {item.blurb}
                 </p>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                        <div style={{
-                            width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                            background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: "#fff", fontSize: 9, fontWeight: 700,
-                        }}>
-                            N
-                        </div>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        Neel
-                    </span>
-                    </div>
-
-                    <button
-                        type="button"
-                        className="notify-btn"
-                        onClick={() => setNotified(true)}
-                        disabled={notified}
-                        style={{
-                            flexShrink: 0,
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            padding: "6px 11px", borderRadius: 99,
-                            fontSize: 10.5, fontWeight: 700, border: "none",
-                            background: notified ? SUCCESS : "#fff",
-                            color: notified ? "#fff" : BRAND,
-                            cursor: notified ? "default" : "pointer",
-                            transition: "all 0.18s",
-                        }}
-                    >
-                        {notified ? <><BellRing style={{ width: 11, height: 11 }} /> Notified</> : <><Bell style={{ width: 11, height: 11 }} /> Notify</>}
-                    </button>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid rgba(100,116,139,0.12)", marginTop: "auto" }}>
+                    <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Mentor — TBA</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: MUTED, fontWeight: 600 }}>{item.eta}</span>
                 </div>
+
+                <button
+                    type="button"
+                    className="notify-btn"
+                    onClick={() => setNotified(true)}
+                    disabled={notified}
+                    style={{
+                        marginTop: 2, padding: "9px 0", borderRadius: 10, width: "100%",
+                        fontSize: 12, fontWeight: 700,
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        border: notified ? "1.5px solid rgba(5,150,105,0.3)" : "1.5px solid rgba(37,99,235,0.22)",
+                        background: notified ? "#f0fdf4" : "rgba(37,99,235,0.08)",
+                        color: notified ? SUCCESS : BRAND,
+                        cursor: notified ? "default" : "pointer",
+                        transition: "all 0.18s",
+                    }}
+                >
+                    {notified ? <><BellRing style={{ width: 12, height: 12 }} /> We'll notify you</> : <><Bell style={{ width: 12, height: 12 }} /> Notify me</>}
+                </button>
             </div>
         </motion.div>
     );
@@ -1300,10 +1278,10 @@ function FaqItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boo
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: isOpen ? BRAND : "rgba(37,99,235,0.08)", transition: "background 0.18s",
                 }}>
-      {isOpen
-          ? <Minus style={{ width: 12, height: 12, color: "#fff" }} />
-          : <Plus style={{ width: 12, height: 12, color: BRAND }} />}
-    </span>
+          {isOpen
+              ? <Minus style={{ width: 12, height: 12, color: "#fff" }} />
+              : <Plus style={{ width: 12, height: 12, color: BRAND }} />}
+        </span>
             </button>
             <AnimatePresence initial={false}>
                 {isOpen && (
@@ -1332,7 +1310,7 @@ export default function CoursesPage() {
     const [category, setCategory] = useState("");
     const [type, setType]         = useState<"" | "free" | "paid">("");
 
-// Presentation-only additions — none of these touch data fetching
+    // Presentation-only additions — none of these touch data fetching
     const [sortBy, setSortBy]   = useState<"newest" | "rating" | "popular">("newest");
     const [openFaq, setOpenFaq] = useState<number | null>(0);
     const gridRef = useRef<HTMLDivElement>(null);
@@ -1382,7 +1360,7 @@ export default function CoursesPage() {
         setFiltered(r);
     }, [courses, search, category, type]);
 
-// Client-side sort of already-filtered results — purely presentational, no new requests
+    // Client-side sort of already-filtered results — purely presentational, no new requests
     const sortedFiltered = useMemo(() => {
         if (sortBy === "newest") return filtered;
         const arr = [...filtered];
@@ -1405,22 +1383,22 @@ export default function CoursesPage() {
     return (
         <>
             <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap');
-    .lc2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .si:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-    .fs { appearance: none; }
-    .fs:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .chip:focus-visible, .cta-btn:focus-visible, .accordion-btn:focus-visible, .notify-btn:focus-visible, .type-pill:focus-visible {
-      outline: 2px solid #2563eb; outline-offset: 2px;
-    }
-    .chip { transition: border-color 0.18s, background 0.18s, transform 0.18s; }
-    .chip:hover { transform: translateY(-2px); }
-    @media (prefers-reduced-motion: reduce) {
-      * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-    }
-  `}</style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+        .lc2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .si:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+        .fs { appearance: none; }
+        .fs:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .chip:focus-visible, .cta-btn:focus-visible, .accordion-btn:focus-visible, .notify-btn:focus-visible, .type-pill:focus-visible {
+          outline: 2px solid #2563eb; outline-offset: 2px;
+        }
+        .chip { transition: border-color 0.18s, background 0.18s, transform 0.18s; }
+        .chip:hover { transform: translateY(-2px); }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+        }
+      `}</style>
 
             <div style={{
                 background: PAPER,
@@ -1471,8 +1449,8 @@ export default function CoursesPage() {
                                     }}>
                                         <Sparkles size={11} style={{ color: BRAND }} />
                                         <span style={{ fontSize: 11, fontWeight: 700, color: BRAND, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                  All Courses
-                </span>
+                      All Courses
+                    </span>
                                     </div>
                                     <span style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "linear-gradient(90deg,#2563eb,transparent)" }} />
                                 </div>
@@ -1485,19 +1463,19 @@ export default function CoursesPage() {
                                 }}>
                                     Learn from{" "}
                                     <span style={{ position: "relative", display: "inline-block", color: BRAND }}>
-                the best.
-                <motion.span
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    style={{
-                        position: "absolute", left: 0, right: 0, bottom: -3,
-                        height: 3, borderRadius: 2,
-                        background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DEEP})`,
-                        transformOrigin: "left", display: "block",
-                    }}
-                />
-              </span>
+                    the best.
+                    <motion.span
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        style={{
+                            position: "absolute", left: 0, right: 0, bottom: -3,
+                            height: 3, borderRadius: 2,
+                            background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DEEP})`,
+                            transformOrigin: "left", display: "block",
+                        }}
+                    />
+                  </span>
                                 </h1>
 
                                 <p style={{
@@ -1567,8 +1545,8 @@ export default function CoursesPage() {
                                         const Icon = v.icon;
                                         return (
                                             <span key={v.text} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: MUTED, fontWeight: 500 }}>
-                    <Icon style={{ width: 14, height: 14, color: BRAND, flexShrink: 0 }} /> {v.text}
-                  </span>
+                        <Icon style={{ width: 14, height: 14, color: BRAND, flexShrink: 0 }} /> {v.text}
+                      </span>
                                         );
                                     })}
                                 </div>
@@ -1609,18 +1587,18 @@ export default function CoursesPage() {
                                             minWidth: 188, textAlign: "left", fontFamily: "inherit",
                                         }}
                                     >
-                <span style={{
-                    width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: active ? BRAND : "rgba(37,99,235,0.08)",
-                    color: active ? "#fff" : BRAND,
-                }}>
-                  <Icon size={15} />
-                </span>
+                    <span style={{
+                        width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: active ? BRAND : "rgba(37,99,235,0.08)",
+                        color: active ? "#fff" : BRAND,
+                    }}>
+                      <Icon size={15} />
+                    </span>
                                         <span>
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{t.label}</div>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>{t.blurb}</div>
-                </span>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{t.label}</div>
+                      <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>{t.blurb}</div>
+                    </span>
                                     </button>
                                 );
                             })}
@@ -1764,8 +1742,8 @@ export default function CoursesPage() {
 
                             {!isLoading && (
                                 <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500, marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0, fontFamily: MONO }}>
-              {sortedFiltered.length} course{sortedFiltered.length !== 1 ? "s" : ""}
-            </span>
+                  {sortedFiltered.length} course{sortedFiltered.length !== 1 ? "s" : ""}
+                </span>
                             )}
                         </div>
 
@@ -1802,26 +1780,6 @@ export default function CoursesPage() {
                     </div>
 
                     <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
-                            <div>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-                                <Award style={{ width: 12, height: 12 }} /> Our catalog
-                            </span>
-                                <h2 style={{ fontSize: "clamp(20px,2.4vw,26px)", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: 0 }}>
-                                    All courses
-                                </h2>
-                            </div>
-                            <span style={{
-                                display: "inline-flex", alignItems: "center", gap: 6,
-                                fontSize: 10.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
-                                padding: "7px 15px", borderRadius: 99,
-                                background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DEEP})`, color: "#fff",
-                                boxShadow: "0 6px 16px rgba(37,99,235,0.28)", flexShrink: 0,
-                            }}>
-                            <CheckCircle style={{ width: 12, height: 12 }} /> Official courses
-                        </span>
-                        </div>
-
                         {isLoading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                                 {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
@@ -1876,25 +1834,25 @@ export default function CoursesPage() {
                     </div>
                 </section>
 
-                {/* ── Coming Soon — redesigned as a horizontal filmstrip of poster cards ── */}
+                {/* ── Coming Soon — illustrative placeholder cards ── */}
                 <section style={{ background: PAPER, position: "relative" }}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
                         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
                             <div>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-              <CalendarClock style={{ width: 12, height: 12 }} /> In the works
-            </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                  <CalendarClock style={{ width: 12, height: 12 }} /> In the works
+                </span>
                                 <h2 style={{ fontSize: "clamp(20px,2.4vw,26px)", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: 0 }}>
-                                    Coming soon — Soft Skills
+                                    Coming soon
                                 </h2>
                             </div>
                             <p style={{ maxWidth: 420, color: MUTED, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-                                A dedicated soft-skills track is on the way — communication, leadership, EQ, and more. Tap notify and we'll let you know the moment one goes live.
+                                Soft-skill tracks we're building next — communication, leadership, EQ, and more. Tap notify and we'll let you know the moment one goes live.
                             </p>
                         </div>
-                        <div className="flex hide-scrollbar" style={{ gap: 16, overflowX: "auto", paddingBottom: 10, scrollSnapType: "x mandatory" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                             {COMING_SOON.map((item, i) => (
-                                <ComingSoonCard key={item.id} item={item} delay={Math.min(i * 0.04, 0.2)} />
+                                <ComingSoonCard key={item.id} item={item} delay={Math.min(i * 0.05, 0.2)} />
                             ))}
                         </div>
                     </div>
