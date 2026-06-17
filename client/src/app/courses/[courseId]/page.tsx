@@ -59,6 +59,8 @@ interface Course {
   category: string;
   difficulty?: string;
   price?: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   thumbnail?: string;
   totalDuration?: number;
   certificateEnabled?: boolean;
@@ -168,6 +170,15 @@ export default function PublicCourseDetailPage() {
   const isPaid     = course.contentType === "paid" || course.contentType === "exclusive";
   const initials   = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const dashHref   = `/dashboard/content/${courseId}`;
+
+  const hasDiscount = !isEnrolled && isPaid && course.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
+  const effectivePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : (course.price ?? 0);
+  const discountLabel = hasDiscount
+    ? course.discount!.type === "percentage"
+      ? `${course.discount!.value}% OFF`
+      : `₹${course.discount!.value} OFF`
+    : null;
+
   // For logged-out users: send to checkout (paid) or content (free) after login
   const enrollHref = isPaid
     ? `/login?redirect=/dashboard/checkout/${courseId}`
@@ -202,11 +213,9 @@ export default function PublicCourseDetailPage() {
             </div>
             <p style={{ fontWeight: 700, fontSize: 17, margin: 0 }}>Lesson Locked</p>
             <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
-              {!isLoggedIn
-                ? `Sign in & enroll to unlock all ${lessons.length} lessons`
-                : isPaid
-                  ? `Enroll for ₹${course.price} to unlock all ${lessons.length} lessons`
-                  : "Enroll for free to access this lesson"}
+              {isPaid
+                ? `Enroll for ₹${effectivePrice} to unlock all ${lessons.length} lessons`
+                : `Enroll to unlock all ${lessons.length} lessons`}
             </p>
           </div>
         </div>
@@ -457,7 +466,7 @@ export default function PublicCourseDetailPage() {
 
                         {!preview && (
                           <span style={{ fontSize: 9.5, color: BRAND, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
-                            <Lock style={{ width: 8, height: 8 }} /> {!isLoggedIn ? "Sign in to unlock" : "Enroll to unlock"}
+                            <Lock style={{ width: 8, height: 8 }} /> Enroll to unlock
                           </span>
                         )}
 
@@ -540,12 +549,22 @@ export default function PublicCourseDetailPage() {
                     </>
                   ) : isPaid ? (
                     <>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 12 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                         <span style={{ fontSize: 28, fontWeight: 800, color: INK, letterSpacing: "-0.03em" }}>
-                          {(course.price ?? 0) > 0 ? `₹${course.price}` : "Paid"}
+                          {effectivePrice > 0 ? `₹${effectivePrice}` : "Paid"}
                         </span>
-                        {(course.price ?? 0) > 0 && <span style={{ fontSize: 11, color: MUTED }}>+ GST</span>}
+                        {hasDiscount && (course.price ?? 0) > 0 && (
+                          <span style={{ fontSize: 15, color: MUTED, textDecoration: "line-through" }}>₹{course.price}</span>
+                        )}
+                        {effectivePrice > 0 && <span style={{ fontSize: 11, color: MUTED }}>+ GST</span>}
                       </div>
+                      {discountLabel && (
+                        <div style={{ marginBottom: 10 }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg,#f97316,#ea580c)", padding: "3px 10px", borderRadius: 99 }}>
+                            {discountLabel}
+                          </span>
+                        </div>
+                      )}
                       <Link href={isLoggedIn ? loggedInCtaHref : enrollHref} style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                         padding: "12px 0", borderRadius: 13,
@@ -582,6 +601,8 @@ export default function PublicCourseDetailPage() {
                       "Lifetime access",
                       course.certificateEnabled ? "Certificate on completion" : null,
                       course.difficulty ? `${course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)} level` : null,
+                      (course.modules?.length ?? 0) > 0 ? `${course.modules!.length} module${course.modules!.length > 1 ? "s" : ""}` : null,
+                      lessons.length > 0 ? `${lessons.length} lesson${lessons.length > 1 ? "s" : ""}` : null,
                       `${FREE_PREVIEW_COUNT} free preview lessons`,
                     ].filter(Boolean).map((item, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>

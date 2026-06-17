@@ -25,6 +25,12 @@ interface Module {
   resources: Resource[];
 }
 
+interface Discount {
+  type: 'percentage' | 'fixed' | 'none';
+  value: number;
+  isActive: boolean;
+}
+
 interface Course {
   title: string;
   shortDescription: string;
@@ -33,6 +39,7 @@ interface Course {
   contentType: string;
   difficulty: string;
   price: number;
+  discount: Discount;
   tags: string[];
   thumbnail: string;
   duration: number;
@@ -46,6 +53,7 @@ export default function EditCoursePage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingDiscount, setIsSavingDiscount] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -57,6 +65,7 @@ export default function EditCoursePage() {
     contentType: 'free',
     difficulty: 'beginner',
     price: 0,
+    discount: { type: 'none', value: 0, isActive: false },
     tags: [],
     thumbnail: '',
     duration: 0,
@@ -120,6 +129,28 @@ export default function EditCoursePage() {
       toast.error('Failed to update course');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveDiscount = async () => {
+    try {
+      setIsSavingDiscount(true);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/advanced/courses/${courseId}/discount`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(course.discount),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Discount saved');
+      } else {
+        toast.error(data.error || 'Failed to save discount');
+      }
+    } catch {
+      toast.error('Failed to save discount');
+    } finally {
+      setIsSavingDiscount(false);
     }
   };
 
@@ -488,6 +519,83 @@ export default function EditCoursePage() {
             )}
           </div>
         </div>
+
+        {/* Discount Section */}
+        {course.contentType === 'paid' && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold">Discount</h2>
+                <p className="text-zinc-400 text-sm mt-0.5">Offer a limited-time discount on this course</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveDiscount}
+                disabled={isSavingDiscount}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              >
+                {isSavingDiscount ? 'Saving…' : 'Save Discount'}
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">Discount Type</label>
+                <select
+                  value={course.discount?.type ?? 'none'}
+                  onChange={e => setCourse(prev => ({ ...prev, discount: { ...prev.discount, type: e.target.value as any } }))}
+                  className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="none">None</option>
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed (₹)</option>
+                </select>
+              </div>
+
+              {course.discount?.type !== 'none' && (
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    {course.discount?.type === 'percentage' ? 'Discount %' : 'Discount Amount (₹)'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={course.discount?.type === 'percentage' ? 100 : course.price - 1}
+                    value={course.discount?.value ?? 0}
+                    onChange={e => setCourse(prev => ({ ...prev, discount: { ...prev.discount, value: parseFloat(e.target.value) || 0 } }))}
+                    className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                  />
+                  {course.discount?.type === 'percentage' && course.discount.value > 0 && (
+                    <p className="text-xs text-zinc-400 mt-1">
+                      Final price: ₹{Math.round(course.price - (course.price * course.discount.value) / 100)}
+                    </p>
+                  )}
+                  {course.discount?.type === 'fixed' && course.discount.value > 0 && (
+                    <p className="text-xs text-zinc-400 mt-1">
+                      Final price: ₹{Math.max(0, course.price - course.discount.value)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {course.discount?.type !== 'none' && (
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div
+                      onClick={() => setCourse(prev => ({ ...prev, discount: { ...prev.discount, isActive: !prev.discount?.isActive } }))}
+                      className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${course.discount?.isActive ? 'bg-blue-600' : 'bg-zinc-600'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${course.discount?.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </div>
+                    <span className="text-sm font-medium text-zinc-300">
+                      {course.discount?.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Modules Section */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">

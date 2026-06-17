@@ -41,6 +41,9 @@ router.put('/courses/:courseId/modules', verifyMentor, courseAdvancedController.
 // Publish toggle
 router.post('/courses/:courseId/toggle-publish', verifyMentor, courseAdvancedController.togglePublish);
 
+// Discount
+router.put('/courses/:courseId/discount', verifyMentor, courseAdvancedController.updateCourseDiscount);
+
 // Duplicate
 router.post('/courses/:courseId/duplicate', verifyMentor, courseAdvancedController.duplicateCourse);
 

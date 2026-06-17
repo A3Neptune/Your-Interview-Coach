@@ -1051,6 +1051,56 @@ export const getDetailedAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * Update course discount (mentor only)
+ */
+export const updateCourseDiscount = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const mentorId = req.user.id || req.user._id;
+    const { type, value, isActive } = req.body;
+
+    const validTypes = ['percentage', 'fixed', 'none'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ success: false, error: 'Invalid discount type' });
+    }
+    if (type === 'percentage' && (value < 0 || value > 100)) {
+      return res.status(400).json({ success: false, error: 'Percentage must be between 0 and 100' });
+    }
+
+    const course = await CourseAdvanced.findOne({ _id: courseId, mentorId });
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found or unauthorized' });
+    }
+
+    if (type === 'fixed' && value >= course.price) {
+      return res.status(400).json({ success: false, error: 'Fixed discount cannot exceed course price' });
+    }
+
+    course.discount = { type, value: value || 0, isActive: !!isActive };
+
+    // Also update discountPrice for convenience
+    if (isActive && type !== 'none' && value > 0) {
+      const discAmt = type === 'percentage'
+        ? Math.round((course.price * value) / 100)
+        : value;
+      course.discountPrice = Math.max(0, course.price - discAmt);
+    } else {
+      course.discountPrice = null;
+    }
+
+    await course.save();
+
+    invalidateCourseCaches(courseId, mentorId);
+    await redisCacheService.deletePattern('courses:published:*');
+
+    res.json({ success: true, data: course, message: 'Discount updated successfully' });
+  } catch (error) {
+    console.error('Update course discount error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update discount' });
+  }
+};
+
 export default {
   getMentorCourses,
   getCourseById,
@@ -1065,6 +1115,7 @@ export default {
   getCacheStats,
   getPublishedCourses,
   getPublishedCourseById,
+  updateCourseDiscount,
   // Review functions
   submitReview,
   getCourseReviews,

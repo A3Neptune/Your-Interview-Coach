@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Play, Lock, BookOpen, Clock, ArrowRight, Sparkles,
-  TrendingUp, CheckCircle, Star, Award, ChevronRight, Info, Eye,
+  TrendingUp, CheckCircle, Star, Award, ChevronRight, Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAuthToken, removeAuthToken } from '@/lib/api';
@@ -108,11 +108,11 @@ function EnrolledCard({ course }: { course: Course }) {
       </div>
 
       {/* Body */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '18px 18px 18px', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '16px 18px 18px', gap: 9 }}>
 
-        {/* Chips row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: 'rgba(37,99,235,0.08)', color: BRAND, border: '1px solid rgba(37,99,235,0.15)' }}>
+        {/* Chips — category + progress state + difficulty + cert inline */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: 'rgba(37,99,235,0.08)', color: BRAND, border: '1px solid rgba(37,99,235,0.15)' }}>
             {CAT_LABEL[course.category] ?? course.category}
           </span>
           {isDone
@@ -120,96 +120,85 @@ function EnrolledCard({ course }: { course: Course }) {
                 <CheckCircle style={{ width: 8, height: 8 }} /> Completed
               </span>
             : pct > 0
-              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: BRAND, background: '#eff6ff', border: '1px solid rgba(37,99,235,0.2)', padding: '2px 7px', borderRadius: 99 }}>
-                  In Progress
-                </span>
-              : null
+              ? <span style={{ fontSize: 9, fontWeight: 700, color: BRAND, background: '#eff6ff', border: '1px solid rgba(37,99,235,0.2)', padding: '2px 7px', borderRadius: 99 }}>In Progress</span>
+              : <span style={{ fontSize: 9, fontWeight: 700, color: MUTED, background: '#f8fafc', border: '1px solid #e2e8f0', padding: '2px 7px', borderRadius: 99 }}>Not started</span>
           }
+          {course.difficulty && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9, fontWeight: 600, color: MUTED }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: DIFF_COLOR[course.difficulty] ?? MUTED, display: 'inline-block' }} />
+              {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
+            </span>
+          )}
           {course.certificateEnabled && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#059669', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 7px', borderRadius: 99 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#059669', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 6px', borderRadius: 99 }}>
               <Award style={{ width: 8, height: 8 }} /> Cert
             </span>
           )}
         </div>
 
-        {/* Difficulty */}
-        {course.difficulty && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 600, color: MUTED }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: DIFF_COLOR[course.difficulty] ?? MUTED, display: 'inline-block', flexShrink: 0 }} />
-            {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
-          </span>
-        )}
-
         {/* Title */}
-        <h3 style={{
-          fontSize: 15, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.018em', margin: 0, color: INK,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.32, letterSpacing: '-0.018em', margin: 0, color: INK, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {course.title}
         </h3>
 
         {/* Description */}
         {(course.shortDescription || course.description) && (
-          <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.65, margin: 0, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.6, margin: 0, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {course.shortDescription || course.description}
           </p>
         )}
 
-        {/* Stats */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingTop: 10, borderTop: '1px solid rgba(37,99,235,0.08)' }}>
-          {(course.analytics?.enrollments ?? 0) > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <TrendingUp style={{ width: 11, height: 11 }} />
-              {course.analytics!.enrollments.toLocaleString('en-IN')}
+        {/* Instructor + stats combined */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 8, borderTop: '1px solid rgba(37,99,235,0.07)', marginTop: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'linear-gradient(135deg,#1e3a8a,#2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, fontWeight: 700 }}>
+              {inits}
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {course.mentorId.name}
             </span>
-          )}
-          {(course.analytics?.averageRating ?? 0) > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Star style={{ width: 11, height: 11, color: '#f59e0b', fill: '#f59e0b' }} />
-              {course.analytics!.averageRating.toFixed(1)}
-            </span>
-          )}
-        </div>
-
-        {/* Instructor */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 9.5, fontWeight: 700,
-            boxShadow: '0 2px 8px rgba(29,78,216,0.22)',
-          }}>
-            {inits}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 11.5, fontWeight: 600, color: INK, margin: 0, lineHeight: 1.3 }}>{course.mentorId.name}</p>
-            {course.mentorId.company && <p style={{ fontSize: 10, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {(course.analytics?.averageRating ?? 0) > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: MUTED }}>
+                <Star style={{ width: 10, height: 10, color: '#f59e0b', fill: '#f59e0b' }} />
+                {course.analytics!.averageRating.toFixed(1)}
+              </span>
+            )}
+            {(course.totalDuration ?? 0) > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 500, color: MUTED }}>
+                <Clock style={{ width: 10, height: 10 }} />
+                {course.totalDuration}m
+              </span>
+            )}
           </div>
         </div>
 
         {/* Divider */}
         <div style={{ height: 1, background: `linear-gradient(90deg,${accentBorder},transparent)` }} />
 
-        {/* Progress + CTA */}
+        {/* Progress box + CTA */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ background: accentLight, borderRadius: 10, padding: '8px 12px', flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: MUTED }}>Progress</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: accent }}>{pct}%</span>
+          <div style={{ flex: 1, background: accentLight, borderRadius: 10, padding: '8px 11px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: pct > 0 ? 5 : 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: accent, lineHeight: 1 }}>
+                {isDone ? 'Completed' : pct > 0 ? 'In Progress' : 'Not started'}
+              </span>
+              {pct > 0 && <span style={{ fontSize: 10.5, fontWeight: 700, color: accent }}>{pct}%</span>}
             </div>
-            <div style={{ height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: isDone ? 'linear-gradient(90deg,#10b981,#059669)' : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`, transition: 'width 0.5s ease' }} />
-            </div>
+            {pct > 0 && (
+              <div style={{ height: 3, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: isDone ? 'linear-gradient(90deg,#10b981,#059669)' : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`, transition: 'width 0.5s ease' }} />
+              </div>
+            )}
           </div>
           <Link href={`/dashboard/content/${course._id}`} style={{
-            padding: '10px 14px', borderRadius: 10,
+            padding: '10px 14px', borderRadius: 10, flexShrink: 0,
             fontSize: 12, fontWeight: 700, color: '#fff',
-            background: isDone ? 'linear-gradient(135deg,#10b981,#059669)' : `linear-gradient(135deg,${BRAND}dd,${BRAND})`,
+            background: isDone ? 'linear-gradient(135deg,#10b981,#059669)' : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
             display: 'flex', alignItems: 'center', gap: 5,
             textDecoration: 'none',
-            boxShadow: isDone ? '0 3px 10px rgba(5,150,105,0.3)' : '0 3px 10px rgba(37,99,235,0.28)',
-            flexShrink: 0,
+            boxShadow: isDone ? '0 3px 10px rgba(5,150,105,0.28)' : '0 3px 10px rgba(37,99,235,0.24)',
           }}>
             <Play style={{ width: 11, height: 11, fill: '#fff' }} />
             {isDone ? 'Review' : pct > 0 ? 'Continue' : 'Start'}
@@ -222,12 +211,13 @@ function EnrolledCard({ course }: { course: Course }) {
 
 // ── Catalogue card — all / free / paid tabs ──────────────────────────────────
 function CatalogueCard({ course }: { course: Course }) {
-  const isPaid     = course.contentType === 'paid' || course.contentType === 'exclusive';
-  const isEnrolled = !!course.enrollment;
-  const pct        = course.enrollment?.progress ?? 0;
-  const inits      = initials(course.mentorId.name);
-  const accent     = isEnrolled ? '#059669' : BRAND;
-  const accentLight  = isEnrolled ? 'rgba(5,150,105,0.07)' : 'rgba(37,99,235,0.07)';
+  const isPaid       = course.contentType === 'paid' || course.contentType === 'exclusive';
+  const isEnrolled   = !!course.enrollment;
+  const pct          = course.enrollment?.progress ?? 0;
+  const inits        = initials(course.mentorId.name);
+  const green        = '#059669';
+  const accent       = isEnrolled ? green : BRAND;
+  const accentLight  = isEnrolled ? 'rgba(5,150,105,0.07)' : 'rgba(37,99,235,0.06)';
   const accentBorder = isEnrolled ? 'rgba(5,150,105,0.2)'  : 'rgba(37,99,235,0.18)';
 
   return (
@@ -235,166 +225,134 @@ function CatalogueCard({ course }: { course: Course }) {
       style={{
         display: 'flex', flexDirection: 'column', height: '100%',
         borderRadius: 20, overflow: 'hidden',
-        background: 'rgba(255,255,255,0.97)',
+        background: '#fff',
         border: `1.5px solid ${accentBorder}`,
-        boxShadow: `0 4px 20px ${accentLight}`,
+        boxShadow: '0 2px 16px rgba(37,99,235,0.07)',
         transition: 'transform 0.34s cubic-bezier(.22,1,.36,1), box-shadow 0.34s ease',
         willChange: 'transform',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-5px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 16px 44px ${accentLight}`; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 20px ${accentLight}`; }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 14px 40px rgba(37,99,235,0.13)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 16px rgba(37,99,235,0.07)'; }}
     >
-      {/* Always-on accent bar */}
+      {/* Accent bar */}
       <div style={{ height: 3, background: isEnrolled ? 'linear-gradient(90deg,#10b981,#05966955,transparent)' : `linear-gradient(90deg,${BRAND},${BRAND_DEEP}55,transparent)`, flexShrink: 0 }} />
 
-      {/* Thumbnail — clean, no text/price on image */}
-      <div style={{
-        position: 'relative', height: 152, flexShrink: 0, overflow: 'hidden',
-        background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
-      }}>
+      {/* Thumbnail */}
+      <div style={{ height: 172, flexShrink: 0, overflow: 'hidden', background: 'linear-gradient(135deg,#1e3a8a,#2563eb)', position: 'relative' }}>
         {course.thumbnail
           ? <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen style={{ width: 48, height: 48, color: 'rgba(255,255,255,0.2)' }} />
+              <BookOpen style={{ width: 44, height: 44, color: 'rgba(255,255,255,0.18)' }} />
             </div>
         }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(15,23,42,0.18),transparent 55%)' }} />
       </div>
 
       {/* Body */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '18px 18px 18px', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '16px 18px 18px', gap: 9 }}>
 
-        {/* Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: 'rgba(37,99,235,0.08)', color: BRAND, border: '1px solid rgba(37,99,235,0.15)' }}>
+        {/* Chips — category + type + difficulty + cert inline */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: 'rgba(37,99,235,0.08)', color: BRAND, border: '1px solid rgba(37,99,235,0.15)' }}>
             {CAT_LABEL[course.category] ?? course.category}
           </span>
           {isEnrolled
-            ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#059669', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 7px', borderRadius: 99 }}>
+            ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: green, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 7px', borderRadius: 99 }}>
                 <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
               </span>
             : isPaid
               ? <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#eff6ff', color: BRAND, border: '1px solid rgba(37,99,235,0.2)' }}>Paid</span>
-              : <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#f0fdf4', color: '#059669', border: '1px solid #bbf7d0' }}>Free</span>
+              : <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#f0fdf4', color: green, border: '1px solid #bbf7d0' }}>Free</span>
           }
+          {course.difficulty && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9, fontWeight: 600, color: MUTED }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: DIFF_COLOR[course.difficulty] ?? MUTED, display: 'inline-block' }} />
+              {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
+            </span>
+          )}
           {course.certificateEnabled && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: '#059669', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 7px', borderRadius: 99 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: green, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 6px', borderRadius: 99 }}>
               <Award style={{ width: 8, height: 8 }} /> Cert
             </span>
           )}
         </div>
 
-        {/* Difficulty */}
-        {course.difficulty && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 600, color: MUTED }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: DIFF_COLOR[course.difficulty] ?? MUTED, display: 'inline-block', flexShrink: 0 }} />
-            {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
-          </span>
-        )}
-
         {/* Title */}
-        <h3 style={{
-          fontSize: 15, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.018em', margin: 0, color: INK,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.32, letterSpacing: '-0.018em', margin: 0, color: INK, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {course.title}
         </h3>
 
         {/* Description */}
         {(course.shortDescription || course.description) && (
-          <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.65, margin: 0, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.6, margin: 0, flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {course.shortDescription || course.description}
           </p>
         )}
 
-        {/* Stats */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingTop: 10, borderTop: '1px solid rgba(37,99,235,0.08)' }}>
-          {(course.analytics?.enrollments ?? 0) > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <TrendingUp style={{ width: 11, height: 11 }} />
-              {course.analytics!.enrollments.toLocaleString('en-IN')}
+        {/* Instructor + stats combined */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 8, borderTop: '1px solid rgba(37,99,235,0.07)', marginTop: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'linear-gradient(135deg,#1e3a8a,#2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, fontWeight: 700 }}>
+              {inits}
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {course.mentorId.name}
             </span>
-          )}
-          {(course.analytics?.averageRating ?? 0) > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Star style={{ width: 11, height: 11, color: '#f59e0b', fill: '#f59e0b' }} />
-              {course.analytics!.averageRating.toFixed(1)}
-            </span>
-          )}
-          {(course.totalDuration ?? 0) > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Clock style={{ width: 11, height: 11 }} />
-              {course.totalDuration} min
-            </span>
-          )}
-        </div>
-
-        {/* Instructor */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 9.5, fontWeight: 700,
-            boxShadow: '0 2px 8px rgba(29,78,216,0.22)',
-          }}>
-            {inits}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 11.5, fontWeight: 600, color: INK, margin: 0, lineHeight: 1.3 }}>{course.mentorId.name}</p>
-            {course.mentorId.company && <p style={{ fontSize: 10, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {(course.analytics?.averageRating ?? 0) > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: MUTED }}>
+                <Star style={{ width: 10, height: 10, color: '#f59e0b', fill: '#f59e0b' }} />
+                {course.analytics!.averageRating.toFixed(1)}
+              </span>
+            )}
+            {(course.totalDuration ?? 0) > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 500, color: MUTED }}>
+                <Clock style={{ width: 10, height: 10 }} />
+                {course.totalDuration}m
+              </span>
+            )}
           </div>
         </div>
-
-        {/* Progress bar — enrolled only */}
-        {isEnrolled && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: MUTED }}>Progress</span>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: pct >= 100 ? '#059669' : BRAND }}>{pct}%</span>
-            </div>
-            <div style={{ height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : `linear-gradient(90deg,${BRAND},${BRAND_DEEP})`, transition: 'width 0.5s ease' }} />
-            </div>
-          </div>
-        )}
 
         {/* Divider */}
         <div style={{ height: 1, background: `linear-gradient(90deg,${accentBorder},transparent)` }} />
 
-        {/* Price block + CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <div style={{ background: accentLight, borderRadius: 10, padding: '8px 12px', flex: 1 }}>
+        {/* Price box + CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, background: accentLight, borderRadius: 10, padding: '8px 11px' }}>
             {isEnrolled ? (
               <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: accent, lineHeight: 1 }}>Enrolled</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>
-                  {pct >= 100 ? 'Completed' : pct > 0 ? `${pct}% done` : 'Not started'}
+                <div style={{ fontSize: 12, fontWeight: 700, color: accent, lineHeight: 1 }}>
+                  {pct >= 100 ? 'Completed' : pct > 0 ? 'In Progress' : 'Enrolled'}
                 </div>
+                {pct > 0 && pct < 100 && (
+                  <div style={{ marginTop: 5, height: 3, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP})` }} />
+                  </div>
+                )}
               </>
             ) : isPaid && course.price > 0 ? (
               <>
-                <div style={{ fontSize: 18, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: '-0.02em' }}>₹{course.price}</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>excl. GST</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: '-0.02em' }}>₹{course.price}</div>
+                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 500, marginTop: 2 }}>excl. GST</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#059669', lineHeight: 1 }}>Free</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>No cost</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: green, lineHeight: 1 }}>Free</div>
+                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 500, marginTop: 2 }}>No cost</div>
               </>
             )}
           </div>
           <Link
             href={isEnrolled ? `/dashboard/content/${course._id}` : isPaid ? `/dashboard/checkout/${course._id}` : `/dashboard/content/${course._id}`}
             style={{
-              padding: '10px 14px', borderRadius: 10,
+              padding: '10px 14px', borderRadius: 10, flexShrink: 0,
               fontSize: 12, fontWeight: 700, color: '#fff',
-              background: isEnrolled
-                ? 'linear-gradient(135deg,#10b981,#059669)'
-                : `linear-gradient(135deg,${BRAND}dd,${BRAND})`,
+              background: isEnrolled ? 'linear-gradient(135deg,#10b981,#059669)' : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
               display: 'flex', alignItems: 'center', gap: 5,
               textDecoration: 'none',
-              boxShadow: isEnrolled ? '0 3px 10px rgba(5,150,105,0.3)' : '0 3px 10px rgba(37,99,235,0.28)',
-              flexShrink: 0,
+              boxShadow: isEnrolled ? '0 3px 10px rgba(5,150,105,0.28)' : '0 3px 10px rgba(37,99,235,0.24)',
             }}
           >
             {isEnrolled

@@ -15,6 +15,8 @@ interface Course {
   title: string;
   description: string;
   price: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   mentorId: {
     name: string;
     designation: string;
@@ -123,11 +125,13 @@ export default function CheckoutPage() {
                 razorpay_signature: response.razorpay_signature,
               });
 
+              const _hasDisc = course?.discount?.isActive && course.discount.type !== 'none' && (course.discount.value ?? 0) > 0;
+              const _base = _hasDisc && course?.discountPrice != null ? course.discountPrice : (course?.price ?? 0);
               fbq('Purchase', {
                 content_name: course?.title,
                 content_ids: [courseId],
                 content_type: 'course',
-                value: Math.round((course?.price ?? 0) * 1.18),
+                value: Math.round(_base * 1.18),
                 currency: 'INR',
               });
               toast.success('Payment successful!');
@@ -176,6 +180,12 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const hasDiscount = course.discount?.isActive && course.discount.type !== 'none' && (course.discount.value ?? 0) > 0;
+  const basePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : course.price;
+  const gst = Math.round(basePrice * 0.18);
+  const total = basePrice + gst;
+  const savings = hasDiscount ? course.price - basePrice : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -280,27 +290,42 @@ export default function CheckoutPage() {
               </div>
 
               <div className="pt-4 border-t-2 border-blue-100">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-slate-600 font-medium">Base price</span>
-                  <span className="text-slate-900 font-bold">₹{course.price}</span>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-slate-600 font-medium">Original price</span>
+                  <span className={`font-bold ${hasDiscount ? 'line-through text-slate-400' : 'text-slate-900'}`}>₹{course.price}</span>
                 </div>
+                {hasDiscount && (
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-emerald-600 font-semibold">
+                        Discount ({course.discount!.type === 'percentage' ? `${course.discount!.value}%` : `₹${course.discount!.value}`})
+                      </span>
+                      <span className="text-emerald-600 font-bold">−₹{savings}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-700 font-semibold">After discount</span>
+                      <span className="text-slate-900 font-bold">₹{basePrice}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-slate-600 font-medium">GST (18%)</span>
-                  <span className="text-slate-900 font-bold">+₹{Math.round(course.price * 0.18)}</span>
+                  <span className="text-slate-900 font-bold">+₹{gst}</span>
                 </div>
-                <p className="text-xs text-slate-400 mb-3">
-                  Price shown excl. GST — tax added at checkout
-                </p>
+                <p className="text-xs text-slate-400 mb-3">Tax added at checkout</p>
               </div>
 
               <div className="pt-4 border-t-2 border-blue-200">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-900 font-bold text-lg">Total payable</span>
                   <div className="text-right">
-                    <span className="text-3xl font-black text-blue-600">₹{Math.round(course.price * 1.18)}</span>
+                    <span className="text-3xl font-black text-blue-600">₹{total}</span>
                     <p className="text-[10px] text-slate-400 mt-0.5">Incl. 18% GST</p>
                   </div>
                 </div>
+                {hasDiscount && savings > 0 && (
+                  <p className="text-right text-xs text-emerald-600 font-semibold mt-1">You save ₹{savings}!</p>
+                )}
               </div>
             </div>
 
@@ -309,7 +334,7 @@ export default function CheckoutPage() {
               disabled={isProcessing}
               className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
-              {isProcessing ? 'Processing...' : `Pay ₹${Math.round(course.price * 1.18)} (incl. GST)`}
+              {isProcessing ? 'Processing...' : `Pay ₹${total} (incl. GST)`}
             </button>
 
             <div className="mt-6 space-y-3">

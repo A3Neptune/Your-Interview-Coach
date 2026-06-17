@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  BookOpen, Clock, Users, Star, Lock, ArrowRight, Sparkles, Award, Play, CheckCircle,
+  BookOpen, Clock, Star, Lock, ArrowRight, Sparkles, Award, Play, CheckCircle, Tag,
 } from "lucide-react";
 import { getAuthToken } from "@/lib/api";
 
@@ -24,12 +24,16 @@ interface Course {
   category: string;
   difficulty?: string;
   price?: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   thumbnail?: string;
   totalDuration?: number;
   certificateEnabled?: boolean;
   analytics?: { enrollments: number; averageRating: number; totalRatings: number };
   mentorId: { name: string; designation: string; company?: string };
   enrollment?: { progress: number };
+  totalLectures?: number;
+  modules?: { title: string }[];
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -58,15 +62,27 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
   const pct        = course.enrollment?.progress ?? 0;
   const inits      = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
+  const hasDiscount = !isEnrolled && isPaid && course.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
+  const effectivePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : (course.price ?? 0);
+  const discountLabel = hasDiscount
+    ? course.discount!.type === "percentage"
+      ? `${course.discount!.value}% OFF`
+      : `₹${course.discount!.value} OFF`
+    : null;
+
+  const green      = "#059669";
+  const accentClr  = isEnrolled ? green : BRAND;
+  const borderClr  = isEnrolled ? "rgba(5,150,105,0.2)" : "rgba(37,99,235,0.18)";
   const accentBar  = isEnrolled
     ? "linear-gradient(90deg,#10b981,#05966955,transparent)"
     : `linear-gradient(90deg,${BRAND},${BRAND_DEEP}55,transparent)`;
-  const cardBorder = isEnrolled ? "rgba(5,150,105,0.2)" : "rgba(37,99,235,0.18)";
-  const ctaHref    = isEnrolled
+  const isLoggedIn  = !!getAuthToken();
+  const previewHref = `/courses/${course._id}`;
+  const enrollHref  = isEnrolled
     ? `/dashboard/content/${course._id}`
-    : isPaid
-      ? `/courses/${course._id}`
-      : `/courses/${course._id}`;
+    : isLoggedIn
+      ? isPaid ? `/dashboard/checkout/${course._id}` : `/dashboard/content/${course._id}`
+      : isPaid ? `/login?redirect=/dashboard/checkout/${course._id}` : `/login?redirect=/dashboard/content/${course._id}`;
 
   return (
     <motion.div
@@ -77,70 +93,68 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
       style={{
         display: "flex", flexDirection: "column", height: "100%",
         borderRadius: 20, overflow: "hidden",
-        background: "rgba(255,255,255,0.97)",
-        border: `1.5px solid ${cardBorder}`,
-        boxShadow: "0 4px 20px rgba(37,99,235,0.07)",
-        transition: "transform 0.34s cubic-bezier(.22,1,.36,1), box-shadow 0.34s ease",
+        background: "#fff",
+        border: `1.5px solid ${borderClr}`,
+        boxShadow: "0 2px 16px rgba(37,99,235,0.07)",
         willChange: "transform",
       }}
-      whileHover={{ translateY: -5, boxShadow: "0 16px 44px rgba(37,99,235,0.13)" }}
+      whileHover={{ translateY: -4, boxShadow: "0 14px 40px rgba(37,99,235,0.13)" }}
     >
-      {/* Always-on top accent bar */}
+      {/* Accent bar */}
       <div style={{ height: 3, background: accentBar, flexShrink: 0 }} />
 
-      {/* Thumbnail — clean, no text/badges */}
+      {/* Thumbnail */}
       <div style={{
-        position: "relative", height: 152, flexShrink: 0, overflow: "hidden",
+        height: 172, flexShrink: 0, overflow: "hidden",
         background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
+        position: "relative",
       }}>
         {course.thumbnail
           ? <img src={course.thumbnail} alt={course.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <BookOpen style={{ width: 44, height: 44, color: "rgba(255,255,255,0.2)" }} />
+              <BookOpen style={{ width: 44, height: 44, color: "rgba(255,255,255,0.18)" }} />
             </div>
         }
+        {/* Subtle bottom fade for readability */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(15,23,42,0.18),transparent 55%)" }} />
       </div>
 
       {/* Body */}
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "18px 18px 18px", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "16px 18px 18px", gap: 9 }}>
 
-        {/* Category + type chips */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        {/* Chips row — category + type + difficulty + cert all inline */}
+        <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
           <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+            fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
             padding: "2px 8px", borderRadius: 99,
-            background: "rgba(37,99,235,0.08)", color: BRAND,
-            border: "1px solid rgba(37,99,235,0.15)",
+            background: "rgba(37,99,235,0.08)", color: BRAND, border: "1px solid rgba(37,99,235,0.15)",
           }}>
             {CAT_LABEL[course.category] ?? course.category}
           </span>
           {isEnrolled
-            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
+            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: green, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
                 <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
               </span>
             : isPaid
               ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#eff6ff", color: BRAND, border: "1px solid rgba(37,99,235,0.2)" }}>Paid</span>
-              : <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", color: "#059669", border: "1px solid #bbf7d0" }}>Free</span>
+              : <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", color: green, border: "1px solid #bbf7d0" }}>Free</span>
           }
+          {course.difficulty && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 600, color: MUTED }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: DIFF_DOT[course.difficulty] ?? MUTED, display: "inline-block" }} />
+              {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
+            </span>
+          )}
           {course.certificateEnabled && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: green, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 6px", borderRadius: 99 }}>
               <Award style={{ width: 8, height: 8 }} /> Cert
             </span>
           )}
         </div>
 
-        {/* Difficulty */}
-        {course.difficulty && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, fontWeight: 600, color: MUTED }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: DIFF_DOT[course.difficulty] ?? MUTED, display: "inline-block", flexShrink: 0 }} />
-            {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
-          </span>
-        )}
-
         {/* Title */}
         <h3 style={{
-          fontSize: 15, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-0.018em", margin: 0, color: INK,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: 15, fontWeight: 700, lineHeight: 1.32, letterSpacing: "-0.018em", margin: 0, color: INK,
           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           {course.title}
@@ -149,98 +163,128 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
         {/* Description */}
         {course.shortDescription && (
           <p style={{
-            fontSize: 12.5, color: MUTED, lineHeight: 1.65, margin: 0, flex: 1,
+            fontSize: 12.5, color: MUTED, lineHeight: 1.6, margin: 0, flex: 1,
             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
           }}>
             {course.shortDescription}
           </p>
         )}
 
-        {/* Stats */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 10, borderTop: "1px solid rgba(37,99,235,0.08)" }}>
-          {(course.analytics?.enrollments ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Users style={{ width: 11, height: 11 }} />
-              {course.analytics!.enrollments.toLocaleString("en-IN")}
+        {/* Instructor + stats combined */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid rgba(37,99,235,0.07)", marginTop: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+              background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontSize: 9, fontWeight: 700,
+            }}>
+              {inits}
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {course.mentorId.name}
             </span>
-          )}
-          {(course.analytics?.averageRating ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Star style={{ width: 11, height: 11, color: "#f59e0b", fill: "#f59e0b" }} />
-              {course.analytics!.averageRating.toFixed(1)}
-            </span>
-          )}
-          {(course.totalDuration ?? 0) > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 500, color: MUTED }}>
-              <Clock style={{ width: 11, height: 11 }} />
-              {course.totalDuration} min
-            </span>
-          )}
-        </div>
-
-        {/* Instructor */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: 9.5, fontWeight: 700,
-            boxShadow: "0 2px 8px rgba(29,78,216,0.22)",
-          }}>
-            {inits}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 11.5, fontWeight: 600, color: INK, margin: 0, lineHeight: 1.3 }}>{course.mentorId.name}</p>
-            {course.mentorId.company && <p style={{ fontSize: 10, color: BRAND, fontWeight: 500, margin: 0 }}>{course.mentorId.company}</p>}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {(course.analytics?.averageRating ?? 0) > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: MUTED }}>
+                <Star style={{ width: 10, height: 10, color: "#f59e0b", fill: "#f59e0b" }} />
+                {course.analytics!.averageRating.toFixed(1)}
+              </span>
+            )}
+            {(course.modules?.length ?? 0) > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 500, color: MUTED }}>
+                <BookOpen style={{ width: 10, height: 10 }} />
+                {course.modules!.length} mod
+              </span>
+            )}
+            {(course.totalDuration ?? 0) > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 500, color: MUTED }}>
+                <Clock style={{ width: 10, height: 10 }} />
+                {course.totalDuration}m
+              </span>
+            )}
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, background: "linear-gradient(90deg,rgba(37,99,235,0.15),transparent)" }} />
+        <div style={{ height: 1, background: `linear-gradient(90deg,${borderClr},transparent)` }} />
 
-        {/* Price + CTA row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ background: isEnrolled ? "rgba(5,150,105,0.07)" : "rgba(37,99,235,0.06)", borderRadius: 10, padding: "8px 12px", flex: 1 }}>
+        {/* Bottom: price box + CTAs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* Price row */}
+          <div style={{ background: isEnrolled ? "rgba(5,150,105,0.07)" : "rgba(37,99,235,0.06)", borderRadius: 10, padding: "8px 11px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {isEnrolled ? (
-              <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#059669", lineHeight: 1 }}>Enrolled</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>
-                  {pct >= 100 ? "Completed" : pct > 0 ? `${pct}% done` : "Not started"}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: accentClr, lineHeight: 1 }}>
+                  {pct >= 100 ? "Completed" : pct > 0 ? "In Progress" : "Enrolled"}
                 </div>
-              </>
+                {pct > 0 && pct < 100 && (
+                  <div style={{ marginTop: 5, height: 3, borderRadius: 99, background: "rgba(37,99,235,0.12)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, borderRadius: 99, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP})` }} />
+                  </div>
+                )}
+              </div>
             ) : isPaid && (course.price ?? 0) > 0 ? (
-              <>
-                <div style={{ fontSize: 18, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: "-0.02em" }}>₹{course.price}</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>excl. GST</div>
-              </>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: "-0.02em" }}>₹{effectivePrice}</span>
+                {hasDiscount && <span style={{ fontSize: 11, color: MUTED, textDecoration: "line-through" }}>₹{course.price}</span>}
+                <span style={{ fontSize: 9.5, color: MUTED, fontWeight: 500 }}>excl. GST</span>
+              </div>
             ) : (
-              <>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#059669", lineHeight: 1 }}>Free</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 2 }}>No cost</div>
-              </>
+              <div style={{ fontSize: 15, fontWeight: 800, color: green, lineHeight: 1 }}>Free</div>
+            )}
+            {discountLabel && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg,#f97316,#ea580c)", padding: "2px 7px", borderRadius: 99 }}>
+                <Tag style={{ width: 7, height: 7 }} />{discountLabel}
+              </span>
             )}
           </div>
-          <Link
-            href={ctaHref}
-            style={{
-              padding: "9px 16px", borderRadius: 10,
-              fontSize: 12, fontWeight: 700, color: "#fff",
-              background: isEnrolled
-                ? "linear-gradient(135deg,#10b981,#059669)"
-                : `linear-gradient(135deg,${BRAND}dd,${BRAND})`,
-              display: "flex", alignItems: "center", gap: 5,
-              textDecoration: "none",
-              boxShadow: isEnrolled ? "0 3px 10px rgba(5,150,105,0.3)" : "0 3px 10px rgba(37,99,235,0.25)",
-              flexShrink: 0,
-            }}
-          >
-            {isEnrolled
-              ? <><Play style={{ width: 11, height: 11, fill: "#fff" }} /> {pct >= 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</>
-              : isPaid
-                ? <><Lock style={{ width: 11, height: 11 }} /> View</>
-                : <><Play style={{ width: 11, height: 11, fill: "#fff" }} /> Preview</>
-            }
-          </Link>
+
+          {/* CTA buttons */}
+          {isEnrolled ? (
+            <Link
+              href={`/dashboard/content/${course._id}`}
+              style={{
+                padding: "9px 0", borderRadius: 10, width: "100%",
+                fontSize: 12, fontWeight: 700, color: "#fff",
+                background: "linear-gradient(135deg,#10b981,#059669)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                textDecoration: "none",
+                boxShadow: "0 3px 10px rgba(5,150,105,0.28)",
+              }}
+            >
+              <Play style={{ width: 11, height: 11, fill: "#fff" }} /> {pct >= 100 ? "Review" : pct > 0 ? "Continue" : "Start"}
+            </Link>
+          ) : (
+            <div style={{ display: "flex", gap: 6 }}>
+              <Link
+                href={previewHref}
+                style={{
+                  flex: 1, padding: "9px 0", borderRadius: 10,
+                  fontSize: 11.5, fontWeight: 700, color: BRAND,
+                  background: "rgba(37,99,235,0.08)", border: "1.5px solid rgba(37,99,235,0.22)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  textDecoration: "none",
+                }}
+              >
+                <Play style={{ width: 10, height: 10, fill: BRAND }} /> Preview
+              </Link>
+              <Link
+                href={enrollHref}
+                style={{
+                  flex: 1, padding: "9px 0", borderRadius: 10,
+                  fontSize: 11.5, fontWeight: 700, color: "#fff",
+                  background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  textDecoration: "none",
+                  boxShadow: "0 3px 10px rgba(37,99,235,0.24)",
+                }}
+              >
+                {isPaid ? <><Lock style={{ width: 10, height: 10 }} /> Enroll</> : <><Play style={{ width: 10, height: 10, fill: "#fff" }} /> Enroll</>}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -291,10 +335,6 @@ export default function CoursesSection() {
 
   return (
     <>
-      <style>{`
-        .courses-lc2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-      `}</style>
-
       <section
         style={{
           background: PAPER,

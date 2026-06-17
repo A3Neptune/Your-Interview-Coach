@@ -140,6 +140,21 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    discount: {
+      type: {
+        type: String,
+        enum: ['percentage', 'fixed', 'none'],
+        default: 'none',
+      },
+      value: {
+        type: Number,
+        default: 0,
+      },
+      isActive: {
+        type: Boolean,
+        default: false,
+      },
+    },
     currency: {
       type: String,
       default: 'INR',
