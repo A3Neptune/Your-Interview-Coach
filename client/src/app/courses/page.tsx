@@ -5,11 +5,12 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Clock, Users, Star, Lock, ArrowRight, Sparkles, Award,
-  Search, ChevronDown, X, Play, Check,
+  Search, ChevronDown, X, Play, CheckCircle,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StandardFooter from "@/components/StandardFooter";
 import { useAuth } from "@/context/AuthContext";
+import { getAuthToken } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -32,6 +33,7 @@ interface Course {
   certificateEnabled?: boolean;
   analytics?: { enrollments: number; averageRating: number };
   mentorId: { name: string; designation: string; company?: string };
+  enrollment?: { progress: number };
 }
 
 const CAT_LABEL: Record<string, string> = {
@@ -67,8 +69,13 @@ const DIFF_DOT: Record<string, string> = {
 
 /* ─── Course Card ─── */
 function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: number; ctaHref: string }) {
-  const isPaid = course.contentType === "paid" || course.contentType === "exclusive";
-  const inits  = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const isPaid     = course.contentType === "paid" || course.contentType === "exclusive";
+  const isEnrolled = !!course.enrollment;
+  const pct        = course.enrollment?.progress ?? 0;
+  const inits      = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const accentBar  = isEnrolled ? "linear-gradient(90deg,#10b981,#05966955,transparent)" : `linear-gradient(90deg,${BRAND},${BRAND_DEEP}55,transparent)`;
+  const cardBorder = isEnrolled ? "rgba(5,150,105,0.2)" : "rgba(37,99,235,0.18)";
 
   return (
     <motion.div
@@ -80,7 +87,7 @@ function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: nu
         display: "flex", flexDirection: "column", height: "100%",
         borderRadius: 20, overflow: "hidden",
         background: "rgba(255,255,255,0.97)",
-        border: "1.5px solid rgba(37,99,235,0.18)",
+        border: `1.5px solid ${cardBorder}`,
         boxShadow: "0 4px 20px rgba(37,99,235,0.07)",
         transition: "transform 0.34s cubic-bezier(.22,1,.36,1), box-shadow 0.34s ease",
         willChange: "transform",
@@ -88,7 +95,7 @@ function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: nu
       whileHover={{ translateY: -5, boxShadow: "0 16px 44px rgba(37,99,235,0.13)" }}
     >
       {/* Always-on accent bar */}
-      <div style={{ height: 3, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP}55,transparent)`, flexShrink: 0 }} />
+      <div style={{ height: 3, background: accentBar, flexShrink: 0 }} />
 
       {/* Thumbnail — clean, no text/badges on image */}
       <div style={{
@@ -116,9 +123,13 @@ function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: nu
           }}>
             {CAT_LABEL[course.category] ?? course.category}
           </span>
-          {isPaid
-            ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#eff6ff", color: BRAND, border: "1px solid rgba(37,99,235,0.2)" }}>Paid</span>
-            : <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", color: "#059669", border: "1px solid #bbf7d0" }}>Free</span>
+          {isEnrolled
+            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
+                <CheckCircle style={{ width: 8, height: 8 }} /> Enrolled
+              </span>
+            : isPaid
+              ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#eff6ff", color: BRAND, border: "1px solid rgba(37,99,235,0.2)" }}>Paid</span>
+              : <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "#f0fdf4", color: "#059669", border: "1px solid #bbf7d0" }}>Free</span>
           }
           {course.certificateEnabled && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 99 }}>
@@ -198,8 +209,15 @@ function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: nu
 
         {/* Price block + CTA */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ background: "rgba(37,99,235,0.06)", borderRadius: 10, padding: "8px 12px", flex: 1 }}>
-            {isPaid && (course.price ?? 0) > 0 ? (
+          <div style={{ background: isEnrolled ? "rgba(5,150,105,0.07)" : "rgba(37,99,235,0.06)", borderRadius: 10, padding: "8px 12px", flex: 1 }}>
+            {isEnrolled ? (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#059669", lineHeight: 1 }}>Enrolled</div>
+                <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 3 }}>
+                  {pct >= 100 ? "Completed" : pct > 0 ? `${pct}% done` : "Not started"}
+                </div>
+              </>
+            ) : isPaid && (course.price ?? 0) > 0 ? (
               <>
                 <div style={{ fontSize: 20, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: "-0.02em" }}>₹{course.price}</div>
                 <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginTop: 3 }}>excl. GST</div>
@@ -212,21 +230,25 @@ function CourseCard({ course, delay = 0, ctaHref }: { course: Course; delay?: nu
             )}
           </div>
           <Link
-            href={ctaHref}
+            href={isEnrolled ? `/dashboard/content/${course._id}` : ctaHref}
             style={{
               padding: "10px 16px", borderRadius: 10,
               fontSize: 12.5, fontWeight: 700, color: "#fff",
-              background: `linear-gradient(135deg,${BRAND}dd,${BRAND})`,
+              background: isEnrolled
+                ? "linear-gradient(135deg,#10b981,#059669)"
+                : `linear-gradient(135deg,${BRAND}dd,${BRAND})`,
               display: "flex", alignItems: "center", gap: 5,
               textDecoration: "none",
-              boxShadow: "0 3px 12px rgba(37,99,235,0.28)",
+              boxShadow: isEnrolled ? "0 3px 12px rgba(5,150,105,0.3)" : "0 3px 12px rgba(37,99,235,0.28)",
               flexShrink: 0,
               transition: "transform 0.2s, box-shadow 0.2s",
             }}
           >
-            {isPaid
-              ? <><Lock style={{ width: 11, height: 11 }} /> Enroll</>
-              : <><Play style={{ width: 11, height: 11, fill: "#fff" }} /> Preview</>
+            {isEnrolled
+              ? <><Play style={{ width: 11, height: 11, fill: "#fff" }} /> {pct >= 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</>
+              : isPaid
+                ? <><Lock style={{ width: 11, height: 11 }} /> Enroll</>
+                : <><Play style={{ width: 11, height: 11, fill: "#fff" }} /> Preview</>
             }
           </Link>
         </div>
@@ -256,12 +278,32 @@ export default function CoursesPage() {
   const [type, setType]         = useState<"" | "free" | "paid">("");
 
   useEffect(() => {
-    fetch(`${API_URL}/advanced/courses/public?limit=100&sortBy=createdAt&sortOrder=desc`)
-      .then(r => r.json())
-      .then(d => { if (d.success) setCourses(d.data.courses || []); })
+    const token = getAuthToken();
+
+    const publicFetch = fetch(`${API_URL}/advanced/courses/public?limit=100&sortBy=createdAt&sortOrder=desc`)
+      .then(r => r.json());
+
+    const enrollFetch = token
+      ? fetch(`${API_URL}/enrollments/my-enrollments`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json()).catch(() => ({ success: false }))
+      : Promise.resolve({ success: false });
+
+    Promise.all([publicFetch, enrollFetch])
+      .then(([pubData, enrollData]) => {
+        let list: Course[] = pubData.success ? pubData.data.courses || [] : [];
+        if (enrollData.success && Array.isArray(enrollData.data)) {
+          const enrollMap = new Map<string, { progress: number }>();
+          enrollData.data.forEach((e: any) => {
+            const id = e.courseId?._id ?? e.courseId;
+            if (id) enrollMap.set(id, { progress: e.progress || 0 });
+          });
+          list = list.map(c => enrollMap.has(c._id) ? { ...c, enrollment: enrollMap.get(c._id) } : c);
+        }
+        setCourses(list);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     let r = [...courses];
