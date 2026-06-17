@@ -39,6 +39,8 @@ interface Course {
   category: string;
   difficulty?: string;
   price?: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   modules?: Array<{
     _id?: string;
     title: string;
@@ -228,6 +230,8 @@ export default function CourseDetailPage() {
 
   const FREE_PREVIEW_COUNT = 2;
   const isPaidCourse    = course?.contentType === "paid" || course?.contentType === "exclusive";
+  const hasDiscount     = isPaidCourse && course?.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
+  const effectivePrice  = hasDiscount && course?.discountPrice != null ? course.discountPrice : (course?.price ?? 0);
   const selectedIndex   = selected ? contents.findIndex(c => c._id === selected._id) : -1;
   const isPreviewLesson = selectedIndex >= 0 && selectedIndex < FREE_PREVIEW_COUNT;
   // While enrollment is still loading, treat as watchable so the lock wall
