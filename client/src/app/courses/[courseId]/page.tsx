@@ -387,7 +387,7 @@ export default function PublicCourseDetailPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <BookOpen style={{ width: 14, height: 14, color: BRAND }} />
                     <h3 style={{ fontSize: 13.5, fontWeight: 700, color: INK, margin: 0 }}>
-                      Lessons <span style={{ fontWeight: 500, color: "#94a3b8" }}>({lessons.length})</span>
+                      Modules <span style={{ fontWeight: 500, color: "#94a3b8" }}>({course.modules?.length ?? lessons.length})</span>
                     </h3>
                   </div>
                   {isEnrolled
@@ -395,7 +395,7 @@ export default function PublicCourseDetailPage() {
                         Full access
                       </span>
                     : <span style={{ fontSize: 11, fontWeight: 600, color: "#059669", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "3px 9px", borderRadius: 99 }}>
-                        {FREE_PREVIEW_COUNT} free previews
+                        {FREE_PREVIEW_COUNT} free preview modules
                       </span>
                   }
                 </div>
@@ -602,8 +602,7 @@ export default function PublicCourseDetailPage() {
                       course.certificateEnabled ? "Certificate on completion" : null,
                       course.difficulty ? `${course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)} level` : null,
                       (course.modules?.length ?? 0) > 0 ? `${course.modules!.length} module${course.modules!.length > 1 ? "s" : ""}` : null,
-                      lessons.length > 0 ? `${lessons.length} lesson${lessons.length > 1 ? "s" : ""}` : null,
-                      `${FREE_PREVIEW_COUNT} free preview lessons`,
+                      `${FREE_PREVIEW_COUNT} free preview modules`,
                     ].filter(Boolean).map((item, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <CheckCircle style={{ width: 13, height: 13, color: "#059669", fill: "#059669", flexShrink: 0 }} />

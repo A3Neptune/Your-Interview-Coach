@@ -268,7 +268,7 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
                   textDecoration: "none",
                 }}
               >
-                <Play style={{ width: 10, height: 10, fill: BRAND }} /> Preview
+                <Play style={{ width: 10, height: 10, fill: BRAND }} /> Free Preview
               </Link>
               <Link
                 href={enrollHref}
