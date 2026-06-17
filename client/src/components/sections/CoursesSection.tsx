@@ -195,7 +195,7 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
             {(course.modules?.length ?? 0) > 0 && (
               <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 500, color: MUTED }}>
                 <BookOpen style={{ width: 10, height: 10 }} />
-                {course.modules!.length} mod
+                {course.modules!.length} modules
               </span>
             )}
             {(course.totalDuration ?? 0) > 0 && (

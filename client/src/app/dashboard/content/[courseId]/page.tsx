@@ -39,6 +39,8 @@ interface Course {
   category: string;
   difficulty?: string;
   price?: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   modules?: Array<{
     _id?: string;
     title: string;
@@ -228,6 +230,8 @@ export default function CourseDetailPage() {
 
   const FREE_PREVIEW_COUNT = 2;
   const isPaidCourse    = course?.contentType === "paid" || course?.contentType === "exclusive";
+  const hasDiscount     = isPaidCourse && course?.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
+  const effectivePrice  = hasDiscount && course?.discountPrice != null ? course.discountPrice : (course?.price ?? 0);
   const selectedIndex   = selected ? contents.findIndex(c => c._id === selected._id) : -1;
   const isPreviewLesson = selectedIndex >= 0 && selectedIndex < FREE_PREVIEW_COUNT;
   // While enrollment is still loading, treat as watchable so the lock wall
@@ -288,7 +292,7 @@ export default function CourseDetailPage() {
             </div>
             <p style={{ fontWeight: 700, fontSize: 17, margin: 0 }}>This lesson is locked</p>
             <p style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-              {isPaidCourse ? `Enroll for ₹${course?.price} to unlock all content` : "Enroll for free to unlock"}
+              {isPaidCourse ? `Enroll for ₹${effectivePrice} to unlock all content` : "Enroll for free to unlock"}
             </p>
           </div>
         </div>
@@ -304,7 +308,7 @@ export default function CourseDetailPage() {
             {isEnrolling
               ? <><span className="spinner" /> Enrolling…</>
               : isPaidCourse
-                ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{course?.price}</>
+                ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{effectivePrice}</>
                 : <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Enroll for Free</>
             }
           </button>
@@ -643,7 +647,7 @@ export default function CourseDetailPage() {
                       {isEnrolling
                         ? <><span className="spinner" style={{ width: 13, height: 13 }} /> Enrolling…</>
                         : isPaidCourse
-                          ? <><Lock style={{ width: 12, height: 12 }} /> Enroll — ₹{course.price}</>
+                          ? <><Lock style={{ width: 12, height: 12 }} /> Enroll — ₹{effectivePrice}</>
                           : <><Play style={{ width: 12, height: 12, fill: "#fff" }} /> Enroll for Free</>
                       }
                     </button>
@@ -888,7 +892,10 @@ export default function CourseDetailPage() {
                   </div>
                   <div style={{ background: "#f8faff", border: "1px solid rgba(29,78,216,0.1)", borderRadius: 11, padding: "11px 14px" }}>
                     <p style={{ fontSize: 9.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 3px" }}>Amount</p>
-                    <p style={{ fontSize: 24, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>₹{course.price}</p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
+                      <p style={{ fontSize: 24, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>₹{effectivePrice}</p>
+                      {hasDiscount && <p style={{ fontSize: 13, color: "#94a3b8", textDecoration: "line-through", margin: 0 }}>₹{course.price}</p>}
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 9 }}>

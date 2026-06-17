@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Users, TrendingUp, DollarSign, Award, Star, MessageSquare, Activity } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, DollarSign, Award, Star, Activity } from 'lucide-react';
 import { getAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -264,23 +264,6 @@ export default function CourseAnalyticsPage() {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={() => router.push(`/mentor-dashboard/courses/${courseId}/enrollments`)}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-        >
-          <Users size={18} />
-          View Enrolled Students
-        </button>
-        <button
-          onClick={() => router.push(`/mentor-dashboard/courses/${courseId}/reviews`)}
-          className="flex items-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg font-medium transition-colors"
-        >
-          <MessageSquare size={18} />
-          View All Reviews
-        </button>
-      </div>
     </div>
   );
 }
