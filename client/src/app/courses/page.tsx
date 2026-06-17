@@ -1333,10 +1333,11 @@ export default function CoursesPage() {
                 if (enrollData.success && Array.isArray(enrollData.data)) {
                     const enrollMap = new Map<string, { progress: number }>();
                     enrollData.data.forEach((e: any) => {
-                        const id = e.courseId?._id ?? e.courseId;
+                        const raw = e.courseId?._id ?? e.courseId;
+                        const id  = raw ? String(raw) : null;
                         if (id) enrollMap.set(id, { progress: e.progress || 0 });
                     });
-                    list = list.map(c => enrollMap.has(c._id) ? { ...c, enrollment: enrollMap.get(c._id) } : c);
+                    list = list.map(c => enrollMap.has(String(c._id)) ? { ...c, enrollment: enrollMap.get(String(c._id)) } : c);
                 }
                 setCourses(list);
             })

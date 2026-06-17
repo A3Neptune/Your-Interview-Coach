@@ -600,16 +600,22 @@ export const getPublishedCourses = async (req, res) => {
 export const getPublishedCourseById = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const cacheKey = `courses:published:detail:v2:${courseId}`;
 
-    // Try cache first
-    const cached = await redisCacheService.get(cacheKey);
-    if (cached) {
-      return res.json({
-        success: true,
-        data: cached,
-        cached: true,
-      });
+    // Check enrollment when the user is authenticated
+    const userId = req.user?.id || req.user?._id;
+    let isEnrolled = false;
+    if (userId) {
+      const enrollment = await Enrollment.findOne({ userId, courseId, status: 'active' }).lean();
+      isEnrolled = !!enrollment;
+    }
+
+    // Use cache only for the unenrolled/public view (enrolled users need full URLs)
+    const cacheKey = `courses:published:detail:v2:${courseId}`;
+    if (!isEnrolled) {
+      const cached = await redisCacheService.get(cacheKey);
+      if (cached) {
+        return res.json({ success: true, data: cached, cached: true });
+      }
     }
 
     const course = await CourseAdvanced.findOne({
@@ -627,12 +633,11 @@ export const getPublishedCourseById = async (req, res) => {
       });
     }
 
-    // Expose URLs only for the first FREE_PREVIEW_COUNT resources (free preview).
-    // Everything else gets stripped — no URLs, no quiz answers.
-    const FREE_PREVIEW_COUNT = 2;
-    let previewSlotsLeft = FREE_PREVIEW_COUNT;
+    if (!isEnrolled && course.modules) {
+      // Not enrolled — strip URLs, expose only first FREE_PREVIEW_COUNT resources
+      const FREE_PREVIEW_COUNT = 2;
+      let previewSlotsLeft = FREE_PREVIEW_COUNT;
 
-    if (course.modules) {
       course.modules = course.modules.map(mod => {
         const safeResources = (mod.resources ?? []).map(r => {
           const isPreview = previewSlotsLeft > 0;
@@ -641,7 +646,6 @@ export const getPublishedCourseById = async (req, res) => {
             title: r.title,
             type: r.type,
             duration: r.duration,
-            // Only expose URL for free-preview slots
             ...(isPreview && r.url ? { url: r.url } : {}),
           };
         });
@@ -655,21 +659,15 @@ export const getPublishedCourseById = async (req, res) => {
           resourceCount: safeResources.length,
         };
       });
+
+      // Increment views and cache the stripped response
+      await Promise.all([
+        CourseAdvanced.findByIdAndUpdate(courseId, { $inc: { 'analytics.views': 1 } }),
+        redisCacheService.set(cacheKey, course, 15 * 60 * 1000),
+      ]);
     }
 
-    // Increment views
-    await CourseAdvanced.findByIdAndUpdate(courseId, {
-      $inc: { 'analytics.views': 1 },
-    });
-
-    // Cache for 15 minutes
-    await redisCacheService.set(cacheKey, course, 15 * 60 * 1000);
-
-    res.json({
-      success: true,
-      data: course,
-      cached: false,
-    });
+    res.json({ success: true, data: course, cached: false });
   } catch (error) {
     console.error('Get published course error:', error);
     res.status(500).json({
