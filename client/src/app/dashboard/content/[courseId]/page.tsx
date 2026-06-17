@@ -292,7 +292,7 @@ export default function CourseDetailPage() {
             </div>
             <p style={{ fontWeight: 700, fontSize: 17, margin: 0 }}>This lesson is locked</p>
             <p style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-              {isPaidCourse ? `Enroll for ₹${course?.price} to unlock all content` : "Enroll for free to unlock"}
+              {isPaidCourse ? `Enroll for ₹${effectivePrice} to unlock all content` : "Enroll for free to unlock"}
             </p>
           </div>
         </div>
@@ -911,7 +911,10 @@ export default function CourseDetailPage() {
                   </div>
                   <div style={{ background: "#f8faff", border: "1px solid rgba(29,78,216,0.1)", borderRadius: 11, padding: "11px 14px" }}>
                     <p style={{ fontSize: 9.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 3px" }}>Amount</p>
-                    <p style={{ fontSize: 24, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>₹{course.price}</p>
+                    <p style={{ fontSize: 24, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>
+                      ₹{effectivePrice}
+                      {hasDiscount && <span style={{ fontSize: 14, fontWeight: 500, color: "#94a3b8", textDecoration: "line-through", marginLeft: 8 }}>₹{course.price}</span>}
+                    </p>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 9 }}>

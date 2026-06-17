@@ -468,15 +468,15 @@ export default function EditCoursePage() {
 
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Difficulty *
+                Difficulty
               </label>
               <select
                 name="difficulty"
                 value={course.difficulty}
                 onChange={handleChange}
-                required
                 className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               >
+                <option value="">Not specified</option>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>

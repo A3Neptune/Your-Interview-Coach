@@ -56,6 +56,15 @@ export default function CheckoutPage() {
 
       setIsLoading(true);
 
+      // If already enrolled, go straight to the course content
+      const enrollCheck = await fetch(`${API_URL}/enrollments/${courseId}/check`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.json()).catch(() => ({ success: false }));
+      if (enrollCheck.success && enrollCheck.isEnrolled) {
+        router.replace(`/dashboard/content/${courseId}`);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/advanced/courses/checkout-summary/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
