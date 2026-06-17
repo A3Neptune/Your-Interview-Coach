@@ -122,7 +122,7 @@ const courseSchema = new mongoose.Schema(
     }],
     difficulty: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+      enum: ['', 'beginner', 'intermediate', 'advanced', 'expert'],
       default: 'beginner',
     },
     contentType: {
