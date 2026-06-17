@@ -600,7 +600,7 @@ export const getPublishedCourses = async (req, res) => {
 export const getPublishedCourseById = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const cacheKey = `courses:published:detail:${courseId}`;
+    const cacheKey = `courses:published:detail:v2:${courseId}`;
 
     // Try cache first
     const cached = await redisCacheService.get(cacheKey);
@@ -627,18 +627,34 @@ export const getPublishedCourseById = async (req, res) => {
       });
     }
 
-    // Strip video URLs and quiz answers from modules — these are only for enrolled users
+    // Expose URLs only for the first FREE_PREVIEW_COUNT resources (free preview).
+    // Everything else gets stripped — no URLs, no quiz answers.
+    const FREE_PREVIEW_COUNT = 2;
+    let previewSlotsLeft = FREE_PREVIEW_COUNT;
+
     if (course.modules) {
-      course.modules = course.modules.map(mod => ({
-        title: mod.title,
-        description: mod.description,
-        order: mod.order,
-        isLocked: mod.isLocked,
-        estimatedDuration: mod.estimatedDuration,
-        // resource count only, no URLs
-        resourceCount: mod.resources?.length ?? 0,
-        // no quiz questions/answers
-      }));
+      course.modules = course.modules.map(mod => {
+        const safeResources = (mod.resources ?? []).map(r => {
+          const isPreview = previewSlotsLeft > 0;
+          if (isPreview) previewSlotsLeft--;
+          return {
+            title: r.title,
+            type: r.type,
+            duration: r.duration,
+            // Only expose URL for free-preview slots
+            ...(isPreview && r.url ? { url: r.url } : {}),
+          };
+        });
+        return {
+          title: mod.title,
+          description: mod.description,
+          order: mod.order,
+          isLocked: mod.isLocked,
+          estimatedDuration: mod.estimatedDuration,
+          resources: safeResources,
+          resourceCount: safeResources.length,
+        };
+      });
     }
 
     // Increment views
