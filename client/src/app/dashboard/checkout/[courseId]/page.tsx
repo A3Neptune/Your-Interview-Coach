@@ -56,8 +56,7 @@ export default function CheckoutPage() {
 
       setIsLoading(true);
 
-      // Fetch from advanced courses API
-      const response = await fetch(`${API_URL}/advanced/courses/published/${courseId}`, {
+      const response = await fetch(`${API_URL}/advanced/courses/checkout-summary/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

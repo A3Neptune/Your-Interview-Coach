@@ -449,10 +449,11 @@ const verifyServicePayment = async (
  */
 const getPaymentHistory = async (userId) => {
   return await Payment.find({ userId })
+    .select('amount currency status paymentMethod createdAt description courseId metadata')
     .populate({
       path: 'courseId',
       model: 'CourseAdvanced',
-      select: 'title price description category'
+      select: 'title price category thumbnail',
     })
     .sort({ createdAt: -1 });
 };
@@ -462,10 +463,11 @@ const getPaymentHistory = async (userId) => {
  */
 const getPaymentById = async (paymentId, userId) => {
   const payment = await Payment.findById(paymentId)
+    .select('amount currency status paymentMethod createdAt description gstNumber billingName billingEmail courseId metadata')
     .populate({
       path: 'courseId',
       model: 'CourseAdvanced',
-      select: 'title price description category'
+      select: 'title price category thumbnail',
     })
     .populate('userId', 'name email');
 

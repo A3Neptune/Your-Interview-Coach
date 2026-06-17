@@ -616,7 +616,8 @@ export const getPublishedCourseById = async (req, res) => {
       _id: courseId,
       isPublished: true,
     })
-      .populate('mentorId', 'name email profileImage company designation')
+      .select('title slug shortDescription fullDescription category tags difficulty contentType price discountPrice discount currency thumbnail previewVideo images totalDuration totalLectures prerequisites learningOutcomes targetAudience certificateEnabled analytics mentorId modules')
+      .populate('mentorId', 'name profileImage company designation')
       .lean();
 
     if (!course) {
@@ -624,6 +625,20 @@ export const getPublishedCourseById = async (req, res) => {
         success: false,
         error: 'Course not found',
       });
+    }
+
+    // Strip video URLs and quiz answers from modules — these are only for enrolled users
+    if (course.modules) {
+      course.modules = course.modules.map(mod => ({
+        title: mod.title,
+        description: mod.description,
+        order: mod.order,
+        isLocked: mod.isLocked,
+        estimatedDuration: mod.estimatedDuration,
+        // resource count only, no URLs
+        resourceCount: mod.resources?.length ?? 0,
+        // no quiz questions/answers
+      }));
     }
 
     // Increment views
@@ -645,6 +660,37 @@ export const getPublishedCourseById = async (req, res) => {
       success: false,
       error: 'Failed to fetch course',
     });
+  }
+};
+
+/**
+ * Checkout summary — pricing + title only, no modules or content URLs
+ */
+export const getCheckoutSummary = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const cacheKey = `courses:checkout-summary:${courseId}`;
+
+    const cached = await redisCacheService.get(cacheKey);
+    if (cached) {
+      return res.json({ success: true, data: cached, cached: true });
+    }
+
+    const course = await CourseAdvanced.findOne({ _id: courseId, isPublished: true })
+      .select('title shortDescription price discountPrice discount contentType thumbnail certificateEnabled totalDuration totalLectures mentorId')
+      .populate('mentorId', 'name designation')
+      .lean();
+
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+
+    await redisCacheService.set(cacheKey, course, 10 * 60 * 1000);
+
+    res.json({ success: true, data: course, cached: false });
+  } catch (error) {
+    console.error('Get checkout summary error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch course' });
   }
 };
 
@@ -1115,6 +1161,7 @@ export default {
   getCacheStats,
   getPublishedCourses,
   getPublishedCourseById,
+  getCheckoutSummary,
   updateCourseDiscount,
   // Review functions
   submitReview,

@@ -15,6 +15,9 @@ router.get('/courses/public/:courseId', courseAdvancedController.getPublishedCou
 // Auth-required published list for students
 router.get('/courses/published', verifyToken, courseAdvancedController.getPublishedCourses);
 
+// Checkout summary — pricing fields only, no module content or video URLs
+router.get('/courses/checkout-summary/:courseId', verifyToken, courseAdvancedController.getCheckoutSummary);
+
 // Mentor course list + create
 router.get('/courses', verifyMentor, courseAdvancedController.getMentorCourses);
 router.post('/courses', verifyMentor, courseAdvancedController.createCourse);

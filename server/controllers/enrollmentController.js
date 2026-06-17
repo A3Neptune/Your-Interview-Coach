@@ -105,7 +105,7 @@ export const getMyEnrollments = async (req, res) => {
       .populate({
         path: 'courseId',
         model: 'CourseAdvanced',
-        select: 'title shortDescription fullDescription category difficulty price contentType thumbnail mentorId modules tags',
+        select: 'title shortDescription category difficulty price contentType thumbnail mentorId tags totalDuration totalLectures certificateEnabled',
         populate: {
           path: 'mentorId',
           select: 'name designation profileImage company'

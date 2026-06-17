@@ -216,6 +216,9 @@ userSchema.methods.toJSON = function () {
   delete obj.password;
   delete obj.resetToken;
   delete obj.resetTokenExpiry;
+  delete obj.verificationToken;
+  delete obj.verificationTokenExpiry;
+  delete obj.knownDevices;
   return obj;
 };
 
