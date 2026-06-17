@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Play, Lock, BookOpen, Clock, ArrowRight, Sparkles,
-  TrendingUp, CheckCircle, Star, Award, ChevronRight, Eye,
+  TrendingUp, CheckCircle, Star, Award, ChevronRight, Eye, Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAuthToken, removeAuthToken } from '@/lib/api';
@@ -26,6 +26,8 @@ interface Course {
   description?: string;
   contentType: 'free' | 'paid' | 'exclusive';
   price: number;
+  discountPrice?: number | null;
+  discount?: { type: string; value: number; isActive: boolean };
   category: string;
   thumbnail?: string;
   difficulty?: string;
@@ -220,6 +222,12 @@ function CatalogueCard({ course }: { course: Course }) {
   const accentLight  = isEnrolled ? 'rgba(5,150,105,0.07)' : 'rgba(37,99,235,0.06)';
   const accentBorder = isEnrolled ? 'rgba(5,150,105,0.2)'  : 'rgba(37,99,235,0.18)';
 
+  const hasDiscount  = !isEnrolled && isPaid && course.discount?.isActive && course.discount.type !== 'none' && (course.discount.value ?? 0) > 0;
+  const effectivePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : course.price;
+  const discountLabel  = hasDiscount
+    ? course.discount!.type === 'percentage' ? `${course.discount!.value}% OFF` : `₹${course.discount!.value} OFF`
+    : null;
+
   return (
     <div
       style={{
@@ -318,50 +326,85 @@ function CatalogueCard({ course }: { course: Course }) {
         {/* Divider */}
         <div style={{ height: 1, background: `linear-gradient(90deg,${accentBorder},transparent)` }} />
 
-        {/* Price box + CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ flex: 1, background: accentLight, borderRadius: 10, padding: '8px 11px' }}>
+        {/* Price box + CTAs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Price row */}
+          <div style={{ background: accentLight, borderRadius: 10, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {isEnrolled ? (
-              <>
-                <div style={{ fontSize: 12, fontWeight: 700, color: accent, lineHeight: 1 }}>
-                  {pct >= 100 ? 'Completed' : pct > 0 ? 'In Progress' : 'Enrolled'}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: pct > 0 && pct < 100 ? 5 : 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: accent, lineHeight: 1 }}>
+                    {pct >= 100 ? 'Completed' : pct > 0 ? 'In Progress' : 'Enrolled'}
+                  </span>
+                  {pct > 0 && pct < 100 && <span style={{ fontSize: 10.5, fontWeight: 700, color: accent }}>{pct}%</span>}
                 </div>
                 {pct > 0 && pct < 100 && (
-                  <div style={{ marginTop: 5, height: 3, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+                  <div style={{ height: 3, borderRadius: 99, background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: `linear-gradient(90deg,${BRAND},${BRAND_DEEP})` }} />
                   </div>
                 )}
-              </>
+              </div>
             ) : isPaid && course.price > 0 ? (
-              <>
-                <div style={{ fontSize: 17, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: '-0.02em' }}>₹{course.price}</div>
-                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 500, marginTop: 2 }}>excl. GST</div>
-              </>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, color: BRAND, lineHeight: 1, letterSpacing: '-0.02em' }}>₹{effectivePrice}</span>
+                {hasDiscount && <span style={{ fontSize: 11, color: MUTED, textDecoration: 'line-through' }}>₹{course.price}</span>}
+                <span style={{ fontSize: 9.5, color: MUTED, fontWeight: 500 }}>excl. GST</span>
+              </div>
             ) : (
-              <>
-                <div style={{ fontSize: 15, fontWeight: 800, color: green, lineHeight: 1 }}>Free</div>
-                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 500, marginTop: 2 }}>No cost</div>
-              </>
+              <span style={{ fontSize: 15, fontWeight: 800, color: green, lineHeight: 1 }}>Free</span>
+            )}
+            {discountLabel && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#f97316,#ea580c)', padding: '2px 7px', borderRadius: 99, flexShrink: 0, marginLeft: 6 }}>
+                <Tag style={{ width: 7, height: 7 }} />{discountLabel}
+              </span>
             )}
           </div>
-          <Link
-            href={isEnrolled ? `/dashboard/content/${course._id}` : isPaid ? `/dashboard/checkout/${course._id}` : `/dashboard/content/${course._id}`}
-            style={{
-              padding: '10px 14px', borderRadius: 10, flexShrink: 0,
-              fontSize: 12, fontWeight: 700, color: '#fff',
-              background: isEnrolled ? 'linear-gradient(135deg,#10b981,#059669)' : `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-              display: 'flex', alignItems: 'center', gap: 5,
-              textDecoration: 'none',
-              boxShadow: isEnrolled ? '0 3px 10px rgba(5,150,105,0.28)' : '0 3px 10px rgba(37,99,235,0.24)',
-            }}
-          >
-            {isEnrolled
-              ? <><Play style={{ width: 11, height: 11, fill: '#fff' }} /> {pct >= 100 ? 'Review' : pct > 0 ? 'Continue' : 'Start'}</>
-              : isPaid
-                ? <><Lock style={{ width: 11, height: 11 }} /> Enroll</>
-                : <><Eye style={{ width: 11, height: 11 }} /> Preview</>
-            }
-          </Link>
+
+          {/* CTA buttons */}
+          {isEnrolled ? (
+            <Link
+              href={`/dashboard/content/${course._id}`}
+              style={{
+                padding: '9px 0', borderRadius: 10, width: '100%',
+                fontSize: 12, fontWeight: 700, color: '#fff',
+                background: 'linear-gradient(135deg,#10b981,#059669)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                textDecoration: 'none',
+                boxShadow: '0 3px 10px rgba(5,150,105,0.28)',
+              }}
+            >
+              <Play style={{ width: 11, height: 11, fill: '#fff' }} />
+              {pct >= 100 ? 'Review' : pct > 0 ? 'Continue' : 'Start'}
+            </Link>
+          ) : (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Link
+                href={`/courses/${course._id}`}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 10,
+                  fontSize: 11.5, fontWeight: 700, color: BRAND,
+                  background: 'rgba(37,99,235,0.08)', border: '1.5px solid rgba(37,99,235,0.22)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  textDecoration: 'none',
+                }}
+              >
+                <Play style={{ width: 10, height: 10, fill: BRAND }} /> Free Preview
+              </Link>
+              <Link
+                href={isPaid ? `/dashboard/checkout/${course._id}` : `/dashboard/content/${course._id}`}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 10,
+                  fontSize: 11.5, fontWeight: 700, color: '#fff',
+                  background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  textDecoration: 'none',
+                  boxShadow: '0 3px 10px rgba(37,99,235,0.24)',
+                }}
+              >
+                {isPaid ? <><Lock style={{ width: 10, height: 10 }} /> Enroll</> : <><Play style={{ width: 10, height: 10, fill: '#fff' }} /> Enroll</>}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

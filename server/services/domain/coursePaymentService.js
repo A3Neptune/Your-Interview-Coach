@@ -84,8 +84,19 @@ const createCourseOrder = async (userId, courseId, paymentMethod, gstNumber) => 
 
   const user = await User.findById(userId);
 
-  // Calculate amount with GST (18%)
-  const baseAmount = course.price;
+  // Calculate amount with GST (18%), applying active discount if set
+  const hasDiscount = course.discount?.isActive
+    && course.discount.type !== 'none'
+    && (course.discount.value ?? 0) > 0;
+
+  let baseAmount = course.price;
+  if (hasDiscount) {
+    if (course.discount.type === 'percentage') {
+      baseAmount = Math.round(course.price - (course.price * course.discount.value) / 100);
+    } else {
+      baseAmount = Math.max(0, course.price - course.discount.value);
+    }
+  }
 
   if (!baseAmount || baseAmount <= 0) {
     throw new ValidationError('Invalid course price. Must be greater than 0');
