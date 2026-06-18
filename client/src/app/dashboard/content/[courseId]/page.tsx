@@ -305,7 +305,12 @@ export default function CourseDetailPage() {
               color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
               boxShadow: "0 8px 24px rgba(37,99,235,0.3)",
             }}>
-              <Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{effectivePrice}
+              <Lock style={{ width: 13, height: 13 }} />
+              <span>
+                Enroll — ₹{effectivePrice}
+                {hasDiscount && <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.7, textDecoration: "line-through", marginLeft: 6 }}>₹{course?.price}</span>}
+                <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.75, marginLeft: 4 }}>excl. GST</span>
+              </span>
             </Link>
           ) : (
             <button onClick={handleEnroll} disabled={isEnrolling} style={{
@@ -653,7 +658,12 @@ export default function CourseDetailPage() {
                         color: "#fff", fontWeight: 700, fontSize: 13.5, textDecoration: "none",
                         boxShadow: "0 6px 18px rgba(37,99,235,0.28)",
                       }}>
-                        <Lock style={{ width: 12, height: 12 }} /> Enroll — ₹{effectivePrice}
+                        <Lock style={{ width: 12, height: 12 }} />
+                        <span>
+                          Enroll — ₹{effectivePrice}
+                          {hasDiscount && <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.7, textDecoration: "line-through", marginLeft: 5 }}>₹{course?.price}</span>}
+                          <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.75, marginLeft: 3 }}>excl. GST</span>
+                        </span>
                       </Link>
                     ) : (
                       <button onClick={handleEnroll} disabled={isEnrolling} style={{
@@ -914,6 +924,7 @@ export default function CourseDetailPage() {
                     <p style={{ fontSize: 24, fontWeight: 800, color: BRAND, margin: 0, letterSpacing: "-0.03em" }}>
                       ₹{effectivePrice}
                       {hasDiscount && <span style={{ fontSize: 14, fontWeight: 500, color: "#94a3b8", textDecoration: "line-through", marginLeft: 8 }}>₹{course.price}</span>}
+                      <span style={{ fontSize: 11, fontWeight: 400, color: "#94a3b8", marginLeft: 6 }}>excl. GST</span>
                     </p>
                   </div>
                 </div>
