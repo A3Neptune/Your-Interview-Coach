@@ -58,7 +58,6 @@ const CAT_LABEL: Record<string, string> = {
   "placement-prep":  "Placement Prep",
   "skills":          "Skills",
   "career-growth":   "Career Growth",
-  "coding":          "Coding",
   "system-design":   "System Design",
   "behavioral":      "Behavioral",
   "other":           "Other",
@@ -70,7 +69,6 @@ const CAT_TABS = [
   { value: "resume-building", label: "Resume" },
   { value: "gd-practice",     label: "Group Discussion" },
   { value: "placement-prep",  label: "Placement" },
-  { value: "coding",          label: "Coding" },
   { value: "system-design",   label: "System Design" },
   { value: "behavioral",      label: "Behavioral" },
   { value: "career-growth",   label: "Career Growth" },
@@ -82,7 +80,6 @@ const CAT_COLOR: Record<string, { bg: string; text: string; border: string }> = 
   "resume-building": { bg: "rgba(37,99,235,0.07)",   text: "#1e40af", border: "rgba(37,99,235,0.18)" },
   "gd-practice":     { bg: "rgba(5,150,105,0.07)",   text: "#065f46", border: "rgba(5,150,105,0.18)" },
   "placement-prep":  { bg: "rgba(236,72,153,0.07)",  text: "#9d174d", border: "rgba(236,72,153,0.18)" },
-  "coding":          { bg: "rgba(124,58,237,0.07)",  text: "#5b21b6", border: "rgba(124,58,237,0.18)" },
   "system-design":   { bg: "rgba(249,115,22,0.08)",  text: "#9a3412", border: "rgba(249,115,22,0.2)" },
   "behavioral":      { bg: "rgba(139,92,246,0.07)",  text: "#6b21a8", border: "rgba(139,92,246,0.18)" },
   "career-growth":   { bg: "rgba(8,145,178,0.07)",   text: "#0e7490", border: "rgba(8,145,178,0.18)" },
@@ -107,18 +104,6 @@ const COMING_SOON: Course[] = [
     mentorId: { name: "Rahul Sharma", designation: "Staff Engineer", company: "Google" },
     totalLectures: 142,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }, { title: "D" }, { title: "E" }],
-  },
-  {
-    _id: "cs-2", comingSoon: true,
-    title: "DSA — Cracking Coding Interviews",
-    shortDescription: "500+ problems covering arrays, trees, graphs, dynamic programming and greedy algorithms.",
-    contentType: "paid", category: "coding", difficulty: "intermediate",
-    price: 3999, discount: { type: "percentage", value: 75, isActive: true },
-    totalDuration: 980, certificateEnabled: true,
-    analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Priya Patel", designation: "Senior SDE", company: "Amazon" },
-    totalLectures: 210,
-    modules: [{ title: "A" }, { title: "B" }, { title: "C" }, { title: "D" }],
   },
   {
     _id: "cs-3", comingSoon: true,
@@ -937,7 +922,7 @@ export default function CoursesPage() {
                   lineHeight: 1.7, marginBottom: 28, fontWeight: 400,
                 }}>
                   Expert-crafted courses for every stage — mock interviews, resume, group discussions,
-                  coding, system design &amp; more.{!isLoggedIn && " Sign in to track progress."}
+                  system design &amp; more.{!isLoggedIn && " Sign in to track progress."}
                 </p>
 
                 {/* stats row */}

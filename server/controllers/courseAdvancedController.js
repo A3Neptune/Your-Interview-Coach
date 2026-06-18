@@ -219,7 +219,7 @@ export const updateCourse = async (req, res) => {
     );
 
     // Invalidate all related caches
-    invalidateCourseCaches(courseId, mentorId);
+    await invalidateCourseCaches(courseId, mentorId);
 
     // If published, invalidate public caches
     if (updatedCourse.isPublished) {
@@ -261,7 +261,7 @@ export const deleteCourse = async (req, res) => {
     }
 
     // Invalidate all related caches
-    invalidateCourseCaches(courseId, mentorId);
+    await invalidateCourseCaches(courseId, mentorId);
 
     // If course was published, invalidate public caches
     if (course.isPublished) {
@@ -306,7 +306,7 @@ export const updateModules = async (req, res) => {
     await course.save();
 
     // Invalidate caches
-    invalidateCourseCaches(courseId, mentorId);
+    await invalidateCourseCaches(courseId, mentorId);
 
     res.json({
       success: true,
@@ -350,7 +350,7 @@ export const togglePublish = async (req, res) => {
     await course.save();
 
     // Invalidate caches (both mentor and public)
-    invalidateCourseCaches(courseId, mentorId);
+    await invalidateCourseCaches(courseId, mentorId);
     await redisCacheService.deletePattern('courses:published:*'); // Invalidate all published course caches
 
     res.json({
@@ -433,7 +433,7 @@ export const bulkUpdateCourses = async (req, res) => {
 
     // Invalidate all course list caches for this mentor
     await redisCacheService.deletePattern(`courses:list:${mentorId}*`);
-    courseIds.forEach(id => invalidateCourseCaches(id, mentorId));
+    await Promise.all(courseIds.map(id => invalidateCourseCaches(id, mentorId)));
 
     res.json({
       success: true,
@@ -1168,7 +1168,7 @@ export const updateCourseDiscount = async (req, res) => {
 
     await course.save();
 
-    invalidateCourseCaches(courseId, mentorId);
+    await invalidateCourseCaches(courseId, mentorId);
     await redisCacheService.deletePattern('courses:published:*');
 
     res.json({ success: true, data: course, message: 'Discount updated successfully' });
