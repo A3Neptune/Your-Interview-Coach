@@ -195,9 +195,26 @@ export const updateCourse = async (req, res) => {
       });
     }
 
+    const updatePayload = { ...req.body };
+
+    // If price is being updated, recalculate discountPrice to keep it in sync
+    if (updatePayload.price != null) {
+      const newPrice = updatePayload.price;
+      const discount = updatePayload.discount ?? existingCourse.discount;
+      const discountActive = discount?.isActive && discount?.type !== 'none' && (discount?.value ?? 0) > 0;
+      if (discountActive) {
+        const discAmt = discount.type === 'percentage'
+          ? Math.round((newPrice * discount.value) / 100)
+          : discount.value;
+        updatePayload.discountPrice = Math.max(0, newPrice - discAmt);
+      } else {
+        updatePayload.discountPrice = null;
+      }
+    }
+
     const updatedCourse = await CourseAdvanced.findByIdAndUpdate(
       courseId,
-      { ...req.body },
+      updatePayload,
       { new: true, runValidators: true }
     );
 

@@ -190,10 +190,15 @@ export default function CheckoutPage() {
   }
 
   const hasDiscount = course.discount?.isActive && course.discount.type !== 'none' && (course.discount.value ?? 0) > 0;
-  const basePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : course.price;
+  const discountAmt = hasDiscount
+    ? course.discount!.type === 'percentage'
+      ? Math.round((course.price * course.discount!.value) / 100)
+      : course.discount!.value
+    : 0;
+  const basePrice = hasDiscount ? Math.max(0, course.price - discountAmt) : course.price;
   const gst = Math.round(basePrice * 0.18);
   const total = basePrice + gst;
-  const savings = hasDiscount ? course.price - basePrice : 0;
+  const savings = discountAmt;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">

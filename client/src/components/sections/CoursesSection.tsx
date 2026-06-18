@@ -63,7 +63,12 @@ function CourseCard({ course, delay = 0 }: { course: Course; delay?: number }) {
   const inits      = course.mentorId.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   const hasDiscount = !isEnrolled && isPaid && course.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
-  const effectivePrice = hasDiscount && course.discountPrice != null ? course.discountPrice : (course.price ?? 0);
+  const discountAmt = hasDiscount
+    ? course.discount!.type === "percentage"
+      ? Math.round(((course.price ?? 0) * course.discount!.value) / 100)
+      : course.discount!.value
+    : 0;
+  const effectivePrice = hasDiscount ? Math.max(0, (course.price ?? 0) - discountAmt) : (course.price ?? 0);
   const discountLabel = hasDiscount
     ? course.discount!.type === "percentage"
       ? `${course.discount!.value}% OFF`
