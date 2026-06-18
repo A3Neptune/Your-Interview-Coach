@@ -282,6 +282,7 @@ export const courseCacheKeys = {
 
 export const invalidateCourseCaches = async (courseId, mentorId) => {
   await redisCacheService.deletePattern(`course:${courseId}*`);
+  await redisCacheService.delete(`courses:checkout-summary:${courseId}`);
   await redisCacheService.deletePattern(`courses:list:${mentorId}*`);
   await redisCacheService.deletePattern(`courses:published:*`);
 };

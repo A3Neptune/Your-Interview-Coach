@@ -234,7 +234,7 @@ export default function PublicCourseDetailPage() {
               : isEnrolled
                 ? <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Continue Learning</>
                 : isPaid
-                  ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{course.price}</>
+                  ? <><Lock style={{ width: 13, height: 13 }} /> Enroll — ₹{effectivePrice}</>
                   : <><Play style={{ width: 13, height: 13, fill: "#fff" }} /> Enroll for Free</>
             }
           </Link>
