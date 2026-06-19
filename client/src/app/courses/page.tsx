@@ -101,7 +101,7 @@ const COMING_SOON: Course[] = [
     price: 4999, discount: { type: "percentage", value: 74, isActive: true },
     totalDuration: 1240, certificateEnabled: true,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Rahul Sharma", designation: "Staff Engineer", company: "Google" },
+    mentorId: { name: "Rahul Sharma" },
     totalLectures: 142,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }, { title: "D" }, { title: "E" }],
   },
@@ -113,7 +113,7 @@ const COMING_SOON: Course[] = [
     price: 0,
     totalDuration: 320, certificateEnabled: true,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Ananya Gupta", designation: "HR Director", company: "Microsoft" },
+    mentorId: { name: "Ananya Gupta" },
     totalLectures: 45,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }],
   },
@@ -125,7 +125,7 @@ const COMING_SOON: Course[] = [
     price: 0,
     totalDuration: 180,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Vikram Rao", designation: "Talent Acquisition Lead", company: "Flipkart" },
+    mentorId: { name: "Vikram Rao" },
     totalLectures: 28,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }],
   },
@@ -137,7 +137,7 @@ const COMING_SOON: Course[] = [
     price: 5999, discount: { type: "percentage", value: 67, isActive: true },
     totalDuration: 560, certificateEnabled: true,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Arjun Mehta", designation: "Ex-Principal Engineer", company: "Meta" },
+    mentorId: { name: "Arjun Mehta" },
     totalLectures: 35,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }],
   },
@@ -148,7 +148,7 @@ const COMING_SOON: Course[] = [
     contentType: "free", category: "gd-practice", difficulty: "beginner",
     price: 0,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Neha Singh", designation: "Communication Coach", company: "TCS" },
+    mentorId: { name: "Neha Singh" },
     totalLectures: 32,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }],
   },
@@ -160,7 +160,7 @@ const COMING_SOON: Course[] = [
     price: 2999, discount: { type: "percentage", value: 73, isActive: true },
     totalDuration: 720, certificateEnabled: true,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Karan Malhotra", designation: "Placement Officer", company: "IIT Bombay" },
+    mentorId: { name: "Karan Malhotra"},
     totalLectures: 95,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }, { title: "D" }],
   },
@@ -172,7 +172,7 @@ const COMING_SOON: Course[] = [
     price: 4499, discount: { type: "percentage", value: 67, isActive: true },
     totalDuration: 480,
     analytics: { enrollments: 0, averageRating: 0 },
-    mentorId: { name: "Sneha Iyer", designation: "Engineering Manager", company: "Uber" },
+    mentorId: { name: "Sneha Iyer" },
     totalLectures: 58,
     modules: [{ title: "A" }, { title: "B" }, { title: "C" }],
   },
@@ -550,17 +550,6 @@ function HeroFeaturedCard({ course, loading, isLoggedIn }: { course: Course | nu
       boxShadow: "0 8px 40px rgba(37,99,235,0.13), 0 2px 12px rgba(37,99,235,0.07)",
       overflow: "hidden", position: "relative",
     }}>
-      {/* "Featured" ribbon */}
-      <div style={{
-        position: "absolute", top: 14, left: -1, zIndex: 10,
-        background: `linear-gradient(135deg,${BRAND},${BRAND_DEEP})`,
-        color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.08em",
-        textTransform: "uppercase", padding: "5px 14px 5px 12px",
-        borderRadius: "0 6px 6px 0",
-        boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
-      }}>
-        ★ Featured Course
-      </div>
 
       {/* thumbnail */}
       <div style={{ position: "relative", paddingTop: "52%", background: `linear-gradient(135deg,${INK},${BRAND_DEEP})` }}>
@@ -1102,7 +1091,7 @@ export default function CoursesPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 17, fontWeight: 800, color: "#fff", margin: "0 0 3px", letterSpacing: "-0.02em" }}>
-                    Courses starting from <span style={{ color: "#fbbf24" }}>₹499</span>
+                    Premium <span style={{ color: "#fbbf24" }}>Learning</span> Affordable <span style={{ color: "#fbbf24" }}>Pricing</span>
                   </p>
                   <p style={{ fontSize: 13, color: "#94a3b8", margin: 0, fontWeight: 400 }}>
                     Expert-led interview prep · Enrol today, learn at your own pace
