@@ -169,15 +169,15 @@ export default function ServicesPopup() {
     }
   }, [ct.expired, mode, isVisible]);
 
-  /* ── course price helpers ── */
-  const isPaid = course?.contentType === "paid" || course?.contentType === "exclusive";
-  const hasDiscount = isPaid && course?.discount?.isActive && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
-  const discAmt = hasDiscount
-    ? course!.discount!.type === "percentage"
-      ? Math.round(((course!.price ?? 0) * course!.discount!.value) / 100)
-      : course!.discount!.value
+  /* ── course price helpers (all null-safe) ── */
+  const isPaid = course != null && (course.contentType === "paid" || course.contentType === "exclusive");
+  const hasDiscount = isPaid && course != null && course.discount?.isActive === true && course.discount.type !== "none" && (course.discount.value ?? 0) > 0;
+  const discAmt = (hasDiscount && course != null)
+    ? course.discount!.type === "percentage"
+      ? Math.round(((course.price ?? 0) * course.discount!.value) / 100)
+      : course.discount!.value
     : 0;
-  const effective = hasDiscount ? Math.max(0, (course!.price ?? 0) - discAmt) : (course!.price ?? 0);
+  const effective = (course != null) ? (hasDiscount ? Math.max(0, (course.price ?? 0) - discAmt) : (course.price ?? 0)) : 0;
   const moduleCount = course?.modules?.length ?? 0;
 
   if (!isVisible) return null;
