@@ -40,7 +40,7 @@ interface Course {
   totalDuration?: number;
   certificateEnabled?: boolean;
   analytics?: { enrollments: number; averageRating: number };
-  mentorId: { name: string; designation: string; company?: string };
+  mentorId: { name: string; designation?: string; company?: string };
   enrollment?: { progress: number };
   totalLectures?: number;
   modules?: { title: string }[];
@@ -702,9 +702,10 @@ function CourseRow({
   useEffect(() => {
     const el = ref.current; if (!el) return;
     el.addEventListener("scroll", sync, { passive: true });
-    const ro = new ResizeObserver(sync);
+    const ro = new ResizeObserver(() => requestAnimationFrame(sync));
     ro.observe(el);
-    sync();
+    // defer first sync so the browser has finished painting the flex row
+    requestAnimationFrame(sync);
     return () => { el.removeEventListener("scroll", sync); ro.disconnect(); };
   }, [courses]);
 
