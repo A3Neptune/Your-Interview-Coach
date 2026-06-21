@@ -249,7 +249,7 @@ export default function AnalysisResults({
         )}
 
         {/* Evaluation Signals */}
-        {strictEvaluation && (strictEvaluation.strongSignals?.length > 0 || strictEvaluation.weakSignals?.length > 0) && (
+        {strictEvaluation && ((strictEvaluation.strongSignals?.length ?? 0) > 0 || (strictEvaluation.weakSignals?.length ?? 0) > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {strictEvaluation.strongSignals && strictEvaluation.strongSignals.length > 0 && (
               <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 border border-emerald-700/50 rounded-3xl p-8 shadow-xl">
