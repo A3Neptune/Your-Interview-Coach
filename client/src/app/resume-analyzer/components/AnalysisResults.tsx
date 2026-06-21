@@ -10,6 +10,7 @@ import {
   Calendar,
   BarChart3,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
 interface AnalysisData {
@@ -20,9 +21,17 @@ interface AnalysisData {
     clarity: number;
     sections: number;
     relevance: number;
+    impact?: number;
+  };
+  scoreLevel?: string;
+  strictEvaluation?: {
+    topMncReadiness?: string;
+    scoreReason?: string;
+    strongSignals?: string[];
+    weakSignals?: string[];
   };
   Explanation?: string;
-  "Section Availability"?: Record<string, boolean>;
+  "Section Availability"?: Record<string, string | boolean>;
   "Issues List"?: string[];
   "Resume Summary"?: string;
   "Improvement Suggestions"?: string[];
@@ -38,31 +47,31 @@ interface AnalysisResultsProps {
   onNewAnalysis: () => void;
 }
 
-function ScoreGauge({ score }: { score: number }) {
+function ScoreGauge({ score, scoreLevel }: { score: number; scoreLevel?: string }) {
   const getStatus = () => {
     if (score >= 85)
       return {
-        label: "Excellent",
+        label: scoreLevel || "Excellent",
         color: "text-green-600",
         bg: "bg-green-50",
         border: "border-green-200",
       };
     if (score >= 75)
       return {
-        label: "Great",
+        label: scoreLevel || "Great",
         color: "text-blue-600",
         bg: "bg-blue-50",
         border: "border-blue-200",
       };
     if (score >= 65)
       return {
-        label: "Good",
+        label: scoreLevel || "Good",
         color: "text-amber-600",
         bg: "bg-amber-50",
         border: "border-amber-200",
       };
     return {
-      label: "Needs Work",
+      label: scoreLevel || "Needs Work",
       color: "text-red-600",
       bg: "bg-red-50",
       border: "border-red-200",
@@ -132,10 +141,17 @@ export default function AnalysisResults({
   };
   const breakdownEntries = Object.entries(breakdown) as Array<[string, number]>;
   const explanation = data.Explanation || "";
+  const strictEvaluation = data.strictEvaluation;
+  const sectionAvailability = data["Section Availability"] || {};
   const issues = data["Issues List"] || [];
   const resumeSummary = data["Resume Summary"] || "";
   const improvements = data["Improvement Suggestions"] || [];
   const interviewQA = data["Interview Questions with Answers"] || [];
+  
+  const mncReadinessColor = 
+    strictEvaluation?.topMncReadiness === "High" ? "bg-green-500/20 text-green-400 border-green-500/30" :
+    strictEvaluation?.topMncReadiness === "Medium" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
+    "bg-red-500/20 text-red-400 border-red-500/30";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
@@ -153,17 +169,24 @@ export default function AnalysisResults({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Score Card */}
           <div className="lg:col-span-1">
-            <ScoreGauge score={atsScore} />
+            <ScoreGauge score={atsScore} scoreLevel={data.scoreLevel} />
           </div>
 
           {/* Details Panel */}
           <div className="lg:col-span-2 space-y-6">
             {/* Analysis Summary */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-blue-400" />
-                Analysis Summary
-              </h2>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Sparkles className="w-6 h-6 text-blue-400" />
+                  Analysis Summary
+                </h2>
+                {strictEvaluation?.topMncReadiness && (
+                  <div className={`px-4 py-1.5 rounded-full border text-sm font-bold shadow-sm flex items-center gap-2 ${mncReadinessColor}`}>
+                    MNC Readiness: {strictEvaluation.topMncReadiness}
+                  </div>
+                )}
+              </div>
               <p className="text-gray-300 leading-relaxed text-lg">
                 {explanation}
               </p>
@@ -180,30 +203,35 @@ export default function AnalysisResults({
                 Score Breakdown
               </h3>
               <div className="space-y-5">
-                {breakdownEntries.slice(0, 3).map(([key, value]) => (
+                {breakdownEntries.map(([key, value]) => {
+                  const isImpact = key.toLowerCase() === "impact";
+                  const max = isImpact ? 10 : 20;
+                  const percentage = (value / max) * 100;
+                  return (
                   <div key={key}>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-300 capitalize font-medium">
                         {key}
                       </span>
                       <span className="text-lg font-bold text-blue-400">
-                        {value}/20
+                        {value}/{max}
                       </span>
                     </div>
                     <div className="h-3 bg-slate-600 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-1000 rounded-full ${
-                          value >= 16
+                          percentage >= 80
                             ? "bg-gradient-to-r from-green-500 to-emerald-400"
-                            : value >= 12
+                            : percentage >= 60
                               ? "bg-gradient-to-r from-amber-500 to-yellow-400"
                               : "bg-gradient-to-r from-red-500 to-pink-400"
                         }`}
-                        style={{ width: `${value * 5}%` }}
+                        style={{ width: `${percentage}%` }}
                       />
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           </div>
@@ -212,10 +240,70 @@ export default function AnalysisResults({
         {/* Resume Summary */}
         {resumeSummary && (
           <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">
-              📋 Resume Summary
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+              Resume Summary
             </h2>
-            <p className="text-gray-300 leading-relaxed">{resumeSummary}</p>
+            <p className="text-gray-300 leading-relaxed text-lg">{resumeSummary}</p>
+          </div>
+        )}
+
+        {/* Evaluation Signals */}
+        {strictEvaluation && (strictEvaluation.strongSignals?.length > 0 || strictEvaluation.weakSignals?.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {strictEvaluation.strongSignals && strictEvaluation.strongSignals.length > 0 && (
+              <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 border border-emerald-700/50 rounded-3xl p-8 shadow-xl">
+                <h3 className="text-xl font-bold text-emerald-400 mb-5 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6" />
+                  Strong Signals
+                </h3>
+                <ul className="space-y-4">
+                  {strictEvaluation.strongSignals.map((signal, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-300">
+                      <span className="text-emerald-400 font-bold mt-1 bg-emerald-400/10 p-1 rounded-full"><Zap className="w-3 h-3" /></span>
+                      <span className="leading-relaxed">{signal}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {strictEvaluation.weakSignals && strictEvaluation.weakSignals.length > 0 && (
+              <div className="bg-gradient-to-br from-rose-900/40 to-rose-800/20 border border-rose-700/50 rounded-3xl p-8 shadow-xl">
+                <h3 className="text-xl font-bold text-rose-400 mb-5 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6" />
+                  Weak Signals
+                </h3>
+                <ul className="space-y-4">
+                  {strictEvaluation.weakSignals.map((signal, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-300">
+                      <span className="text-rose-400 font-bold mt-1 bg-rose-400/10 p-1 rounded-full"><AlertCircle className="w-3 h-3" /></span>
+                      <span className="leading-relaxed">{signal}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section Availability */}
+        {Object.keys(sectionAvailability).length > 0 && (
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-8 border border-slate-600 shadow-xl mb-8">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <CheckCircle2 className="w-6 h-6 text-blue-400" />
+              Section Check
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(sectionAvailability).map(([key, val]) => {
+                const isPresent = val === "Yes" || val === true;
+                return (
+                  <div key={key} className={`px-4 py-2 rounded-full border flex items-center gap-2 text-sm font-semibold transition-all ${isPresent ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-rose-500/10 border-rose-500/30 text-rose-400"}`}>
+                    {isPresent ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    <span className="capitalize">{key}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

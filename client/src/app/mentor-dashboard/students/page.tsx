@@ -140,17 +140,46 @@ export default function StudentsPage() {
         };
         if (sessionType !== "all") params.sessionType = sessionType;
 
-        const res = await axios.get(`${API_URL}/bookings/mentor/all-bookings`, {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-          },
-          params,
-          timeout: 15000,
-        });
+        const [res, resAnalysis] = await Promise.all([
+          axios.get(`${API_URL}/bookings/mentor/all-bookings`, {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Cache-Control": "no-cache",
+            },
+            params,
+            timeout: 15000,
+          }),
+          axios.get(`${API_URL}/resume-analysis/records`, {
+            withCredentials: true,
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => ({ data: { records: [] } }))
+        ]);
 
-        setBookings(res.data.bookings || []);
+        let combinedBookings = res.data.bookings || [];
+        if (sessionType === "all" || sessionType === "resumeAnalysis") {
+           const mappedAnalyses = (resAnalysis.data.records || []).map((r: any) => ({
+              _id: r._id,
+              studentId: null,
+              sessionType: 'resumeAnalysis',
+              status: 'completed',
+              createdAt: r.createdAt,
+              scheduledDate: r.createdAt,
+              paymentStatus: 'completed',
+              amount: 0,
+              resumeFile: {
+                 url: r.publicUrl,
+                 atsScore: r.atsScore,
+                 originalName: r.fileName || 'Free Analysis'
+              },
+              studentNotes: 'Analyzed via Free Resume Analyzer tool'
+           }));
+           // Only add them on the first page or distribute them? 
+           // For simplicity, just append them
+           combinedBookings = [...combinedBookings, ...mappedAnalyses];
+        }
+
+        setBookings(combinedBookings);
         setPagination(
           res.data.pagination || {
             total: 0,
@@ -177,13 +206,36 @@ export default function StudentsPage() {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const res = await axios.get(`${API_URL}/bookings/mentor`, {
-        withCredentials: true,
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 15000,
-      });
+      const [res, resAnalysis] = await Promise.all([
+        axios.get(`${API_URL}/bookings/mentor`, {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 15000,
+        }),
+        axios.get(`${API_URL}/resume-analysis/records`, {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => ({ data: { records: [] } }))
+      ]);
 
-      setAllBookings(res.data.bookings || []);
+      const mappedAnalyses = (resAnalysis.data.records || []).map((r: any) => ({
+        _id: r._id,
+        studentId: null,
+        sessionType: 'resumeAnalysis',
+        status: 'completed',
+        createdAt: r.createdAt,
+        scheduledDate: r.createdAt,
+        paymentStatus: 'completed',
+        amount: 0,
+        resumeFile: {
+           url: r.publicUrl,
+           atsScore: r.atsScore,
+           originalName: r.fileName || 'Free Analysis'
+        },
+        studentNotes: 'Analyzed via Free Resume Analyzer tool'
+      }));
+
+      setAllBookings([...(res.data.bookings || []), ...mappedAnalyses]);
     } catch {
       setAllBookings([]);
     }

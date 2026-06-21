@@ -31,16 +31,17 @@ interface AnalysisData {
     clarity: number;
     sections: number;
     relevance: number;
+    impact?: number;
+  };
+  scoreLevel?: string;
+  strictEvaluation?: {
+    topMncReadiness?: string;
+    scoreReason?: string;
+    strongSignals?: string[];
+    weakSignals?: string[];
   };
   Explanation?: string;
-  "Section Availability"?: {
-    "Professional Summary": boolean;
-    "Technical Skills": boolean;
-    "Work Experience": boolean;
-    Projects: boolean;
-    "Achievements & Leadership": boolean;
-    Education: boolean;
-  };
+  "Section Availability"?: Record<string, string | boolean>;
   "Issues List"?: string[];
   "Resume Summary"?: string;
   "Improvement Suggestions"?: string[];
@@ -219,7 +220,9 @@ export default function ResumeAnalyzerPage() {
       const jsonResponse = await response.json();
       const data: AnalysisData = {
         "ATS Score": jsonResponse.atsScore,
+        scoreLevel: jsonResponse.scoreLevel,
         Breakdown: jsonResponse.breakdown,
+        strictEvaluation: jsonResponse.strictEvaluation,
         Explanation: jsonResponse.strictEvaluation?.scoreReason || "",
         "Section Availability": jsonResponse.sectionAvailability,
         "Issues List": jsonResponse.issues || [],
@@ -232,6 +235,23 @@ export default function ResumeAnalyzerPage() {
       };
       
       setAnalysisData(data);
+      
+      // Save the analysis to the backend so the admin can see it
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const token = localStorage.getItem("authToken");
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      fetch(`${API_URL}/resume-analysis/public/record`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          atsScore: jsonResponse.atsScore,
+          publicUrl: jsonResponse.publicUrl || jsonResponse.uploadedFile?.url,
+          fileName: file.name
+        }),
+      }).catch(err => console.error("Failed to save analysis to backend:", err));
+      
     } catch (error) {
       console.error("Error analyzing resume:", error);
       alert("Failed to analyze resume. Please try again.");

@@ -27,6 +27,7 @@ import enrollmentRoutes from './routes/enrollments.js';
 import feedbackRouter from './routes/feedback.js';
 import analyticsRoutes from './routes/analytics.js';
 import contactRoutes from './routes/contact.js';
+import resumeAnalysisRoutes from './routes/resumeAnalysis.js';
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/feedback', feedbackRouter);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/resume-analysis', resumeAnalysisRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Career Coach LMS API' });
