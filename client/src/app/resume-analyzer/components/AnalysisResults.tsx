@@ -47,7 +47,13 @@ interface AnalysisResultsProps {
   onNewAnalysis: () => void;
 }
 
-function ScoreGauge({ score, scoreLevel }: { score: number; scoreLevel?: string }) {
+function ScoreGauge({
+  score,
+  scoreLevel,
+}: {
+  score: number;
+  scoreLevel?: string;
+}) {
   const getStatus = () => {
     if (score >= 85)
       return {
@@ -147,11 +153,13 @@ export default function AnalysisResults({
   const resumeSummary = data["Resume Summary"] || "";
   const improvements = data["Improvement Suggestions"] || [];
   const interviewQA = data["Interview Questions with Answers"] || [];
-  
-  const mncReadinessColor = 
-    strictEvaluation?.topMncReadiness === "High" ? "bg-green-500/20 text-green-400 border-green-500/30" :
-    strictEvaluation?.topMncReadiness === "Medium" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
-    "bg-red-500/20 text-red-400 border-red-500/30";
+
+  const mncReadinessColor =
+    strictEvaluation?.topMncReadiness === "High"
+      ? "bg-green-500/20 text-green-400 border-green-500/30"
+      : strictEvaluation?.topMncReadiness === "Medium"
+        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+        : "bg-red-500/20 text-red-400 border-red-500/30";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
@@ -182,7 +190,9 @@ export default function AnalysisResults({
                   Analysis Summary
                 </h2>
                 {strictEvaluation?.topMncReadiness && (
-                  <div className={`px-4 py-1.5 rounded-full border text-sm font-bold shadow-sm flex items-center gap-2 ${mncReadinessColor}`}>
+                  <div
+                    className={`px-4 py-1.5 rounded-full border text-sm font-bold shadow-sm flex items-center gap-2 ${mncReadinessColor}`}
+                  >
                     MNC Readiness: {strictEvaluation.topMncReadiness}
                   </div>
                 )}
@@ -208,30 +218,30 @@ export default function AnalysisResults({
                   const max = isImpact ? 10 : 20;
                   const percentage = (value / max) * 100;
                   return (
-                  <div key={key}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300 capitalize font-medium">
-                        {key}
-                      </span>
-                      <span className="text-lg font-bold text-blue-400">
-                        {value}/{max}
-                      </span>
+                    <div key={key}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-300 capitalize font-medium">
+                          {key}
+                        </span>
+                        <span className="text-lg font-bold text-blue-400">
+                          {value}/{max}
+                        </span>
+                      </div>
+                      <div className="h-3 bg-slate-600 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-1000 rounded-full ${
+                            percentage >= 80
+                              ? "bg-gradient-to-r from-green-500 to-emerald-400"
+                              : percentage >= 60
+                                ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                                : "bg-gradient-to-r from-red-500 to-pink-400"
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-3 bg-slate-600 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-1000 rounded-full ${
-                          percentage >= 80
-                            ? "bg-gradient-to-r from-green-500 to-emerald-400"
-                            : percentage >= 60
-                              ? "bg-gradient-to-r from-amber-500 to-yellow-400"
-                              : "bg-gradient-to-r from-red-500 to-pink-400"
-                        }`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -244,47 +254,64 @@ export default function AnalysisResults({
               <Sparkles className="w-6 h-6 text-yellow-400" />
               Resume Summary
             </h2>
-            <p className="text-gray-300 leading-relaxed text-lg">{resumeSummary}</p>
+            <p className="text-gray-300 leading-relaxed text-lg">
+              {resumeSummary}
+            </p>
           </div>
         )}
 
         {/* Evaluation Signals */}
-        {strictEvaluation && ((strictEvaluation.strongSignals?.length ?? 0) > 0 || (strictEvaluation.weakSignals?.length ?? 0) > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {strictEvaluation.strongSignals && strictEvaluation.strongSignals.length > 0 && (
-              <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 border border-emerald-700/50 rounded-3xl p-8 shadow-xl">
-                <h3 className="text-xl font-bold text-emerald-400 mb-5 flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6" />
-                  Strong Signals
-                </h3>
-                <ul className="space-y-4">
-                  {strictEvaluation.strongSignals.map((signal, i) => (
-                    <li key={i} className="flex items-start gap-3 text-gray-300">
-                      <span className="text-emerald-400 font-bold mt-1 bg-emerald-400/10 p-1 rounded-full"><Zap className="w-3 h-3" /></span>
-                      <span className="leading-relaxed">{signal}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {strictEvaluation.weakSignals && strictEvaluation.weakSignals.length > 0 && (
-              <div className="bg-gradient-to-br from-rose-900/40 to-rose-800/20 border border-rose-700/50 rounded-3xl p-8 shadow-xl">
-                <h3 className="text-xl font-bold text-rose-400 mb-5 flex items-center gap-2">
-                  <AlertCircle className="w-6 h-6" />
-                  Weak Signals
-                </h3>
-                <ul className="space-y-4">
-                  {strictEvaluation.weakSignals.map((signal, i) => (
-                    <li key={i} className="flex items-start gap-3 text-gray-300">
-                      <span className="text-rose-400 font-bold mt-1 bg-rose-400/10 p-1 rounded-full"><AlertCircle className="w-3 h-3" /></span>
-                      <span className="leading-relaxed">{signal}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
+        {strictEvaluation &&
+          ((strictEvaluation.strongSignals?.length ?? 0) > 0 ||
+            (strictEvaluation.weakSignals?.length ?? 0) > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              {strictEvaluation.strongSignals &&
+                strictEvaluation.strongSignals.length > 0 && (
+                  <div className="bg-gradient-to-br from-emerald-950/60 to-emerald-900/30 border border-emerald-500/30 rounded-3xl p-8 shadow-xl">
+                    <h3 className="text-xl font-bold text-emerald-300 mb-5 flex items-center gap-2">
+                      <TrendingUp className="w-6 h-6" />
+                      Strong Signals
+                    </h3>
+                    <ul className="space-y-4">
+                      {strictEvaluation.strongSignals.map((signal, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-3 text-gray-100"
+                        >
+                          <span className="text-emerald-300 mt-1 bg-emerald-500/20 p-1 rounded-full">
+                            <Zap className="w-3 h-3" />
+                          </span>
+                          <span className="leading-relaxed">{signal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              {strictEvaluation.weakSignals &&
+                strictEvaluation.weakSignals.length > 0 && (
+                  <div className="bg-gradient-to-br from-rose-950/60 to-rose-900/30 border border-rose-500/30 rounded-3xl p-8 shadow-xl">
+                    <h3 className="text-xl font-bold text-rose-300 mb-5 flex items-center gap-2">
+                      <AlertCircle className="w-6 h-6" />
+                      Weak Signals
+                    </h3>
+                    <ul className="space-y-4">
+                      {strictEvaluation.weakSignals.map((signal, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-3 text-gray-100"
+                        >
+                          <span className="text-rose-300 mt-1 bg-rose-500/20 p-1 rounded-full">
+                            <AlertCircle className="w-3 h-3" />
+                          </span>
+                          <span className="leading-relaxed">{signal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          )}
 
         {/* Section Availability */}
         {Object.keys(sectionAvailability).length > 0 && (
@@ -297,8 +324,15 @@ export default function AnalysisResults({
               {Object.entries(sectionAvailability).map(([key, val]) => {
                 const isPresent = val === "Yes" || val === true;
                 return (
-                  <div key={key} className={`px-4 py-2 rounded-full border flex items-center gap-2 text-sm font-semibold transition-all ${isPresent ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-rose-500/10 border-rose-500/30 text-rose-400"}`}>
-                    {isPresent ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                  <div
+                    key={key}
+                    className={`px-4 py-2 rounded-full border flex items-center gap-2 text-sm font-semibold transition-all ${isPresent ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-rose-500/10 border-rose-500/30 text-rose-400"}`}
+                  >
+                    {isPresent ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
+                    )}
                     <span className="capitalize">{key}</span>
                   </div>
                 );
