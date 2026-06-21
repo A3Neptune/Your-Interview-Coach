@@ -50,37 +50,6 @@ interface AnalysisData {
   }>;
 }
 
-function parseAnalysisResponse(rawText: string): AnalysisData {
-  const trimmed = rawText.trim();
-  const tryParse = (value: string) => {
-    try {
-      return JSON.parse(value) as AnalysisData;
-    } catch {
-      return null;
-    }
-  };
-  const direct = tryParse(trimmed);
-  if (direct) return direct;
-  const unfenced = trimmed
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
-  const fromUnfenced = tryParse(unfenced);
-  if (fromUnfenced) return fromUnfenced;
-  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if (fencedMatch?.[1]) {
-    const fromFenceBlock = tryParse(fencedMatch[1].trim());
-    if (fromFenceBlock) return fromFenceBlock;
-  }
-  const firstBrace = trimmed.indexOf("{");
-  const lastBrace = trimmed.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    const fromBraces = tryParse(trimmed.slice(firstBrace, lastBrace + 1));
-    if (fromBraces) return fromBraces;
-  }
-  throw new Error("Invalid analysis response format");
-}
-
 /* ─── Intersection observer hook ─────────────────────────── */
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -239,15 +208,29 @@ export default function ResumeAnalyzerPage() {
     formData.append("file", file);
     try {
       const response = await fetch(
-        "",
+        "https://kp-resume-screening-service.vercel.app/",
         {
           method: "POST",
           body: formData,
         },
       );
       if (!response.ok) throw new Error("Failed to analyze resume");
-      const rawText = await response.text();
-      const data = parseAnalysisResponse(rawText);
+      
+      const jsonResponse = await response.json();
+      const data: AnalysisData = {
+        "ATS Score": jsonResponse.atsScore,
+        Breakdown: jsonResponse.breakdown,
+        Explanation: jsonResponse.strictEvaluation?.scoreReason || "",
+        "Section Availability": jsonResponse.sectionAvailability,
+        "Issues List": jsonResponse.issues || [],
+        "Resume Summary": jsonResponse.resumeSummary || "",
+        "Improvement Suggestions": jsonResponse.improvementSuggestions || [],
+        "Interview Questions with Answers": (jsonResponse.interviewQuestionsWithAnswers || []).map((q: any) => ({
+          Question: q.question,
+          Answer: q.answer
+        }))
+      };
+      
       setAnalysisData(data);
     } catch (error) {
       console.error("Error analyzing resume:", error);

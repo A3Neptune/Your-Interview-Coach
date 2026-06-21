@@ -446,7 +446,7 @@ export default function StudentsPage() {
                   Notes/Agenda
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-300">
-                  Resume
+                  Resume & Score
                 </th>
               </tr>
             </thead>
@@ -597,25 +597,46 @@ export default function StudentsPage() {
                         )}
                       </td>
 
-                      {/* Resume Download */}
+                      {/* Resume & Score */}
                       <td className="px-6 py-4">
-                        {(isResumeAnalysis || normalizedType === "mockInterview") && resumeUrl ? (
-                          <a
-                            href={toCloudinaryDownloadUrl(resumeUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-500/25 transition"
-                          >
-                            <FileDown size={14} />
-                            Download
-                          </a>
-                        ) : (isResumeAnalysis || normalizedType === "mockInterview") ? (
-                          <span className="text-xs text-zinc-500 italic">
-                            No resume
-                          </span>
-                        ) : (
-                          <span className="text-xs text-zinc-600">—</span>
-                        )}
+                        <div className="flex flex-col gap-2">
+                          {(booking.atsScore || booking.resumeFile?.atsScore) && (
+                            <span className="text-xs font-semibold text-blue-400">
+                              ATS Score: {booking.atsScore || booking.resumeFile?.atsScore}
+                            </span>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {(isResumeAnalysis || normalizedType === "mockInterview") && (resumeUrl || booking.publicUrl || booking.resumeFile?.publicUrl) ? (
+                              <>
+                                <a
+                                  href={booking.publicUrl || booking.resumeFile?.publicUrl || resumeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-300 border border-blue-400/20 hover:bg-blue-500/25 transition w-max"
+                                >
+                                  View Resume
+                                </a>
+                                {resumeUrl && (
+                                  <a
+                                    href={toCloudinaryDownloadUrl(resumeUrl)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-500/25 transition w-max"
+                                  >
+                                    <FileDown size={14} />
+                                    Download
+                                  </a>
+                                )}
+                              </>
+                            ) : (isResumeAnalysis || normalizedType === "mockInterview") ? (
+                              <span className="text-xs text-zinc-500 italic">
+                                No resume
+                              </span>
+                            ) : (
+                              <span className="text-xs text-zinc-600">—</span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   );
